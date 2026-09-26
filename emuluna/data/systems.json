@@ -1,0 +1,555 @@
+{
+  "gb": {
+    "name": "Game Boy",
+    "extensions": [
+      "dmg",
+      "gb",
+      "sgb"
+    ],
+    "default_core": "gambatte",
+    "color": "#a9d18c",
+    "icon": "gb.png",
+    "thumbnail": "Nintendo_-_Game_Boy",
+    "media": "cartridge",
+    "openvgdb_id": "openemu.system.gb",
+    "cover_size": [
+      256,
+      256
+    ]
+  },
+  "gbc": {
+    "name": "Game Boy Color",
+    "extensions": [
+      "gbc"
+    ],
+    "default_core": "gambatte",
+    "color": "#7ed7cc",
+    "icon": "gbc.png",
+    "thumbnail": "Nintendo_-_Game_Boy_Color",
+    "media": "cartridge",
+    "openvgdb_id": "openemu.system.gb",
+    "cover_size": [
+      256,
+      256
+    ]
+  },
+  "gba": {
+    "name": "Game Boy Advance",
+    "extensions": [
+      "gba"
+    ],
+    "default_core": "mgba",
+    "color": "#a394ef",
+    "icon": "gba.png",
+    "thumbnail": "Nintendo_-_Game_Boy_Advance",
+    "media": "cartridge",
+    "openvgdb_id": "openemu.system.gba",
+    "cover_size": [
+      256,
+      256
+    ]
+  },
+  "snes": {
+    "name": "Super Nintendo (SNES)",
+    "extensions": [
+      "fig",
+      "sfc",
+      "smc",
+      "snes",
+      "swc"
+    ],
+    "default_core": "snes9x",
+    "color": "#c294df",
+    "icon": "snes.png",
+    "thumbnail": "Nintendo_-_Super_Nintendo_Entertainment_System",
+    "media": "cartridge",
+    "openvgdb_id": "openemu.system.snes",
+    "cover_size": [
+      256,
+      180
+    ]
+  },
+  "nes": {
+    "name": "Nintendo (NES)",
+    "extensions": [
+      "nes",
+      "unf",
+      "unif"
+    ],
+    "default_core": "nestopia",
+    "color": "#9caedb",
+    "icon": "nes.png",
+    "thumbnail": "Nintendo_-_Nintendo_Entertainment_System",
+    "media": "cartridge",
+    "openvgdb_id": "openemu.system.nes",
+    "cover_size": [
+      184,
+      256
+    ]
+  },
+  "fds": {
+    "name": "Famicom Disk System",
+    "extensions": [
+      "fds"
+    ],
+    "default_core": "nestopia",
+    "color": "#9caedb",
+    "icon": "fds.png",
+    "thumbnail": "Nintendo_-_Family_Computer_Disk_System",
+    "media": "cartridge",
+    "openvgdb_id": "openemu.system.fds",
+    "cover_size": [
+      184,
+      256
+    ]
+  },
+  "atari2600": {
+    "name": "Atari 2600",
+    "extensions": [
+      "a26",
+      "bin"
+    ],
+    "default_core": "stella",
+    "color": "#9caedb",
+    "icon": "atari2600.png",
+    "thumbnail": "Atari_-_2600",
+    "media": "cartridge",
+    "openvgdb_id": "openemu.system.2600",
+    "cover_size": [
+      184,
+      256
+    ]
+  },
+  "atari5200": {
+    "name": "Atari 5200",
+    "extensions": [
+      "a52",
+      "bin"
+    ],
+    "default_core": "a5200",
+    "color": "#9caedb",
+    "icon": "atari5200.png",
+    "thumbnail": "Atari_-_5200",
+    "media": "cartridge",
+    "openvgdb_id": "openemu.system.5200",
+    "cover_size": [
+      184,
+      256
+    ]
+  },
+  "atari7800": {
+    "name": "Atari 7800",
+    "extensions": [
+      "a78"
+    ],
+    "default_core": "prosystem",
+    "color": "#9caedb",
+    "icon": "atari7800.png",
+    "thumbnail": "Atari_-_7800",
+    "media": "cartridge",
+    "openvgdb_id": "openemu.system.7800",
+    "cover_size": [
+      184,
+      256
+    ]
+  },
+  "lynx": {
+    "name": "Atari Lynx",
+    "extensions": [
+      "lnx"
+    ],
+    "default_core": "handy",
+    "color": "#9caedb",
+    "icon": "lynx.png",
+    "thumbnail": "Atari_-_Lynx",
+    "media": "cartridge",
+    "openvgdb_id": "openemu.system.lynx",
+    "cover_size": [
+      184,
+      256
+    ]
+  },
+  "colecovision": {
+    "name": "ColecoVision",
+    "extensions": [
+      "col",
+      "rom"
+    ],
+    "default_core": "gearcoleco",
+    "color": "#9caedb",
+    "icon": "colecovision.png",
+    "thumbnail": "Coleco_-_ColecoVision",
+    "media": "cartridge",
+    "openvgdb_id": "openemu.system.colecovision",
+    "cover_size": [
+      184,
+      256
+    ]
+  },
+  "intellivision": {
+    "name": "Intellivision",
+    "extensions": [
+      "bin",
+      "int",
+      "intv",
+      "rom"
+    ],
+    "default_core": "freeintv",
+    "color": "#9caedb",
+    "icon": "intellivision.png",
+    "thumbnail": "Mattel_-_Intellivision",
+    "media": "cartridge",
+    "openvgdb_id": "openemu.system.intellivision",
+    "cover_size": [
+      184,
+      256
+    ]
+  },
+  "gg": {
+    "name": "Game Gear",
+    "extensions": [
+      "gg"
+    ],
+    "default_core": "genesis_plus_gx",
+    "color": "#9caedb",
+    "icon": "gg.png",
+    "thumbnail": "Sega_-_Game_Gear",
+    "media": "cartridge",
+    "openvgdb_id": "openemu.system.gg",
+    "cover_size": [
+      184,
+      256
+    ]
+  },
+  "genesis": {
+    "name": "Sega Mega Drive",
+    "extensions": [
+      "bin",
+      "gen",
+      "md",
+      "smd"
+    ],
+    "default_core": "genesis_plus_gx",
+    "color": "#9caedb",
+    "icon": "genesis.png",
+    "thumbnail": "Sega_-_Mega_Drive_-_Genesis",
+    "media": "cartridge",
+    "openvgdb_id": "openemu.system.sg",
+    "cover_size": [
+      184,
+      256
+    ]
+  },
+  "sms": {
+    "name": "Sega Master System",
+    "extensions": [
+      "sms"
+    ],
+    "default_core": "genesis_plus_gx",
+    "color": "#9caedb",
+    "icon": "sms.png",
+    "thumbnail": "Sega_-_Master_System_-_Mark_III",
+    "media": "cartridge",
+    "openvgdb_id": "openemu.system.sms",
+    "cover_size": [
+      184,
+      256
+    ]
+  },
+  "sg1000": {
+    "name": "SG-1000",
+    "extensions": [
+      "sg"
+    ],
+    "default_core": "genesis_plus_gx",
+    "color": "#9caedb",
+    "icon": "sg1000.png",
+    "thumbnail": "Sega_-_SG-1000",
+    "media": "cartridge",
+    "openvgdb_id": "openemu.system.sg1000",
+    "cover_size": [
+      184,
+      256
+    ]
+  },
+  "sega32x": {
+    "name": "Sega 32X",
+    "extensions": [
+      "32x",
+      "bin"
+    ],
+    "default_core": "picodrive",
+    "color": "#9caedb",
+    "icon": "sega32x.png",
+    "thumbnail": "Sega_-_32X",
+    "media": "cartridge",
+    "openvgdb_id": "openemu.system.32x",
+    "cover_size": [
+      184,
+      256
+    ]
+  },
+  "segacd": {
+    "name": "Sega Mega-CD",
+    "extensions": [
+      "chd",
+      "cue",
+      "iso",
+      "m3u"
+    ],
+    "default_core": "genesis_plus_gx",
+    "color": "#9caedb",
+    "icon": "segacd.png",
+    "thumbnail": "Sega_-_Mega-CD_-_Sega_CD",
+    "media": "disc",
+    "openvgdb_id": "openemu.system.scd",
+    "cover_size": [
+      184,
+      256
+    ]
+  },
+  "saturn": {
+    "name": "Sega Saturn",
+    "extensions": [
+      "ccd",
+      "chd",
+      "cue",
+      "m3u"
+    ],
+    "default_core": "mednafen_saturn",
+    "color": "#9caedb",
+    "icon": "saturn.png",
+    "thumbnail": "Sega_-_Saturn",
+    "media": "disc",
+    "openvgdb_id": "openemu.system.saturn",
+    "cover_size": [
+      184,
+      256
+    ]
+  },
+  "ngp": {
+    "name": "NeoGeo Pocket",
+    "extensions": [
+      "ngp"
+    ],
+    "default_core": "mednafen_ngp",
+    "color": "#9caedb",
+    "icon": "ngp.png",
+    "thumbnail": "SNK_-_Neo_Geo_Pocket",
+    "media": "cartridge",
+    "openvgdb_id": "openemu.system.ngp",
+    "cover_size": [
+      216,
+      256
+    ]
+  },
+  "ngpc": {
+    "name": "Neo Geo Pocket Color",
+    "extensions": [
+      "ngc",
+      "npc"
+    ],
+    "default_core": "mednafen_ngp",
+    "color": "#9caedb",
+    "icon": "ngpc.png",
+    "thumbnail": "SNK_-_Neo_Geo_Pocket_Color",
+    "media": "cartridge",
+    "openvgdb_id": "openemu.system.ngp",
+    "cover_size": [
+      216,
+      256
+    ]
+  },
+  "n64": {
+    "name": "Nintendo 64",
+    "extensions": [
+      "n64",
+      "v64",
+      "z64"
+    ],
+    "default_core": "parallel_n64",
+    "color": "#9caedb",
+    "icon": "n64.png",
+    "thumbnail": "Nintendo_-_Nintendo_64",
+    "media": "cartridge",
+    "input_profile": "n64",
+    "openvgdb_id": "openemu.system.n64",
+    "cover_size": [
+      256,
+      180
+    ]
+  },
+  "nds": {
+    "name": "Nintendo DS",
+    "extensions": [
+      "ids",
+      "nds"
+    ],
+    "default_core": "desmume",
+    "color": "#9caedb",
+    "icon": "nds.png",
+    "thumbnail": "Nintendo_-_Nintendo_DS",
+    "media": "cartridge",
+    "openvgdb_id": "openemu.system.nds",
+    "cover_size": [
+      256,
+      230
+    ]
+  },
+  "odyssey2": {
+    "name": "Odyssey\u00b2",
+    "extensions": [
+      "bin",
+      "o2"
+    ],
+    "default_core": "o2em",
+    "color": "#9caedb",
+    "icon": "odyssey2.png",
+    "thumbnail": "Magnavox_-_Odyssey2",
+    "media": "cartridge",
+    "openvgdb_id": "openemu.system.odyssey2",
+    "cover_size": [
+      184,
+      256
+    ]
+  },
+  "pce": {
+    "name": "TurboGrafx-16",
+    "extensions": [
+      "pce"
+    ],
+    "default_core": "mednafen_pce_fast",
+    "color": "#9caedb",
+    "icon": "pce.png",
+    "thumbnail": "NEC_-_PC_Engine_-_TurboGrafx_16",
+    "media": "cartridge",
+    "openvgdb_id": "openemu.system.pce",
+    "cover_size": [
+      256,
+      256
+    ]
+  },
+  "pcecd": {
+    "name": "TurboGrafx-CD",
+    "extensions": [
+      "ccd",
+      "chd",
+      "cue",
+      "m3u"
+    ],
+    "default_core": "mednafen_pce_fast",
+    "color": "#9caedb",
+    "icon": "pcecd.png",
+    "thumbnail": "NEC_-_PC_Engine_CD_-_TurboGrafx-CD",
+    "media": "disc",
+    "openvgdb_id": "openemu.system.pcecd",
+    "cover_size": [
+      256,
+      256
+    ]
+  },
+  "psx": {
+    "name": "Sony PlayStation",
+    "extensions": [
+      "ccd",
+      "chd",
+      "cue",
+      "iso",
+      "m3u",
+      "pbp"
+    ],
+    "default_core": "pcsx_rearmed",
+    "color": "#9caedb",
+    "icon": "psx.png",
+    "thumbnail": "Sony_-_PlayStation",
+    "media": "disc",
+    "openvgdb_id": "openemu.system.psx",
+    "cover_size": [
+      256,
+      256
+    ]
+  },
+  "psp": {
+    "name": "Sony PSP",
+    "extensions": [
+      "cso",
+      "iso"
+    ],
+    "default_core": "ppsspp",
+    "color": "#9caedb",
+    "icon": "psp.png",
+    "thumbnail": "Sony_-_PlayStation_Portable",
+    "media": "disc",
+    "openvgdb_id": "openemu.system.psp",
+    "cover_size": [
+      150,
+      256
+    ]
+  },
+  "vectrex": {
+    "name": "Vectrex",
+    "extensions": [
+      "bin",
+      "gam",
+      "vec"
+    ],
+    "default_core": "vecx",
+    "color": "#9caedb",
+    "icon": "vectrex.png",
+    "thumbnail": "GCE_-_Vectrex",
+    "media": "cartridge",
+    "openvgdb_id": "openemu.system.vectrex",
+    "cover_size": [
+      184,
+      256
+    ]
+  },
+  "vb": {
+    "name": "Virtual Boy",
+    "extensions": [
+      "vb"
+    ],
+    "default_core": "mednafen_vb",
+    "color": "#9caedb",
+    "icon": "vb.png",
+    "thumbnail": "Nintendo_-_Virtual_Boy",
+    "media": "cartridge",
+    "openvgdb_id": "openemu.system.vb",
+    "cover_size": [
+      256,
+      180
+    ]
+  },
+  "ws": {
+    "name": "WonderSwan",
+    "extensions": [
+      "ws"
+    ],
+    "default_core": "mednafen_wswan",
+    "color": "#9caedb",
+    "icon": "ws.png",
+    "thumbnail": "Bandai_-_WonderSwan",
+    "media": "cartridge",
+    "openvgdb_id": "openemu.system.ws",
+    "cover_size": [
+      184,
+      256
+    ]
+  },
+  "wsc": {
+    "name": "WonderSwan Color",
+    "extensions": [
+      "wsc"
+    ],
+    "default_core": "mednafen_wswan",
+    "color": "#9caedb",
+    "icon": "wsc.png",
+    "thumbnail": "Bandai_-_WonderSwan_Color",
+    "media": "cartridge",
+    "openvgdb_id": "openemu.system.ws",
+    "cover_size": [
+      184,
+      256
+    ]
+  }
+}

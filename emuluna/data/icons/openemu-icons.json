@@ -1,0 +1,197 @@
+{
+  "gb.png": {
+    "sha256": "2186836f1155cfd7cd03a0195655b5563e72ff9ea63321dccd5c76af1d5fe469",
+    "source_paths": [
+      "OpenEmu/SystemPlugins/GameBoy/Images.xcassets/gameboy_library.imageset/gameboy_library@2x.png"
+    ]
+  },
+  "gbc.png": {
+    "sha256": "2186836f1155cfd7cd03a0195655b5563e72ff9ea63321dccd5c76af1d5fe469",
+    "source_paths": [
+      "OpenEmu/SystemPlugins/GameBoy/Images.xcassets/gameboy_library.imageset/gameboy_library@2x.png"
+    ]
+  },
+  "gba.png": {
+    "sha256": "9a170d984046cd0393841142d6e07e057a1076eba846ee8bd2e96529150df252",
+    "source_paths": [
+      "OpenEmu/SystemPlugins/GameBoy Advance/Images.xcassets/gba_library.imageset/gba_library@2x.png"
+    ]
+  },
+  "snes.png": {
+    "sha256": "1e21a90cb014c67c3756a9032f41a68ddb4c0aaa5f32d62be62b93e420526c60",
+    "source_paths": [
+      "OpenEmu/SystemPlugins/SuperNES/Images.xcassets/snes_usa_library.imageset/snes_usa_library@2x.png"
+    ]
+  },
+  "nes.png": {
+    "sha256": "48df2bdaaaaf8022655e2d8789a213a80bad20080f173a0be7d6da2d6969838f",
+    "source_paths": [
+      "OpenEmu/SystemPlugins/NES/Images.xcassets/nes_library.imageset/nes_library@2x.png"
+    ]
+  },
+  "fds.png": {
+    "sha256": "1d955536976e32fb7d349f5ec54b88dbd97d37c3e7e0b83d530faef6092fccb6",
+    "source_paths": [
+      "OpenEmu/SystemPlugins/Nintendo FDS/Images.xcassets/famicom_library.imageset/famicom_library@2x.png"
+    ]
+  },
+  "atari2600.png": {
+    "sha256": "6789a2d645ae8e8d9503ec07bee4ddd35fadbd132d23189411c860aeb68d9586",
+    "source_paths": [
+      "OpenEmu/SystemPlugins/Atari 2600/Images.xcassets/atari2600_library.imageset/atari2600_library@2x.png"
+    ]
+  },
+  "atari5200.png": {
+    "sha256": "ef4b1606ac2968a70e90f171cebfa31827624b0d96b75621403d6dc27777d77d",
+    "source_paths": [
+      "OpenEmu/SystemPlugins/Atari 5200/Images.xcassets/atari5200_library.imageset/atari5200_library@2x.png"
+    ]
+  },
+  "atari7800.png": {
+    "sha256": "17c45abb6657748b59a27f29114abf28184e9d39ec4cefca3a2ddb87d3e2c314",
+    "source_paths": [
+      "OpenEmu/SystemPlugins/Atari 7800/Images.xcassets/atari7800_library.imageset/atari7800_library@2x.png"
+    ]
+  },
+  "lynx.png": {
+    "sha256": "cc71afc498e49eed2276ee246927f08c92d572088ab540e63544cd22b493ee0f",
+    "source_paths": [
+      "OpenEmu/SystemPlugins/Lynx/Images.xcassets/lynx_library.imageset/lynx_library@2x.png"
+    ]
+  },
+  "colecovision.png": {
+    "sha256": "3e2cb78ad49fb5ecb71ae7a110a6f7077d7a0e1a41bcb5a027fdaa05f88377eb",
+    "source_paths": [
+      "OpenEmu/SystemPlugins/ColecoVision/Images.xcassets/colecovision_library.imageset/colecovision_library@2x.png"
+    ]
+  },
+  "intellivision.png": {
+    "sha256": "17d8b6703a18520ab12c9f30109432cebdf8e75a460649b7003ecfc855814078",
+    "source_paths": [
+      "OpenEmu/SystemPlugins/Intellivision/Images.xcassets/intellivision_library.imageset/intellivision_library@2x.png"
+    ]
+  },
+  "gg.png": {
+    "sha256": "7c6109ee6265655f589e0e4020c393180f912ac7445d82d4fff5074f1ee9580a",
+    "source_paths": [
+      "OpenEmu/SystemPlugins/GameGear/Images.xcassets/gamegear_library.imageset/gamegear_library@2x.png"
+    ]
+  },
+  "genesis.png": {
+    "sha256": "3da950e082b77852af6c1d2bf49b34f32a4c78fd690bba52d0e3529ed14e942e",
+    "source_paths": [
+      "OpenEmu/SystemPlugins/Genesis/Images.xcassets/genesis_library.imageset/genesis_library@2x.png"
+    ]
+  },
+  "sms.png": {
+    "sha256": "936c228bc77035eed3f10d7f66426cd6cd6cd04c47cad8b13c2ee37c7d4f2d16",
+    "source_paths": [
+      "OpenEmu/SystemPlugins/SegaMasterSystem/Images.xcassets/sms_library.imageset/sms_library@2x.png"
+    ]
+  },
+  "sg1000.png": {
+    "sha256": "1c461bfd2bb183271a09a3c3d953507ef6c5468c6513b44bc1c506b88897307c",
+    "source_paths": [
+      "OpenEmu/SystemPlugins/SG-1000/Images.xcassets/sg1000_library.imageset/sg1000_library@2x.png"
+    ]
+  },
+  "sega32x.png": {
+    "sha256": "77eb1b0fb4622c2f4be2cb16bf278784d3239dd937229be5adc8429f23b3d49a",
+    "source_paths": [
+      "OpenEmu/SystemPlugins/Sega 32X/Images.xcassets/32x_na_library.imageset/32x_na_library@2x.png"
+    ]
+  },
+  "segacd.png": {
+    "sha256": "f927a6612d2090836a92105ebd8a09adf0a0205ed93338458f8e1d9b6d139788",
+    "source_paths": [
+      "OpenEmu/SystemPlugins/Sega CD/Images.xcassets/segacd_library.imageset/segacd_library@2x.png"
+    ]
+  },
+  "saturn.png": {
+    "sha256": "fef1881b595b9fa6772b4ba3fd8f8b57076d686f88ab7c5a7a423a6336f65570",
+    "source_paths": [
+      "OpenEmu/SystemPlugins/Saturn/Images.xcassets/saturn_library.imageset/saturn_library@2x.png"
+    ]
+  },
+  "ngp.png": {
+    "sha256": "e6591e436201d7bab69c9e5be28c176e293ca090b5b30db45a549d0320999ac5",
+    "source_paths": [
+      "OpenEmu/SystemPlugins/NeoGeoPocket/Images.xcassets/neogeopocket_library.imageset/neogeopocket_library@2x.png"
+    ]
+  },
+  "ngpc.png": {
+    "sha256": "e6591e436201d7bab69c9e5be28c176e293ca090b5b30db45a549d0320999ac5",
+    "source_paths": [
+      "OpenEmu/SystemPlugins/NeoGeoPocket/Images.xcassets/neogeopocket_library.imageset/neogeopocket_library@2x.png"
+    ]
+  },
+  "n64.png": {
+    "sha256": "223035e2787ed1c11f35821deb717ec4343404a7caf0605869a75447245268f4",
+    "source_paths": [
+      "OpenEmu/SystemPlugins/N64/Images.xcassets/n64_library.imageset/n64_library@2x.png"
+    ]
+  },
+  "nds.png": {
+    "sha256": "b007350acc1a35cdd0442f8ea55c70d4b6a617c9a44eb122ac4b74ecded4287c",
+    "source_paths": [
+      "OpenEmu/SystemPlugins/NDS/Images.xcassets/nds_library.imageset/nds_library@2x.png"
+    ]
+  },
+  "odyssey2.png": {
+    "sha256": "57376fad02816018f1b00cc9a8c2a3f90fa1c62e5af12da64fb156efaff906cf",
+    "source_paths": [
+      "OpenEmu/SystemPlugins/Odyssey2/Images.xcassets/odyssey2_library.imageset/odyssey2_library@2x.png"
+    ]
+  },
+  "pce.png": {
+    "sha256": "6db877e49eb8433956e8e8a71046762c9e0c870206480c767a955e536ffb21eb",
+    "source_paths": [
+      "OpenEmu/SystemPlugins/PC Engine/Images.xcassets/tg16_library.imageset/tg16_library@2x.png",
+      "OpenEmu/SystemPlugins/PC Engine CD/Images.xcassets/tgcd_library.imageset/tgcd_library@2x.png"
+    ]
+  },
+  "pcecd.png": {
+    "sha256": "6db877e49eb8433956e8e8a71046762c9e0c870206480c767a955e536ffb21eb",
+    "source_paths": [
+      "OpenEmu/SystemPlugins/PC Engine/Images.xcassets/tg16_library.imageset/tg16_library@2x.png",
+      "OpenEmu/SystemPlugins/PC Engine CD/Images.xcassets/tgcd_library.imageset/tgcd_library@2x.png"
+    ]
+  },
+  "psx.png": {
+    "sha256": "8e14d1c27f711e33dd76c43ba48c58c668302e4799fe1fc5b92e10b66a29a8c5",
+    "source_paths": [
+      "OpenEmu/SystemPlugins/PlayStation/Images.xcassets/psx_library.imageset/psx_library@2x.png",
+      "OpenEmu/SystemPlugins/PlayStation 2/Images.xcassets/ps2_library.imageset/psx_library@2x.png"
+    ]
+  },
+  "psp.png": {
+    "sha256": "947394e96f518ebbbee8efa7c5251a99828608b20535d3ae53ccfe772130f7e5",
+    "source_paths": [
+      "OpenEmu/SystemPlugins/PSP/Images.xcassets/psp_library.imageset/psp_library@2x.png"
+    ]
+  },
+  "vectrex.png": {
+    "sha256": "e4bc8c3a18ccad4ef5d2ad30163c0765abbd00c1c5f2658d1832d5866cab61d7",
+    "source_paths": [
+      "OpenEmu/SystemPlugins/Vectrex/Images.xcassets/vectrex_library.imageset/vectrex_library@2x.png"
+    ]
+  },
+  "vb.png": {
+    "sha256": "c42760382455e6f78c8d32f74121f5e6291dc80f58f1da035a9f7e34dd440eb1",
+    "source_paths": [
+      "OpenEmu/SystemPlugins/Virtual Boy/Images.xcassets/vb_library.imageset/vb_library@2x.png"
+    ]
+  },
+  "ws.png": {
+    "sha256": "4c65b1043f970504aadf497e20c14d110a1b20264c18d7ea92ffd1b5c3b6c1da",
+    "source_paths": [
+      "OpenEmu/SystemPlugins/WonderSwan/Images.xcassets/wonderswan_library.imageset/wonderswan_library@2x.png"
+    ]
+  },
+  "wsc.png": {
+    "sha256": "4c65b1043f970504aadf497e20c14d110a1b20264c18d7ea92ffd1b5c3b6c1da",
+    "source_paths": [
+      "OpenEmu/SystemPlugins/WonderSwan/Images.xcassets/wonderswan_library.imageset/wonderswan_library@2x.png"
+    ]
+  }
+}

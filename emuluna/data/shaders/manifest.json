@@ -1,0 +1,425 @@
+{
+  "slang:blinky": {
+    "name": "Blinky",
+    "format": "slang",
+    "preset": "presets/Blinky/Blinky.slangp",
+    "author": "Community shader authors (see source notices)",
+    "passes": 1,
+    "cost": "Low",
+    "files": {
+      "presets/Blinky/Blinky.slangp": "332035cb8a0c83183440ff391b475c4965d83426e50540a75a39f183f9c98285",
+      "presets/Blinky/blinky/shaders/blinky.slang": "e8c2fabd8778723824824f25aeea7ff1253b7b93a8e172d0d2643ecd1868c977"
+    }
+  },
+  "slang:crt-geom": {
+    "name": "CRT Geom",
+    "format": "slang",
+    "preset": "presets/CRT Geom/CRT Geom.slangp",
+    "author": "Community shader authors (see source notices)",
+    "passes": 1,
+    "cost": "Moderate",
+    "files": {
+      "presets/CRT Geom/CRT Geom.slangp": "d9ca96a8c8ff106a5c3425ae68c971cdd42e166f99864f99aa4cc386f31d30e4",
+      "presets/CRT Geom/crt-geom/shaders/crt-geom.slang": "89529587d42cede0a34a1572de9dcb99584192965a6afbee7ec0ac505d9f02a1"
+    }
+  },
+  "slang:crt-geom-deluxe": {
+    "name": "CRT Geom Deluxe",
+    "format": "slang",
+    "preset": "presets/CRT Geom Deluxe/CRT Geom Deluxe.slangp",
+    "author": "Community shader authors (see source notices)",
+    "passes": 4,
+    "cost": "High",
+    "files": {
+      "presets/CRT Geom Deluxe/CRT Geom Deluxe.slangp": "4427c16cd2714d2dfb0009bf232141fb43d90c90defa62fd05e88118d7e6df9d",
+      "presets/CRT Geom Deluxe/parameterGroups.plist": "f6cc51f7638f2cd5d761c49d4bfc29af4d1c7c675e3ff6074ba43e3455f096eb",
+      "presets/CRT Geom Deluxe/crt-geom-deluxe/shaders/geom-deluxe/crt-geom-deluxe.slang": "ea4832f0c2760ff06237ee410df1de489d17032e56179ca652b2019c7be7cfbd",
+      "presets/CRT Geom Deluxe/crt-geom-deluxe/shaders/geom-deluxe/gaussx.slang": "715ecab26c9dcd3f3c91a1b62391288effb062e5b52ead706fc81c5532afd2a4",
+      "presets/CRT Geom Deluxe/crt-geom-deluxe/shaders/geom-deluxe/gaussy.slang": "e14237098aa4cc2009dac4bad851f3b6c1399f955c598946355d7d5d46ed2950",
+      "presets/CRT Geom Deluxe/crt-geom-deluxe/shaders/geom-deluxe/geom-deluxe-params.inc": "5e59df3aae243fe2f260d5142787d1d272a617edd9aa3a333d63ae255cfc7372",
+      "presets/CRT Geom Deluxe/crt-geom-deluxe/shaders/geom-deluxe/phosphor_apply.slang": "c2d8cbc03f25ce55ad91d35ffc953b95b5c72878a31899a599f2bc80b6704a89",
+      "presets/CRT Geom Deluxe/crt-geom-deluxe/shaders/geom-deluxe/masks/aperture_1_2_bgr.png": "c15ba5870564d6b37f69d7d9b024c3f28c2528624714e871ba5084f855d624be",
+      "presets/CRT Geom Deluxe/crt-geom-deluxe/shaders/geom-deluxe/masks/aperture_1_4_rgb.png": "a25fc64e4298cd6b7969044b652a764cf9f0ca57e0c96371ea38cfb92e7bfa60",
+      "presets/CRT Geom Deluxe/crt-geom-deluxe/shaders/geom-deluxe/masks/aperture_2_4_rgb.png": "81af33dfbf11b85cb6e6f3e102f3a46c523dd2aed5d0e40ac6a5d4ca3fbd691c",
+      "presets/CRT Geom Deluxe/crt-geom-deluxe/shaders/geom-deluxe/masks/aperture_2_5_bgr.png": "e3d3de8033301727570c85a10a80e4c1daf0bcfba1d777a5371a7869488e829c",
+      "presets/CRT Geom Deluxe/crt-geom-deluxe/shaders/geom-deluxe/masks/aperture_3_6_rgb.png": "8150c7904031cc92dbadbd4cb8f9902dbf27cd4094967a754533cc9a57a2a357",
+      "presets/CRT Geom Deluxe/crt-geom-deluxe/shaders/geom-deluxe/masks/delta_1_2x1_bgr.png": "39cf662bbe7cb77be5ad207547dc1cbeb1982795c41940026879115e101b383b",
+      "presets/CRT Geom Deluxe/crt-geom-deluxe/shaders/geom-deluxe/masks/delta_1_4x1_rgb.png": "fdd19b5704dec3bafd12a670ed29bf2f26ffe18c5adbe92fd5bb7f23882b2fd0",
+      "presets/CRT Geom Deluxe/crt-geom-deluxe/shaders/geom-deluxe/masks/delta_2_4x1_rgb.png": "5e9f12ce3c43842ef5eabd7d1dba9ed8c7b3e0f8e06900574f5a2477cbfb4202",
+      "presets/CRT Geom Deluxe/crt-geom-deluxe/shaders/geom-deluxe/masks/delta_2_4x2_rgb.png": "81090ba5a0411086a6dfbc4bbc8781576be604c6630ab3d68e83b2d107738bcf",
+      "presets/CRT Geom Deluxe/crt-geom-deluxe/shaders/geom-deluxe/masks/slot_2_4x4_rgb.png": "41c7464eacec4bfab1459fc9636cda0930ce63ded21cff0871e8a3a1df10e5b6",
+      "presets/CRT Geom Deluxe/crt-geom-deluxe/shaders/geom-deluxe/masks/slot_2_5x4_bgr.png": "d2d7e54d643dad79a5083090b0eb740641505abb68defe3bf0e3c51a28c51e49",
+      "presets/CRT Geom Deluxe/crt-geom-deluxe/shaders/geom-deluxe/masks/slot_3_7x6_rgb.png": "7a50f0bfc5a8edc2e161179d1ce2b96379b8583af302af44e12c771c77132eb3"
+    }
+  },
+  "slang:crt-royale-kurozumi": {
+    "name": "CRT Royale Kurozumi",
+    "format": "slang",
+    "preset": "presets/CRT Royale Kurozumi/CRT Royale Kurozumi.slangp",
+    "author": "Community shader authors (see source notices)",
+    "passes": 13,
+    "cost": "High",
+    "files": {
+      "presets/CRT Royale Kurozumi/CRT Royale Kurozumi.slangp": "97b0485c2ee2c0673fa58c85d330aa6a7c3b2250274751c44289c3bf4b5ba2fd",
+      "presets/CRT Royale Kurozumi/parameterGroups.plist": "61a27d1ed64f6ae7607091bbf3df01bbb9b84f2e7d8dc7ce1bb8e4bd6de2c4ed",
+      "presets/CRT Royale Kurozumi/blurs/blur5fast-horizontal.slang": "281dc43c7a0c2d96c2986e82c7e0a31ee4fcd6fc7c69235b34f8ee20add05959",
+      "presets/CRT Royale Kurozumi/blurs/blur5fast-vertical.slang": "37d592eb26bef2a2052b356d150a3b3bbc9ddce39fdee25a771ae3708861d8d6",
+      "presets/CRT Royale Kurozumi/blurs/vertex-shader-blur-fast-horizontal.h": "20c73c1ea18e2ea58e99b91b3c730ec90fe28fa7d40660841b00ff3bb67b06ec",
+      "presets/CRT Royale Kurozumi/blurs/vertex-shader-blur-fast-vertical.h": "55ceb2c01829fc5a261c287ca5dec36f09253aa88999f550a5f33381905fbbdf",
+      "presets/CRT Royale Kurozumi/include/blur-functions.h": "0edea684af38d783068f61eccc7c8ff8695c80133605bab3f8e73a2337e307d6",
+      "presets/CRT Royale Kurozumi/include/compat_macros.inc": "38c1957b4bedc098ce01f2ee56db6aa97e708b037087dfde51d4ebbe342a2de6",
+      "presets/CRT Royale Kurozumi/include/gamma-management.h": "aa851dac11e468ef0b168bb8576f709b386ea35f5a9f10ed16c0789343a0ad0e",
+      "presets/CRT Royale Kurozumi/include/quad-pixel-communication.h": "e07f8c0b8583bf78babe1d23333b83ebae40c3f5a664e35fdd041ae6fccb5410",
+      "presets/CRT Royale Kurozumi/include/special-functions.h": "0b5dbbaef443327756958b0f59caad87e23f13f499e0fcd5bac97860b069b3ab",
+      "presets/CRT Royale Kurozumi/reshade/shaders/LUT/Kurozumi_64_D65_EBU.png": "e76dfee08269efd04aea8dd37599569fcbec299e1643001f2ff729d45b6d77a1",
+      "presets/CRT Royale Kurozumi/reshade/shaders/LUT/Kurozumi_64_D65_Rec601.png": "d7499acef3b0e8636ecee5fb43b00bee0f14ae9277d387df31a133bb049b734d",
+      "presets/CRT Royale Kurozumi/reshade/shaders/LUT/Kurozumi_64_D93_Rec601.png": "52366d69b19a10b02e9544ca20814108f868c9e40726867bf9c19efc78860d1e",
+      "presets/CRT Royale Kurozumi/reshade/shaders/LUT/LUT.slang": "b7ff4dd43426e9de097a71e8f8193cce60ef0ca35b1a2533b4970a6f3db1bbb7",
+      "presets/CRT Royale Kurozumi/reshade/shaders/LUT/cmyk-16.png": "2a275f8323894e588f1072f319be792c142531b9a09433bf3884fa048b9cbd67",
+      "presets/CRT Royale Kurozumi/reshade/shaders/LUT/multiLUT.slang": "8b4d3b0704229ff5c8b4ffb597c65ea880ad6461d66dcc6be6f74113550fce41",
+      "presets/CRT Royale Kurozumi/crt/shaders/crt-royale/LICENSE.TXT": "d8c320ffc0030d1b096ae4732b50d2b811cf95e9a9b7377c1127b2563e0a0388",
+      "presets/CRT Royale Kurozumi/crt/shaders/crt-royale/README.TXT": "c319c5f717089ab20a2dc96870b5bb69dfd9acf7c64155c3c46a95ef816eb573",
+      "presets/CRT Royale Kurozumi/crt/shaders/crt-royale/THANKS.TXT": "5393b940fc9e3e096fd8402d581a57b725656e4612628d470d73cb7db66afd4d",
+      "presets/CRT Royale Kurozumi/crt/shaders/crt-royale/TileableLinearApertureGrille15Wide8And5d5Spacing.png": "b36c2ad8249552c80fa333b1b258bf1aa53a5dcb39904899b2c1bfd2a7669eed",
+      "presets/CRT Royale Kurozumi/crt/shaders/crt-royale/TileableLinearApertureGrille15Wide8And5d5SpacingResizeTo64.png": "732e24255ecf7902d362b4e1cd311bc1e8f19e8dc4c2532d18636f50cc4ed266",
+      "presets/CRT Royale Kurozumi/crt/shaders/crt-royale/TileableLinearShadowMask.png": "59b33c066b33743b1de1fdfc57c035b943d6719ab74a94aee71fa30684c67d64",
+      "presets/CRT Royale Kurozumi/crt/shaders/crt-royale/TileableLinearShadowMaskEDP.png": "ef32fcbd763214e28e6e804588c89f562f8bdbbaad5b1f6ffa597954882020db",
+      "presets/CRT Royale Kurozumi/crt/shaders/crt-royale/TileableLinearShadowMaskEDPResizeTo64.png": "381d464562462952faa5de4ab28e42a95aae191cc224d92474eb52f4174b1203",
+      "presets/CRT Royale Kurozumi/crt/shaders/crt-royale/TileableLinearShadowMaskResizeTo64.png": "b09cef027889a461fb14433a0b63925edf365833eafec75105dd2add5b27550b",
+      "presets/CRT Royale Kurozumi/crt/shaders/crt-royale/TileableLinearSlotMaskTall15Wide9And4d5Horizontal9d14VerticalSpacing.png": "353cd2e76bb0451959cee6b4bda447d8c8bc2d3bb0b90b545f1f4c06cf4212ba",
+      "presets/CRT Royale Kurozumi/crt/shaders/crt-royale/TileableLinearSlotMaskTall15Wide9And4d5Horizontal9d14VerticalSpacingResizeTo64.png": "ab655f312622d8247ad2038801c07eed07a99199bf239d7c3893bd667ea260af",
+      "presets/CRT Royale Kurozumi/crt/shaders/crt-royale/user-settings.h": "fdd85fca181afaf64b112773721a57e040995b92d1364dcc1577b04538d11a04",
+      "presets/CRT Royale Kurozumi/crt/shaders/crt-royale/crt-royale-settings-files/README.TXT": "d049a6e5f0103324dfc1f6b50413c5b390431f00294866c6af147302694e19b1",
+      "presets/CRT Royale Kurozumi/crt/shaders/crt-royale/crt-royale-settings-files/user-settings-default-ati-clean.h": "b6d8077a5246a3d9c02f32dc7c95ed29a31d2e1897f423662bf96664474198ca",
+      "presets/CRT Royale Kurozumi/crt/shaders/crt-royale/crt-royale-settings-files/user-settings-default-ati.h": "15064c50cbb69265fdda14b4ae1a1974007151c0d6d8d8cd133cec9f92d8b3c6",
+      "presets/CRT Royale Kurozumi/crt/shaders/crt-royale/crt-royale-settings-files/user-settings-default-intel-clean.h": "aab68573d303aef5e710b059c107262abbdf7555cb94b204a6cfea90aa1e7dd6",
+      "presets/CRT Royale Kurozumi/crt/shaders/crt-royale/crt-royale-settings-files/user-settings-default-intel.h": "6131e055eae60f10f8403359de49aa6cbd5514379582f1e90e008c37b1074d9f",
+      "presets/CRT Royale Kurozumi/crt/shaders/crt-royale/crt-royale-settings-files/user-settings-default-nvidia-clean.h": "5f36719ae4300296d5f059eb1db2c86ecc918b820cd58852650a9ea3df71d393",
+      "presets/CRT Royale Kurozumi/crt/shaders/crt-royale/crt-royale-settings-files/user-settings-default-nvidia.h": "daf3f31b1939d1c3bb10f6b1670179f823b72a7437685a31a7d797fd62d58398",
+      "presets/CRT Royale Kurozumi/crt/shaders/crt-royale/crt-royale-settings-files/user-settings-fast-ati.h": "228948af32b8eb4851c1bb72c7a6947a0e99cc9ada7c6d090fea925bde9be0b9",
+      "presets/CRT Royale Kurozumi/crt/shaders/crt-royale/crt-royale-settings-files/user-settings-fast-intel.h": "03546aa8bf76a14976d852c500ad91d48fba4ba03406f59f613c9d3c4e9c79db",
+      "presets/CRT Royale Kurozumi/crt/shaders/crt-royale/crt-royale-settings-files/user-settings-fast-nvidia.h": "d6668eb8029206a96353251d45db35c3f0e69f5238d815fa383850e191439508",
+      "presets/CRT Royale Kurozumi/crt/shaders/crt-royale/crt-royale-settings-files/user-settings-fast-static-ati.h": "249367ae7b93dac7712602d4453eb4e4a485b2c71bd1edf62489d597fbf128cc",
+      "presets/CRT Royale Kurozumi/crt/shaders/crt-royale/crt-royale-settings-files/user-settings-fast-static-intel.h": "0d52eb7d6679b43d2f00c6bc1a803a2a0f9eed01c2748137d625cc105baf17cd",
+      "presets/CRT Royale Kurozumi/crt/shaders/crt-royale/crt-royale-settings-files/user-settings-fast-static-nvidia.h": "22dcf250d81e72bb8428dbc38536f93ae454abd0482de616cbfe22534b0b1be7",
+      "presets/CRT Royale Kurozumi/crt/shaders/crt-royale/crt-royale-settings-files/user-settings-royale-with-cheese-ati.h": "4dd724b29d41ed4c45365ede6622245de6bec16059c63a97d89fbc13e50ad8db",
+      "presets/CRT Royale Kurozumi/crt/shaders/crt-royale/crt-royale-settings-files/user-settings-royale-with-cheese-nvidia.h": "6511c4d49530fd03bb3104524a865f84b102bae81537966681cc2e3da165e9cf",
+      "presets/CRT Royale Kurozumi/crt/shaders/crt-royale/crt-royale-settings-files/user-settings.h": "15064c50cbb69265fdda14b4ae1a1974007151c0d6d8d8cd133cec9f92d8b3c6",
+      "presets/CRT Royale Kurozumi/crt/shaders/crt-royale/src/bind-shader-params.h": "473e20b8b172489a7bb0ecdc6da4d7905ce22d6d249318521b5e7638003929e9",
+      "presets/CRT Royale Kurozumi/crt/shaders/crt-royale/src/bloom-functions.h": "8bc5450359a056ff8dbd9b2504f467687aefb8018af7cc44cc2f222c61c3d0c3",
+      "presets/CRT Royale Kurozumi/crt/shaders/crt-royale/src/crt-royale-bloom-approx-fake-bloom-intel.slang": "030c496d443e992c75d38740288e9d414958682224c40fa055bc447c3d5a364a",
+      "presets/CRT Royale Kurozumi/crt/shaders/crt-royale/src/crt-royale-bloom-approx-fake-bloom.slang": "a217c9c1a50e748a8c24af4520ab054fd72f94dde21341f670d262ab87422267",
+      "presets/CRT Royale Kurozumi/crt/shaders/crt-royale/src/crt-royale-bloom-approx-intel.slang": "00d129b3ec0e87fae0cbb51cf212e0349b0a95aba85cee54ff33058cc2129fba",
+      "presets/CRT Royale Kurozumi/crt/shaders/crt-royale/src/crt-royale-bloom-approx.h": "c0c513c778b2e6e32eed586a43060405bfe5cab3719ec1409f50ed3e57973d7e",
+      "presets/CRT Royale Kurozumi/crt/shaders/crt-royale/src/crt-royale-bloom-approx.slang": "9e531b3c3046fe41c6576f5c2ab836442bcc258d0d4ed3f0669631592fc154e4",
+      "presets/CRT Royale Kurozumi/crt/shaders/crt-royale/src/crt-royale-bloom-horizontal-reconstitute.slang": "89a64e73f93bb3d6d6156114784b3b9e2a5b8289ca58fdaca06ee177bdebe5bb",
+      "presets/CRT Royale Kurozumi/crt/shaders/crt-royale/src/crt-royale-bloom-vertical.slang": "f0c50b3691fcac9ee265507022e3847a95ca4fe050c33c87ac8e14c62ef82c4d",
+      "presets/CRT Royale Kurozumi/crt/shaders/crt-royale/src/crt-royale-brightpass.slang": "6748bf8ca0779b652992cb13d5c0f0ce7927a80e55f64d9fd97ba311b708ed9c",
+      "presets/CRT Royale Kurozumi/crt/shaders/crt-royale/src/crt-royale-first-pass-linearize-crt-gamma-bob-fields.slang": "08d609d05ff1e6ca793c0969a1f1c393f2960eb3c734c43235428eb5fa94f2a0",
+      "presets/CRT Royale Kurozumi/crt/shaders/crt-royale/src/crt-royale-geometry-aa-last-pass-intel.slang": "1d4e8e16111bea1cf20b81414aadfa7bac5f4ad88e46b50fcffe244ab281254e",
+      "presets/CRT Royale Kurozumi/crt/shaders/crt-royale/src/crt-royale-geometry-aa-last-pass.h": "a4e73af234fb5bd8470b50efdd3704f2cf0f6f57ee3b9e6400edbe3247216dce",
+      "presets/CRT Royale Kurozumi/crt/shaders/crt-royale/src/crt-royale-geometry-aa-last-pass.slang": "062aa057e96ce109281b1936bf1deb2b8ad6b3daa13eae7d5f889f08ea83b27d",
+      "presets/CRT Royale Kurozumi/crt/shaders/crt-royale/src/crt-royale-mask-resize-horizontal.slang": "966b8d1de40773a9f68e33dc9e7420e62511c7dbb30fed1f80b3426a9e74896e",
+      "presets/CRT Royale Kurozumi/crt/shaders/crt-royale/src/crt-royale-mask-resize-vertical.slang": "c20a113e76cb32765c42d5f0c018a39955ca0142f893c6ee8bec2721f2c25c27",
+      "presets/CRT Royale Kurozumi/crt/shaders/crt-royale/src/crt-royale-scanlines-horizontal-apply-mask-fake-bloom-intel.slang": "23aac30b2cbf3dc427d475543a7ed3524c55be74a981f934b70f2ade0983a7b0",
+      "presets/CRT Royale Kurozumi/crt/shaders/crt-royale/src/crt-royale-scanlines-horizontal-apply-mask-fake-bloom.slang": "07f86a13ac24d097d949f0895b8f62afb60a49f4016f0e82e1eb3ee368cac94f",
+      "presets/CRT Royale Kurozumi/crt/shaders/crt-royale/src/crt-royale-scanlines-horizontal-apply-mask-intel.slang": "a0f98d2aee9614bbe35f6d8882d789921e2969380f9dfb02af29d2f4ca37a20c",
+      "presets/CRT Royale Kurozumi/crt/shaders/crt-royale/src/crt-royale-scanlines-horizontal-apply-mask.h": "87439a49f06ba4bcbdfd2fa38b55c0e444ebe3958f6f8653edf5b1dc80ada0d2",
+      "presets/CRT Royale Kurozumi/crt/shaders/crt-royale/src/crt-royale-scanlines-horizontal-apply-mask.slang": "09fc3f28678ba4b270d3cf736f427bac14245136f81e6cdbcdf7ab933d0eb4aa",
+      "presets/CRT Royale Kurozumi/crt/shaders/crt-royale/src/crt-royale-scanlines-vertical-interlacing.slang": "a93600fa01fe13c9a76868dad47e6901389721efa66db8aa3cf71448184f1fe2",
+      "presets/CRT Royale Kurozumi/crt/shaders/crt-royale/src/derived-settings-and-constants.h": "1438399a93acd0adf54831f37fb20199d81b3828802658b7a8ea5ed0aa58ca91",
+      "presets/CRT Royale Kurozumi/crt/shaders/crt-royale/src/geometry-functions.h": "9bc0f8bb18c1ce973e43d4f49f5b685cf430feba867bcc2bb473feab3874426f",
+      "presets/CRT Royale Kurozumi/crt/shaders/crt-royale/src/phosphor-mask-resizing.h": "1820dede5dc179511f3a6d8ad1bb709a85aac2b21ac635eaaaef72ec75532ac0",
+      "presets/CRT Royale Kurozumi/crt/shaders/crt-royale/src/scanline-functions.h": "e9b104537329ddc6c593418e19898ab15c91da06e76c018d1f54d6b4e4757b93",
+      "presets/CRT Royale Kurozumi/crt/shaders/crt-royale/src/tex2Dantialias.h": "c2d69eb9989c59e3635849838414ad781a66f5f483a5dba781ad2649fa8014db",
+      "presets/CRT Royale Kurozumi/crt/shaders/crt-royale/src/user-cgp-constants.h": "8976660d604283a5ee07fa39561559c9766e60323c655571a919a0d8d5518b6e"
+    },
+    "minimum_viewport": [
+      640,
+      480
+    ],
+    "note": "Uses at least 640 \u00d7 480 internally to keep the bloom stable in small windows."
+  },
+  "slang:dither": {
+    "name": "Dither",
+    "format": "slang",
+    "preset": "presets/Dither/Dither.slangp",
+    "author": "Community shader authors (see source notices)",
+    "passes": 1,
+    "cost": "Low",
+    "files": {
+      "presets/Dither/Dither.slangp": "5de5c1ef3854a554422ca9a51d0f93fdbf76f40297bac9cf9854d3ff738974fc",
+      "presets/Dither/dithering/shaders/bayer-matrix-dithering.slang": "9fc6b75a06051f7897b3fd6dae3313a6c2d3ed9db8fdaa0647fb21c501d9ed3f"
+    }
+  },
+  "slang:halftone": {
+    "name": "Halftone",
+    "format": "slang",
+    "preset": "presets/Halftone/Halftone.slangp",
+    "author": "Community shader authors (see source notices)",
+    "passes": 2,
+    "cost": "Low",
+    "files": {
+      "presets/Halftone/Halftone.slangp": "618434829cad83b461835d460a53d460d1f3629320f2129c7552722a37651a70",
+      "presets/Halftone/misc/cmyk-halftone-dot.slang": "d54b45a536eee987826e5b94b69d5c3ac88250e078cfc21bf484d1f938851b28",
+      "presets/Halftone/reshade/shaders/LUT/LUT.slang": "b7ff4dd43426e9de097a71e8f8193cce60ef0ca35b1a2533b4970a6f3db1bbb7",
+      "presets/Halftone/reshade/shaders/LUT/cmyk-16.png": "2a275f8323894e588f1072f319be792c142531b9a09433bf3884fa048b9cbd67"
+    }
+  },
+  "slang:lcd-psp": {
+    "name": "LCD PSP",
+    "format": "slang",
+    "preset": "presets/LCD PSP/LCD PSP.slangp",
+    "author": "Community shader authors (see source notices)",
+    "passes": 3,
+    "cost": "Moderate",
+    "files": {
+      "presets/LCD PSP/LCD PSP.slangp": "8b6b91b38da61cceddf9044555a5d75bf8af4872ddc86b768baaeb0a6b03d2cf",
+      "presets/LCD PSP/motionblur/shaders/response-time.slang": "d47a142527d94f01a34170f6ff1951e42f46b2ae36651149037fcd63a4d1906f",
+      "presets/LCD PSP/lcd-psp/shaders/color/psp-color.slang": "2f1660c461ec7a9f8b163ee005499058f9b3201815fd2489fe7b2e028620438b",
+      "presets/LCD PSP/lcd-psp/shaders/lcd-cgwg/lcd-grid-v2.slang": "dc77b29530e5b771f12a5a2dd68c390805139bc25d84a30dead021fd38e581c5"
+    }
+  },
+  "linear": {
+    "name": "Linear",
+    "format": "slang",
+    "preset": "presets/Linear/Linear.slangp",
+    "author": "Community shader authors (see source notices)",
+    "passes": 1,
+    "cost": "Low",
+    "files": {
+      "presets/Linear/Linear.slangp": "77670191c6ed6d2967cb9927eece6cad48c2043b657aa4de8cc60a0ccf2847d5",
+      "presets/Linear/stock/stock.slang": "fa7d346e3706a351aa77dc8e77bd049b8bfde635baf4376fedcf81f38d9a4008"
+    }
+  },
+  "slang:mame-hlsl": {
+    "name": "MAME HLSL",
+    "format": "slang",
+    "preset": "presets/MAME HLSL/MAME HLSL.slangp",
+    "author": "Community shader authors (see source notices)",
+    "passes": 11,
+    "cost": "High",
+    "files": {
+      "presets/MAME HLSL/MAME HLSL.slangp": "a83cf709ac7f4b6e411c4060221f94c636ea2b7138a38d93aa7d8667dd2cd338",
+      "presets/MAME HLSL/parameterGroups.plist": "ce65464d8be03e4e3181a853fe1934c4e855a9f9dff33cf849d4a286f3922f5c",
+      "presets/MAME HLSL/shaders/mame_hlsl/resources/aperture-grille.png": "5140dc940e61d6f1077ce33808d1b4ff4aa06444633494c1591b7f43cc031afa",
+      "presets/MAME HLSL/shaders/mame_hlsl/resources/shadow-mask.png": "8cffafef415e41ebe1156c5c90b102f99a554df36705e189dee95cf390779191",
+      "presets/MAME HLSL/shaders/mame_hlsl/resources/slot-mask-aligned.png": "62444e9479554c4776ee3df3b2bba55c102860aed2e191b23055cbadd2cec293",
+      "presets/MAME HLSL/shaders/mame_hlsl/resources/slot-mask.png": "0007677d96c7688ee2ac7cb21eff141029eac5aa51cd6d91f7a1bd42608db1f0",
+      "presets/MAME HLSL/shaders/mame_hlsl/shaders/mame_chroma.slang": "6ed85dcc8d95ebbaeaf6e07e6895f659579b60acf187f898af256dc570df73c1",
+      "presets/MAME HLSL/shaders/mame_hlsl/shaders/mame_color.slang": "19ffc69ed43fcaf98e79e828791d34f4371648931196f7834030b24f9ec8f671",
+      "presets/MAME HLSL/shaders/mame_hlsl/shaders/mame_deconverge.slang": "b7c63caae2ea5a6bb5e97180d7023709358f7198b4b84c755ba23b14129090a4",
+      "presets/MAME HLSL/shaders/mame_hlsl/shaders/mame_defocus.slang": "62a33c6f0c379166852befc5892b22237bf091020379a372c7cf1795f0b082af",
+      "presets/MAME HLSL/shaders/mame_hlsl/shaders/mame_distortion.slang": "4df7dcc2e33dda81b7d1637da8b0f5afe34ce517f0cf04ed339c63cdf5a755aa",
+      "presets/MAME HLSL/shaders/mame_hlsl/shaders/mame_ntsc_decode.slang": "438521fae5ce1afa1b02f087f085dd97054dd292475ac61fcbef4fbfd9a5242f",
+      "presets/MAME HLSL/shaders/mame_hlsl/shaders/mame_ntsc_encode.slang": "c4270513434ba768b510786541f6e6dea75455eab0339f8e5d12945137642783",
+      "presets/MAME HLSL/shaders/mame_hlsl/shaders/mame_parameters.inc": "4995c07eb194f23eb84032142d875f56ac0b54d5892a50bd35ff52c7a1d6d9e7",
+      "presets/MAME HLSL/shaders/mame_hlsl/shaders/mame_phosphor.slang": "71270d7fc0360f40870e7a57c9c33856fbb5237670556d80581a14fccf723e3b",
+      "presets/MAME HLSL/shaders/mame_hlsl/shaders/mame_post.slang": "504f75dc8c2b8997ae5dccd0d942544ce4c341e168aef32c006f8eb84f69ee07",
+      "presets/MAME HLSL/shaders/mame_hlsl/shaders/mame_prescale.slang": "8cca3337ac9c07fcfe46dd5cfbbda3737b1ca871f2beefe29f6c860a0cf0cc06",
+      "presets/MAME HLSL/shaders/mame_hlsl/shaders/mame_scanline.slang": "10bf9573c2ea5d43ed227b4666896f4c2ca068df894070d0a50b8ce6c2bb5b7d"
+    }
+  },
+  "slang:motion-blur": {
+    "name": "Motion Blur",
+    "format": "slang",
+    "preset": "presets/Motion Blur/Motion Blur.slangp",
+    "author": "Community shader authors (see source notices)",
+    "passes": 1,
+    "cost": "Low",
+    "files": {
+      "presets/Motion Blur/Motion Blur.slangp": "5133b92effa2cfbb6d1b6f33b60fc6a12701bcc49a5000fb62ab102e3fb8093f",
+      "presets/Motion Blur/motionblur/shaders/motionblur-simple.slang": "9890fb946de74fdc50a4cb7dee7410ff89669e97d447a1a54c79bd75fa81501b",
+      "presets/Motion Blur/motionblur/shaders/response-time.slang": "d47a142527d94f01a34170f6ff1951e42f46b2ae36651149037fcd63a4d1906f"
+    }
+  },
+  "nearest": {
+    "name": "Nearest Neighbor",
+    "format": "slang",
+    "preset": "presets/Nearest Neighbor/Nearest Neighbor.slangp",
+    "author": "Community shader authors (see source notices)",
+    "passes": 1,
+    "cost": "Low",
+    "files": {
+      "presets/Nearest Neighbor/Nearest Neighbor.slangp": "e746d4e1e64b66b71056280c434218f19605995bd24da82e0bc25934d58b5756",
+      "presets/Nearest Neighbor/stock/stock.slang": "fa7d346e3706a351aa77dc8e77bd049b8bfde635baf4376fedcf81f38d9a4008"
+    }
+  },
+  "slang:ntsc": {
+    "name": "NTSC",
+    "format": "slang",
+    "preset": "presets/NTSC/NTSC.slangp",
+    "author": "Community shader authors (see source notices)",
+    "passes": 4,
+    "cost": "High",
+    "files": {
+      "presets/NTSC/NTSC.slangp": "cccb0eabb89ab2ab10217412e8708d0639c4836750e5e3ec8e0b3ea166ca1db9",
+      "presets/NTSC/ntsc/shaders/ntsc-decode-filter-3phase.inc": "1bd8cc8fea48aa89229c4492792aea1e012625cdb5528943c2c9d6bbe1fe9723",
+      "presets/NTSC/ntsc/shaders/ntsc-gauss-pass.slang": "398add4a9386010075e086c8fe276e8d791ca0cd754b33ff6a3297648ca18d45",
+      "presets/NTSC/ntsc/shaders/ntsc-param.inc": "2a51928ef0630a06dadb90131ba45191cebf2526176f05db9d00cffc86eda167",
+      "presets/NTSC/ntsc/shaders/ntsc-pass1-composite-3phase.slang": "3d888897b88ef56512b950ce3295298e6ab6f0c5e63983de46c400fb9bff2c03",
+      "presets/NTSC/ntsc/shaders/ntsc-pass1-encode-demodulate.inc": "5ca33bce0416e8860f08086dd9254338c763ade078a3ffb7a5045be9330f0b55",
+      "presets/NTSC/ntsc/shaders/ntsc-pass1-vertex.inc": "9e02fddbd36d90c43363063f77a06eb042eb028761643f2c0291dbac3b3bd3c8",
+      "presets/NTSC/ntsc/shaders/ntsc-pass2-3phase.slang": "4e3d2b710b477bb932a066cb96e2aa4f6cfcc1f01ed70b07f55909ebfcf8da09",
+      "presets/NTSC/ntsc/shaders/ntsc-pass2-decode.inc": "cdd7aed4686af2818747d1ba45d60d8fc50e92d331e2c96245da5be8cdd2a3cb",
+      "presets/NTSC/ntsc/shaders/ntsc-pass2-vertex.inc": "a1fc926e7db323457ba7edc4b017d9efc93d1410346c254aea81283c7e51f8d4",
+      "presets/NTSC/ntsc/shaders/ntsc-rgbyuv.inc": "a62e7aa91aafd8b4bc1e8abd136229ded0e7d92982bc255ea570989df812bfca",
+      "presets/NTSC/ntsc/shaders/ntsc-stock.slang": "cc7f7b57adb48e3e3c310ec4e44be5b410caae0bd8ecc86470fd0f5e27d24004"
+    }
+  },
+  "slang:ntsc-vcr": {
+    "name": "NTSC VCR",
+    "format": "slang",
+    "preset": "presets/NTSC VCR/NTSC VCR.slangp",
+    "author": "Community shader authors (see source notices)",
+    "passes": 5,
+    "cost": "High",
+    "files": {
+      "presets/NTSC VCR/NTSC VCR.slangp": "f48284e1a148e3d4f5dc432c0c8a85917f48c08c11ce2aa4772accd531009e53",
+      "presets/NTSC VCR/misc/colorspace-tools.h": "d7fa538a2934cbb3cd8b9d192fae733869af61312177cf2b26898f8fd09a839a",
+      "presets/NTSC VCR/misc/image-adjustment.slang": "4a7d1c93ad2029e56c57e4dde37ba713de4941f164b839b06a9c2f2a4163941b",
+      "presets/NTSC VCR/vhs/resources/play.png": "463295618ee76a66d767f2c491cd6a471d5ea5cb9aa98a95a2dcfd2708e54f9c",
+      "presets/NTSC VCR/vhs/shaders/static.slang": "018061cfbab76a7460a01af61609708260a051663fc43d8cc0f651eaefc6daec",
+      "presets/NTSC VCR/ntsc/shaders/ntsc-decode-filter-3phase.inc": "1bd8cc8fea48aa89229c4492792aea1e012625cdb5528943c2c9d6bbe1fe9723",
+      "presets/NTSC VCR/ntsc/shaders/ntsc-gauss-pass.slang": "398add4a9386010075e086c8fe276e8d791ca0cd754b33ff6a3297648ca18d45",
+      "presets/NTSC VCR/ntsc/shaders/ntsc-param.inc": "2a51928ef0630a06dadb90131ba45191cebf2526176f05db9d00cffc86eda167",
+      "presets/NTSC VCR/ntsc/shaders/ntsc-pass1-composite-3phase.slang": "3d888897b88ef56512b950ce3295298e6ab6f0c5e63983de46c400fb9bff2c03",
+      "presets/NTSC VCR/ntsc/shaders/ntsc-pass1-encode-demodulate.inc": "5ca33bce0416e8860f08086dd9254338c763ade078a3ffb7a5045be9330f0b55",
+      "presets/NTSC VCR/ntsc/shaders/ntsc-pass1-vertex.inc": "9e02fddbd36d90c43363063f77a06eb042eb028761643f2c0291dbac3b3bd3c8",
+      "presets/NTSC VCR/ntsc/shaders/ntsc-pass2-3phase.slang": "4e3d2b710b477bb932a066cb96e2aa4f6cfcc1f01ed70b07f55909ebfcf8da09",
+      "presets/NTSC VCR/ntsc/shaders/ntsc-pass2-decode.inc": "cdd7aed4686af2818747d1ba45d60d8fc50e92d331e2c96245da5be8cdd2a3cb",
+      "presets/NTSC VCR/ntsc/shaders/ntsc-pass2-vertex.inc": "a1fc926e7db323457ba7edc4b017d9efc93d1410346c254aea81283c7e51f8d4",
+      "presets/NTSC VCR/ntsc/shaders/ntsc-rgbyuv.inc": "a62e7aa91aafd8b4bc1e8abd136229ded0e7d92982bc255ea570989df812bfca",
+      "presets/NTSC VCR/ntsc/shaders/ntsc-stock.slang": "cc7f7b57adb48e3e3c310ec4e44be5b410caae0bd8ecc86470fd0f5e27d24004"
+    }
+  },
+  "slang:pixellate": {
+    "name": "Pixellate",
+    "format": "slang",
+    "preset": "presets/Pixellate/Pixellate.slangp",
+    "author": "Community shader authors (see source notices)",
+    "passes": 1,
+    "cost": "Low",
+    "files": {
+      "presets/Pixellate/Pixellate.slangp": "e7901b5ed89b277c2e4f8b1eeddc823f694051c80f492b42e7102e76b6ffa0ed",
+      "presets/Pixellate/pixellate/shaders/pixellate.slang": "02a0ccdfb8d400d644c0426e99980ebcf3c89bb3e51bdb090e0a491bbc91b6fd"
+    }
+  },
+  "slang:sabr": {
+    "name": "SABR",
+    "format": "slang",
+    "preset": "presets/SABR/SABR.slangp",
+    "author": "Community shader authors (see source notices)",
+    "passes": 1,
+    "cost": "Moderate",
+    "files": {
+      "presets/SABR/SABR.slangp": "a406c4265acefcc3d95bd9ae4c75b461880dec51e1cd0b2e5bba8922a0c78914",
+      "presets/SABR/sabr/shaders/sabr-v3.0.slang": "a65d6c82d47dcfae6463e47a730755e570463fc935d07e758c69f8f4d36e29ed"
+    }
+  },
+  "smooth": {
+    "name": "Smooth",
+    "format": "slang",
+    "preset": "presets/Smooth/Smooth.slangp",
+    "author": "Community shader authors (see source notices)",
+    "passes": 2,
+    "cost": "Low",
+    "files": {
+      "presets/Smooth/Smooth.slangp": "a8fa73e7f7dd80e7bd75f6ebfd8a8089d5bf47b64c4640ee171c460ac311370f",
+      "presets/Smooth/smooth/shaders/cubic-gamma-correct.slang": "dfb704f27c59163d2c3c088d7ae3a9e02c438d507889df827be1f91536496996",
+      "presets/Smooth/smooth/shaders/linearize.slang": "e028f187e6aaae23f271c6c4c19318ae05a7f47e896dba15188ef8b5a261a1b8"
+    }
+  },
+  "slang:vhs": {
+    "name": "VHS",
+    "format": "slang",
+    "preset": "presets/VHS/VHS.slangp",
+    "author": "Community shader authors (see source notices)",
+    "passes": 2,
+    "cost": "Low",
+    "files": {
+      "presets/VHS/VHS.slangp": "7a0a3c7d89e2cbdc6fd3181113ea2b78c3f17a78207f17e9b69604a27c3ec22f",
+      "presets/VHS/vhs/resources/play.png": "463295618ee76a66d767f2c491cd6a471d5ea5cb9aa98a95a2dcfd2708e54f9c",
+      "presets/VHS/vhs/resources/rew.png": "0261af40dc0edb7466b9000d6b116d73606665171d352d1741093b1ef9889f68",
+      "presets/VHS/vhs/shaders/rewind.slang": "d4bb863307dd61458b9537dd6f8a4fc857e7a605b9f509af4e6f516367ab1580",
+      "presets/VHS/vhs/shaders/vhs.slang": "8bcc1e215d750c12caf92a61ec25d963af80ed7b0dfb1b14d63d386697bfc93c"
+    }
+  },
+  "slang:xbrz-freescale": {
+    "name": "xBRZ Freescale",
+    "format": "slang",
+    "preset": "presets/xBRZ Freescale/xBRZ Freescale.slangp",
+    "author": "Community shader authors (see source notices)",
+    "passes": 1,
+    "cost": "High",
+    "files": {
+      "presets/xBRZ Freescale/xBRZ Freescale.slangp": "1f2767a17f76b5e6ea0fa14ac729b3ed922cdb004654e93f2c191b4e88c8dee5",
+      "presets/xBRZ Freescale/xbrz/shaders/xbrz-freescale.slang": "53c5750e32aafffd80516486fc17bb82e08b23a40abc1581c885590cc331ace3"
+    }
+  },
+  "slang:xbrz-multipass-freescale": {
+    "name": "xBRZ Multipass Freescale",
+    "format": "slang",
+    "preset": "presets/xBRZ Multipass Freescale/xBRZ Multipass Freescale.slangp",
+    "author": "Community shader authors (see source notices)",
+    "passes": 2,
+    "cost": "High",
+    "files": {
+      "presets/xBRZ Multipass Freescale/xBRZ Multipass Freescale.slangp": "efd8f7edfbab607a824f593f1156f0d677a70031c0edb72f40f1f5297b6ebc14",
+      "presets/xBRZ Multipass Freescale/xbrz/shaders/xbrz-freescale-pass0.slang": "c3f2015b5bd3e0e5ba1ec6ec8d88c029b62680ce74bc2c220d9736a99baec2a4",
+      "presets/xBRZ Multipass Freescale/xbrz/shaders/xbrz-freescale-pass1.slang": "e90635e896073bfaa99846c16d9ef2a38aa66c4ed9c12066b7df5ab916601a60"
+    }
+  },
+  "shader:crt-easymode": {
+    "name": "CRT EasyMode",
+    "author": "EasyMode",
+    "license": "GPL (version unspecified upstream)",
+    "preset": "crt/crt-easymode.glslp",
+    "source": "crt/shaders/crt-easymode.glsl",
+    "linear": false,
+    "sha256": "ed27bab460c53d98fcf727333210de0d746c957c86463028d8c0e4c15e29f3ab",
+    "format": "glsl",
+    "passes": 1,
+    "cost": "Low",
+    "additional": true
+  },
+  "shader:sharp-bilinear": {
+    "name": "Sharp Bilinear",
+    "author": "Themaister",
+    "license": "Public domain",
+    "preset": "interpolation/sharp-bilinear.glslp",
+    "source": "interpolation/shaders/sharp-bilinear.glsl",
+    "linear": true,
+    "sha256": "9b9afa91fe12bcbd49398179bf2072ce5a38b531c39a4fd381e92602c6dc114b",
+    "format": "glsl",
+    "passes": 1,
+    "cost": "Low",
+    "additional": true
+  },
+  "shader:zfast-crt": {
+    "name": "zfast CRT",
+    "author": "Greg Hogan (SoltanGris42)",
+    "license": "GPL-2.0-or-later",
+    "preset": "crt/zfast-crt.glslp",
+    "source": "crt/shaders/zfast_crt.glsl",
+    "linear": true,
+    "sha256": "bd4dc4b1d31470e5035133745e6893056ad4ac176fdec02c831f83b46a6175c5",
+    "format": "glsl",
+    "passes": 1,
+    "cost": "Low",
+    "additional": true
+  },
+  "shader:zfast-lcd": {
+    "name": "zfast LCD",
+    "author": "Greg Hogan (SoltanGris42)",
+    "license": "GPL-2.0-or-later",
+    "preset": "handheld/zfast-lcd.glslp",
+    "source": "handheld/shaders/zfast_lcd.glsl",
+    "linear": true,
+    "sha256": "13d7b1befc911a7369da32a10a1ec807c053ab9793451df72fec3f21e78d214f",
+    "format": "glsl",
+    "passes": 1,
+    "cost": "Low",
+    "additional": true
+  }
+}

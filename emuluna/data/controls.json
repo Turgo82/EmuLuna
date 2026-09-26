@@ -1,0 +1,103 @@
+{
+  "default": {
+    "keys": {
+      "Key_X": 1,
+      "Key_Z": 2,
+      "Key_Backspace": 4,
+      "Key_Return": 8,
+      "Key_Enter": 8,
+      "Key_Right": 16,
+      "Key_Left": 32,
+      "Key_Up": 64,
+      "Key_Down": 128,
+      "Key_W": 256,
+      "Key_Q": 512,
+      "Key_S": 1024,
+      "Key_A": 2048
+    },
+    "gamepad": {
+      "1": 1,
+      "0": 2,
+      "4": 4,
+      "6": 8,
+      "14": 16,
+      "13": 32,
+      "11": 64,
+      "12": 128,
+      "10": 256,
+      "9": 512,
+      "3": 1024,
+      "2": 2048
+    },
+    "stick_as_dpad": true,
+    "triggers": {},
+    "hint": "Arrows: move   X/Z: A/B   S/A: X/Y   Enter: Start   Q/W: L/R   F1: all controls",
+    "description": "Move: arrow keys\nA: X    B: Z\nSNES X: S    SNES Y: A\nStart: Enter    Select: Backspace\nL: Q    R: W\n\nController: d-pad / left stick, east=A, south=B, north=X, west=Y, Start, Back and shoulders."
+  },
+  "n64": {
+    "keys": {
+      "Key_X": 2,
+      "Key_Z": 2048,
+      "Key_Return": 8,
+      "Key_Enter": 8,
+      "Key_Space": 4096,
+      "Key_Q": 512,
+      "Key_W": 256,
+      "Key_T": 64,
+      "Key_F": 32,
+      "Key_G": 128,
+      "Key_H": 16
+    },
+    "axes": {
+      "Key_Left": [
+        0,
+        -32767
+      ],
+      "Key_Right": [
+        0,
+        32767
+      ],
+      "Key_Up": [
+        1,
+        -32767
+      ],
+      "Key_Down": [
+        1,
+        32767
+      ],
+      "Key_J": [
+        2,
+        -32767
+      ],
+      "Key_L": [
+        2,
+        32767
+      ],
+      "Key_I": [
+        3,
+        -32767
+      ],
+      "Key_K": [
+        3,
+        32767
+      ]
+    },
+    "gamepad": {
+      "0": 2,
+      "2": 2048,
+      "6": 8,
+      "14": 16,
+      "13": 32,
+      "11": 64,
+      "12": 128,
+      "10": 256,
+      "9": 512
+    },
+    "triggers": {
+      "4": 4096
+    },
+    "stick_as_dpad": false,
+    "hint": "Arrows: stick   X/Z: A/B   Space: Z trigger   I/J/K/L: C buttons   Enter: Start   F1: controls",
+    "description": "Control stick: arrow keys\nA: X    B: Z    Z trigger: Space\nC buttons: I (up), J (left), K (down), L (right)\nL/R shoulders: Q/W    Start: Enter\nD-pad: T/F/G/H\n\nController: left stick = control stick, right stick = C buttons, south = A, west = B, left trigger = Z, shoulders = L/R, Start and d-pad."
+  }
+}

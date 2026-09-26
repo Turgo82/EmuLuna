@@ -1,0 +1,3360 @@
+{
+  "nes": {
+    "title": "NES controller",
+    "size": [
+      1100,
+      476
+    ],
+    "note": "",
+    "controls": [
+      {
+        "action": "button:64",
+        "label": "\u2191",
+        "rect": [
+          161.0,
+          194.0,
+          62,
+          62
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:128",
+        "label": "\u2193",
+        "rect": [
+          161.0,
+          320.0,
+          62,
+          62
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:32",
+        "label": "\u2190",
+        "rect": [
+          98.0,
+          257.0,
+          62,
+          62
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:16",
+        "label": "\u2192",
+        "rect": [
+          224.0,
+          257.0,
+          62,
+          62
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:4",
+        "label": "Select",
+        "rect": [
+          392.0,
+          319.0,
+          94,
+          40
+        ],
+        "group": "Menu buttons",
+        "ellipse": false
+      },
+      {
+        "action": "button:8",
+        "label": "Start",
+        "rect": [
+          534.0,
+          319.0,
+          94,
+          40
+        ],
+        "group": "Menu buttons",
+        "ellipse": false
+      },
+      {
+        "action": "button:2",
+        "label": "B",
+        "rect": [
+          722.0,
+          291.0,
+          98,
+          98
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:1",
+        "label": "A",
+        "rect": [
+          866.0,
+          291.0,
+          98,
+          98
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      }
+    ],
+    "image": "nes.webp"
+  },
+  "fds": {
+    "title": "Famicom controller",
+    "size": [
+      1077,
+      470
+    ],
+    "note": "",
+    "controls": [
+      {
+        "action": "button:64",
+        "label": "\u2191",
+        "rect": [
+          164.0,
+          203.0,
+          62,
+          62
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:128",
+        "label": "\u2193",
+        "rect": [
+          164.0,
+          321.0,
+          62,
+          62
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:32",
+        "label": "\u2190",
+        "rect": [
+          105.0,
+          262.0,
+          62,
+          62
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:16",
+        "label": "\u2192",
+        "rect": [
+          223.0,
+          262.0,
+          62,
+          62
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:4",
+        "label": "Select",
+        "rect": [
+          395.0,
+          332.0,
+          88,
+          36
+        ],
+        "group": "Menu buttons",
+        "ellipse": false
+      },
+      {
+        "action": "button:8",
+        "label": "Start",
+        "rect": [
+          520.0,
+          332.0,
+          88,
+          36
+        ],
+        "group": "Menu buttons",
+        "ellipse": false
+      },
+      {
+        "action": "button:2",
+        "label": "B",
+        "rect": [
+          712.5,
+          290.5,
+          99,
+          99
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:1",
+        "label": "A",
+        "rect": [
+          854.5,
+          290.5,
+          99,
+          99
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      }
+    ],
+    "image": "fds.webp"
+  },
+  "snes": {
+    "title": "Super Nintendo controller",
+    "size": [
+      1244,
+      546
+    ],
+    "note": "",
+    "controls": [
+      {
+        "action": "button:64",
+        "label": "\u2191",
+        "rect": [
+          224.5,
+          174.5,
+          71,
+          71
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:128",
+        "label": "\u2193",
+        "rect": [
+          224.5,
+          316.5,
+          71,
+          71
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:32",
+        "label": "\u2190",
+        "rect": [
+          153.5,
+          245.5,
+          71,
+          71
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:16",
+        "label": "\u2192",
+        "rect": [
+          295.5,
+          245.5,
+          71,
+          71
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:4",
+        "label": "Select",
+        "rect": [
+          460.5,
+          300.5,
+          95,
+          39
+        ],
+        "group": "Menu buttons",
+        "ellipse": false,
+        "rotation": -37
+      },
+      {
+        "action": "button:8",
+        "label": "Start",
+        "rect": [
+          592.5,
+          300.5,
+          95,
+          39
+        ],
+        "group": "Menu buttons",
+        "ellipse": false,
+        "rotation": -37
+      },
+      {
+        "action": "button:1",
+        "label": "A",
+        "rect": [
+          1054.0,
+          235.0,
+          96,
+          96
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:2",
+        "label": "B",
+        "rect": [
+          934.0,
+          326.0,
+          96,
+          96
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:1024",
+        "label": "X",
+        "rect": [
+          934.0,
+          138.0,
+          96,
+          96
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:2048",
+        "label": "Y",
+        "rect": [
+          812.0,
+          232.0,
+          96,
+          96
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:512",
+        "label": "L",
+        "rect": [
+          245.0,
+          2.0,
+          150,
+          18
+        ],
+        "group": "Shoulders & triggers",
+        "ellipse": false
+      },
+      {
+        "action": "button:256",
+        "label": "R",
+        "rect": [
+          849.0,
+          2.0,
+          150,
+          18
+        ],
+        "group": "Shoulders & triggers",
+        "ellipse": false
+      }
+    ],
+    "image": "snes.webp"
+  },
+  "genesis": {
+    "title": "Mega Drive / Genesis six-button controller",
+    "size": [
+      1186,
+      610
+    ],
+    "note": "The Mode button is on the back; use its binding in the list.",
+    "controls": [
+      {
+        "action": "button:64",
+        "label": "\u2191",
+        "rect": [
+          261.5,
+          160.5,
+          67,
+          67
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:128",
+        "label": "\u2193",
+        "rect": [
+          261.5,
+          298.5,
+          67,
+          67
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:32",
+        "label": "\u2190",
+        "rect": [
+          192.5,
+          229.5,
+          67,
+          67
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:16",
+        "label": "\u2192",
+        "rect": [
+          330.5,
+          229.5,
+          67,
+          67
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:8",
+        "label": "Start",
+        "rect": [
+          531.5,
+          218.0,
+          91,
+          32
+        ],
+        "group": "Menu buttons",
+        "ellipse": false
+      },
+      {
+        "action": "button:2048",
+        "label": "A",
+        "rect": [
+          742.5,
+          312.5,
+          101,
+          101
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:2",
+        "label": "B",
+        "rect": [
+          851.5,
+          252.5,
+          101,
+          101
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:1",
+        "label": "C",
+        "rect": [
+          967.5,
+          219.5,
+          101,
+          101
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:512",
+        "label": "X",
+        "rect": [
+          718.0,
+          206.0,
+          72,
+          72
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:1024",
+        "label": "Y",
+        "rect": [
+          810.0,
+          159.0,
+          72,
+          72
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:256",
+        "label": "Z",
+        "rect": [
+          910.0,
+          136.0,
+          72,
+          72
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      }
+    ],
+    "image": "genesis.webp"
+  },
+  "saturn": {
+    "title": "Sega Saturn controller",
+    "size": [
+      1278,
+      716
+    ],
+    "note": "",
+    "controls": [
+      {
+        "action": "button:64",
+        "label": "\u2191",
+        "rect": [
+          263.5,
+          238.5,
+          79,
+          79
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:128",
+        "label": "\u2193",
+        "rect": [
+          263.5,
+          396.5,
+          79,
+          79
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:32",
+        "label": "\u2190",
+        "rect": [
+          184.5,
+          317.5,
+          79,
+          79
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:16",
+        "label": "\u2192",
+        "rect": [
+          342.5,
+          317.5,
+          79,
+          79
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:8",
+        "label": "Start",
+        "rect": [
+          586.0,
+          439.0,
+          106,
+          44
+        ],
+        "group": "Menu buttons",
+        "ellipse": false
+      },
+      {
+        "action": "button:2",
+        "label": "A",
+        "rect": [
+          813.0,
+          414.0,
+          110,
+          110
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:1",
+        "label": "B",
+        "rect": [
+          933.0,
+          330.0,
+          110,
+          110
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:256",
+        "label": "C",
+        "rect": [
+          1070.0,
+          277.0,
+          110,
+          110
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:2048",
+        "label": "X",
+        "rect": [
+          783.0,
+          289.0,
+          80,
+          80
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:1024",
+        "label": "Y",
+        "rect": [
+          888.0,
+          216.0,
+          80,
+          80
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:512",
+        "label": "Z",
+        "rect": [
+          1004.0,
+          169.0,
+          80,
+          80
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:4096",
+        "label": "L",
+        "rect": [
+          210.0,
+          12.0,
+          152,
+          22
+        ],
+        "group": "Shoulders & triggers",
+        "ellipse": false,
+        "rotation": -15
+      },
+      {
+        "action": "button:8192",
+        "label": "R",
+        "rect": [
+          917.0,
+          12.0,
+          152,
+          22
+        ],
+        "group": "Shoulders & triggers",
+        "ellipse": false,
+        "rotation": 15
+      }
+    ],
+    "image": "saturn.webp"
+  },
+  "pce": {
+    "title": "PC Engine / TurboGrafx-16 \u00b7 TurboPad",
+    "size": [
+      1190,
+      566
+    ],
+    "note": "Two-button pad shown. Six-button controls and pad mode are available in the list.",
+    "controls": [
+      {
+        "action": "button:64",
+        "label": "\u2191",
+        "rect": [
+          160.5,
+          297.5,
+          61,
+          61
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:128",
+        "label": "\u2193",
+        "rect": [
+          160.5,
+          435.5,
+          61,
+          61
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:32",
+        "label": "\u2190",
+        "rect": [
+          91.5,
+          366.5,
+          61,
+          61
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:16",
+        "label": "\u2192",
+        "rect": [
+          229.5,
+          366.5,
+          61,
+          61
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:4",
+        "label": "Select",
+        "rect": [
+          482.0,
+          420.0,
+          84,
+          34
+        ],
+        "group": "Menu buttons",
+        "ellipse": false
+      },
+      {
+        "action": "button:8",
+        "label": "Run",
+        "rect": [
+          624.0,
+          420.0,
+          84,
+          34
+        ],
+        "group": "Menu buttons",
+        "ellipse": false
+      },
+      {
+        "action": "button:2",
+        "label": "II",
+        "rect": [
+          839.5,
+          394.5,
+          89,
+          89
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:1",
+        "label": "I",
+        "rect": [
+          974.5,
+          394.5,
+          89,
+          89
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      }
+    ],
+    "image": "pce.webp",
+    "extra_groups": {
+      "button:2048": "Six-button pad",
+      "button:1024": "Six-button pad",
+      "button:512": "Six-button pad",
+      "button:256": "Six-button pad",
+      "button:4096": "Six-button pad"
+    }
+  },
+  "psx": {
+    "title": "PlayStation \u00b7 DualShock",
+    "size": [
+      1286,
+      766
+    ],
+    "note": "L2 and R2 are behind the shoulders; configure them in the list. Click the center of a stick for L3 or R3.",
+    "controls": [
+      {
+        "action": "button:64",
+        "label": "\u2191",
+        "rect": [
+          232.5,
+          212.5,
+          65,
+          65
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:128",
+        "label": "\u2193",
+        "rect": [
+          232.5,
+          346.5,
+          65,
+          65
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:32",
+        "label": "\u2190",
+        "rect": [
+          165.5,
+          279.5,
+          65,
+          65
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:16",
+        "label": "\u2192",
+        "rect": [
+          299.5,
+          279.5,
+          65,
+          65
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:4",
+        "label": "Select",
+        "rect": [
+          503.0,
+          295.5,
+          54,
+          33
+        ],
+        "group": "Menu buttons",
+        "ellipse": false
+      },
+      {
+        "action": "button:8",
+        "label": "Start",
+        "rect": [
+          735.0,
+          296.0,
+          44,
+          32
+        ],
+        "group": "Menu buttons",
+        "ellipse": false
+      },
+      {
+        "action": "button:1024",
+        "label": "\u25b3",
+        "rect": [
+          983.0,
+          179.0,
+          76,
+          76
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:1",
+        "label": "\u25cb",
+        "rect": [
+          1079.0,
+          275.0,
+          76,
+          76
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:2",
+        "label": "\u00d7",
+        "rect": [
+          983.0,
+          370.0,
+          76,
+          76
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:2048",
+        "label": "\u25a1",
+        "rect": [
+          887.0,
+          275.0,
+          76,
+          76
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:512",
+        "label": "L1",
+        "rect": [
+          199.0,
+          7.0,
+          130,
+          22
+        ],
+        "group": "Shoulders & triggers",
+        "ellipse": false
+      },
+      {
+        "action": "button:256",
+        "label": "R1",
+        "rect": [
+          956.0,
+          7.0,
+          130,
+          22
+        ],
+        "group": "Shoulders & triggers",
+        "ellipse": false
+      },
+      {
+        "action": "axis:1:-1",
+        "label": "\u2191",
+        "rect": [
+          425.3,
+          427.1,
+          57.4,
+          57.4
+        ],
+        "group": "Analog controls",
+        "ellipse": false
+      },
+      {
+        "action": "axis:1:1",
+        "label": "\u2193",
+        "rect": [
+          425.3,
+          525.5,
+          57.4,
+          57.4
+        ],
+        "group": "Analog controls",
+        "ellipse": false
+      },
+      {
+        "action": "axis:0:-1",
+        "label": "\u2190",
+        "rect": [
+          376.1,
+          476.3,
+          57.4,
+          57.4
+        ],
+        "group": "Analog controls",
+        "ellipse": false
+      },
+      {
+        "action": "axis:0:1",
+        "label": "\u2192",
+        "rect": [
+          474.5,
+          476.3,
+          57.4,
+          57.4
+        ],
+        "group": "Analog controls",
+        "ellipse": false
+      },
+      {
+        "action": "button:16384",
+        "label": "Stick click",
+        "rect": [
+          435.55,
+          486.55,
+          36.9,
+          36.9
+        ],
+        "group": "Analog controls",
+        "ellipse": true
+      },
+      {
+        "action": "axis:3:-1",
+        "label": "\u2191",
+        "rect": [
+          802.3,
+          427.1,
+          57.4,
+          57.4
+        ],
+        "group": "Analog controls",
+        "ellipse": false
+      },
+      {
+        "action": "axis:3:1",
+        "label": "\u2193",
+        "rect": [
+          802.3,
+          525.5,
+          57.4,
+          57.4
+        ],
+        "group": "Analog controls",
+        "ellipse": false
+      },
+      {
+        "action": "axis:2:-1",
+        "label": "\u2190",
+        "rect": [
+          753.0999999999999,
+          476.3,
+          57.4,
+          57.4
+        ],
+        "group": "Analog controls",
+        "ellipse": false
+      },
+      {
+        "action": "axis:2:1",
+        "label": "\u2192",
+        "rect": [
+          851.5,
+          476.3,
+          57.4,
+          57.4
+        ],
+        "group": "Analog controls",
+        "ellipse": false
+      },
+      {
+        "action": "button:32768",
+        "label": "Stick click",
+        "rect": [
+          812.55,
+          486.55,
+          36.9,
+          36.9
+        ],
+        "group": "Analog controls",
+        "ellipse": true
+      }
+    ],
+    "image": "psx.webp",
+    "extra_groups": {
+      "button:4096": "Shoulders & triggers",
+      "button:8192": "Shoulders & triggers"
+    }
+  },
+  "n64": {
+    "title": "Nintendo 64 controller",
+    "size": [
+      1156,
+      1104
+    ],
+    "note": "The Z trigger is on the back; configure it in the list.",
+    "controls": [
+      {
+        "action": "button:64",
+        "label": "\u2191",
+        "rect": [
+          190.0,
+          260.0,
+          62,
+          62
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:128",
+        "label": "\u2193",
+        "rect": [
+          190.0,
+          384.0,
+          62,
+          62
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:32",
+        "label": "\u2190",
+        "rect": [
+          128.0,
+          322.0,
+          62,
+          62
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:16",
+        "label": "\u2192",
+        "rect": [
+          252.0,
+          322.0,
+          62,
+          62
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:8",
+        "label": "Start",
+        "rect": [
+          538.0,
+          348.0,
+          80,
+          80
+        ],
+        "group": "Menu buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:2048",
+        "label": "B",
+        "rect": [
+          753.5,
+          338.5,
+          87,
+          87
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:2",
+        "label": "A",
+        "rect": [
+          833.5,
+          418.5,
+          87,
+          87
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      },
+      {
+        "action": "axis:3:-1",
+        "label": "C up",
+        "rect": [
+          934.0,
+          214.0,
+          64,
+          64
+        ],
+        "group": "C buttons",
+        "ellipse": true
+      },
+      {
+        "action": "axis:3:1",
+        "label": "C down",
+        "rect": [
+          934.0,
+          346.0,
+          64,
+          64
+        ],
+        "group": "C buttons",
+        "ellipse": true
+      },
+      {
+        "action": "axis:2:-1",
+        "label": "C left",
+        "rect": [
+          867.0,
+          280.0,
+          64,
+          64
+        ],
+        "group": "C buttons",
+        "ellipse": true
+      },
+      {
+        "action": "axis:2:1",
+        "label": "C right",
+        "rect": [
+          1002.0,
+          280.0,
+          64,
+          64
+        ],
+        "group": "C buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:512",
+        "label": "L",
+        "rect": [
+          121.0,
+          99.5,
+          202,
+          21
+        ],
+        "group": "Shoulders & triggers",
+        "ellipse": false,
+        "rotation": -11
+      },
+      {
+        "action": "button:256",
+        "label": "R",
+        "rect": [
+          833.0,
+          99.5,
+          202,
+          21
+        ],
+        "group": "Shoulders & triggers",
+        "ellipse": false,
+        "rotation": 11
+      },
+      {
+        "action": "axis:1:-1",
+        "label": "\u2191",
+        "rect": [
+          560.5,
+          572.5,
+          35.0,
+          35.0
+        ],
+        "group": "Analog controls",
+        "ellipse": false
+      },
+      {
+        "action": "axis:1:1",
+        "label": "\u2193",
+        "rect": [
+          560.5,
+          632.5,
+          35.0,
+          35.0
+        ],
+        "group": "Analog controls",
+        "ellipse": false
+      },
+      {
+        "action": "axis:0:-1",
+        "label": "\u2190",
+        "rect": [
+          530.5,
+          602.5,
+          35.0,
+          35.0
+        ],
+        "group": "Analog controls",
+        "ellipse": false
+      },
+      {
+        "action": "axis:0:1",
+        "label": "\u2192",
+        "rect": [
+          590.5,
+          602.5,
+          35.0,
+          35.0
+        ],
+        "group": "Analog controls",
+        "ellipse": false
+      }
+    ],
+    "image": "n64.webp",
+    "extra_groups": {
+      "button:4096": "Shoulders & triggers"
+    }
+  },
+  "vb": {
+    "title": "Virtual Boy controller",
+    "size": [
+      1138,
+      960
+    ],
+    "note": "The L and R triggers are on the back; configure them in the list.",
+    "controls": [
+      {
+        "action": "button:64",
+        "label": "\u2191",
+        "rect": [
+          149.5,
+          98.5,
+          51,
+          51
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:128",
+        "label": "\u2193",
+        "rect": [
+          149.5,
+          212.5,
+          51,
+          51
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:32",
+        "label": "\u2190",
+        "rect": [
+          92.5,
+          155.5,
+          51,
+          51
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:16",
+        "label": "\u2192",
+        "rect": [
+          206.5,
+          155.5,
+          51,
+          51
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:4096",
+        "label": "Right pad up",
+        "rect": [
+          936.5,
+          98.5,
+          51,
+          51
+        ],
+        "group": "Right directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:16384",
+        "label": "Right pad down",
+        "rect": [
+          936.5,
+          212.5,
+          51,
+          51
+        ],
+        "group": "Right directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:8192",
+        "label": "Right pad left",
+        "rect": [
+          879.5,
+          155.5,
+          51,
+          51
+        ],
+        "group": "Right directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:32768",
+        "label": "Right pad right",
+        "rect": [
+          993.5,
+          155.5,
+          51,
+          51
+        ],
+        "group": "Right directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:2",
+        "label": "B",
+        "rect": [
+          685.0,
+          262.0,
+          68,
+          68
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:1",
+        "label": "A",
+        "rect": [
+          778.0,
+          217.0,
+          68,
+          68
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:4",
+        "label": "Select",
+        "rect": [
+          293.0,
+          217.0,
+          68,
+          68
+        ],
+        "group": "Menu buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:8",
+        "label": "Start",
+        "rect": [
+          386.0,
+          262.0,
+          68,
+          68
+        ],
+        "group": "Menu buttons",
+        "ellipse": true
+      }
+    ],
+    "image": "vb.webp",
+    "extra_groups": {
+      "button:512": "Shoulders & triggers",
+      "button:256": "Shoulders & triggers"
+    }
+  },
+  "gb": {
+    "title": "Game Boy",
+    "size": [
+      592,
+      980
+    ],
+    "note": "",
+    "controls": [
+      {
+        "action": "button:64",
+        "label": "\u2191",
+        "rect": [
+          101.0,
+          606.0,
+          44,
+          44
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:128",
+        "label": "\u2193",
+        "rect": [
+          101.0,
+          698.0,
+          44,
+          44
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:32",
+        "label": "\u2190",
+        "rect": [
+          55.0,
+          652.0,
+          44,
+          44
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:16",
+        "label": "\u2192",
+        "rect": [
+          147.0,
+          652.0,
+          44,
+          44
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:2",
+        "label": "B",
+        "rect": [
+          380.0,
+          649.0,
+          72,
+          72
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:1",
+        "label": "A",
+        "rect": [
+          478.0,
+          605.0,
+          72,
+          72
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:4",
+        "label": "Select",
+        "rect": [
+          179.5,
+          800.5,
+          73,
+          25
+        ],
+        "group": "Menu buttons",
+        "ellipse": false,
+        "rotation": -28
+      },
+      {
+        "action": "button:8",
+        "label": "Start",
+        "rect": [
+          280.5,
+          800.5,
+          73,
+          25
+        ],
+        "group": "Menu buttons",
+        "ellipse": false,
+        "rotation": -28
+      }
+    ],
+    "image": "gb.webp",
+    "extra_groups": {}
+  },
+  "gbc": {
+    "title": "Game Boy Color",
+    "size": [
+      598,
+      970
+    ],
+    "note": "",
+    "controls": [
+      {
+        "action": "button:64",
+        "label": "\u2191",
+        "rect": [
+          104.5,
+          576.5,
+          43,
+          43
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:128",
+        "label": "\u2193",
+        "rect": [
+          104.5,
+          662.5,
+          43,
+          43
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:32",
+        "label": "\u2190",
+        "rect": [
+          61.5,
+          619.5,
+          43,
+          43
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:16",
+        "label": "\u2192",
+        "rect": [
+          147.5,
+          619.5,
+          43,
+          43
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:2",
+        "label": "B",
+        "rect": [
+          369.5,
+          623.5,
+          67,
+          67
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:1",
+        "label": "A",
+        "rect": [
+          475.5,
+          588.5,
+          67,
+          67
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:4",
+        "label": "Select",
+        "rect": [
+          230.5,
+          794.5,
+          51,
+          19
+        ],
+        "group": "Menu buttons",
+        "ellipse": false
+      },
+      {
+        "action": "button:8",
+        "label": "Start",
+        "rect": [
+          318.5,
+          794.5,
+          51,
+          19
+        ],
+        "group": "Menu buttons",
+        "ellipse": false
+      }
+    ],
+    "image": "gbc.webp",
+    "extra_groups": {}
+  },
+  "gba": {
+    "title": "Game Boy Advance",
+    "size": [
+      1170,
+      664
+    ],
+    "note": "",
+    "controls": [
+      {
+        "action": "button:64",
+        "label": "\u2191",
+        "rect": [
+          128.5,
+          204.5,
+          45,
+          45
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:128",
+        "label": "\u2193",
+        "rect": [
+          128.5,
+          300.5,
+          45,
+          45
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:32",
+        "label": "\u2190",
+        "rect": [
+          80.5,
+          252.5,
+          45,
+          45
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:16",
+        "label": "\u2192",
+        "rect": [
+          176.5,
+          252.5,
+          45,
+          45
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:2",
+        "label": "B",
+        "rect": [
+          926.5,
+          258.5,
+          73,
+          73
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:1",
+        "label": "A",
+        "rect": [
+          1032.5,
+          220.5,
+          73,
+          73
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:8",
+        "label": "Start",
+        "rect": [
+          214.0,
+          422.0,
+          34,
+          34
+        ],
+        "group": "Menu buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:4",
+        "label": "Select",
+        "rect": [
+          214.0,
+          487.0,
+          34,
+          34
+        ],
+        "group": "Menu buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:512",
+        "label": "L",
+        "rect": [
+          65.0,
+          32.5,
+          144,
+          29
+        ],
+        "group": "Shoulders & triggers",
+        "ellipse": false,
+        "rotation": -14
+      },
+      {
+        "action": "button:256",
+        "label": "R",
+        "rect": [
+          961.0,
+          32.5,
+          144,
+          29
+        ],
+        "group": "Shoulders & triggers",
+        "ellipse": false,
+        "rotation": 14
+      }
+    ],
+    "image": "gba.webp",
+    "extra_groups": {}
+  },
+  "nds": {
+    "title": "Nintendo DS \u00b7 DS Lite",
+    "size": [
+      1020,
+      1060
+    ],
+    "note": "L and R are behind the hinge; configure them in the list.",
+    "controls": [
+      {
+        "action": "button:64",
+        "label": "\u2191",
+        "rect": [
+          96.0,
+          686.0,
+          42,
+          42
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:128",
+        "label": "\u2193",
+        "rect": [
+          96.0,
+          778.0,
+          42,
+          42
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:32",
+        "label": "\u2190",
+        "rect": [
+          50.0,
+          732.0,
+          42,
+          42
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:16",
+        "label": "\u2192",
+        "rect": [
+          142.0,
+          732.0,
+          42,
+          42
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:1024",
+        "label": "X",
+        "rect": [
+          872.5,
+          647.5,
+          49,
+          49
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:1",
+        "label": "A",
+        "rect": [
+          931.5,
+          705.5,
+          49,
+          49
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:2",
+        "label": "B",
+        "rect": [
+          872.5,
+          765.5,
+          49,
+          49
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:2048",
+        "label": "Y",
+        "rect": [
+          813.5,
+          705.5,
+          49,
+          49
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:8",
+        "label": "Start",
+        "rect": [
+          810.5,
+          905.5,
+          25,
+          25
+        ],
+        "group": "Menu buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:4",
+        "label": "Select",
+        "rect": [
+          810.5,
+          964.5,
+          25,
+          25
+        ],
+        "group": "Menu buttons",
+        "ellipse": true
+      }
+    ],
+    "image": "nds.webp",
+    "extra_groups": {
+      "button:512": "Shoulders & triggers",
+      "button:256": "Shoulders & triggers"
+    }
+  },
+  "psp": {
+    "title": "PlayStation Portable",
+    "size": [
+      1254,
+      524
+    ],
+    "note": "",
+    "controls": [
+      {
+        "action": "button:64",
+        "label": "\u2191",
+        "rect": [
+          110.5,
+          144.5,
+          51,
+          51
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:128",
+        "label": "\u2193",
+        "rect": [
+          110.5,
+          262.5,
+          51,
+          51
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:32",
+        "label": "\u2190",
+        "rect": [
+          51.5,
+          203.5,
+          51,
+          51
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:16",
+        "label": "\u2192",
+        "rect": [
+          169.5,
+          203.5,
+          51,
+          51
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:1024",
+        "label": "\u25b3",
+        "rect": [
+          1094.0,
+          125.0,
+          62,
+          62
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:1",
+        "label": "\u25cb",
+        "rect": [
+          1168.0,
+          198.0,
+          62,
+          62
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:2",
+        "label": "\u00d7",
+        "rect": [
+          1094.0,
+          272.0,
+          62,
+          62
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:2048",
+        "label": "\u25a1",
+        "rect": [
+          1020.0,
+          198.0,
+          62,
+          62
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:4",
+        "label": "Select",
+        "rect": [
+          866.5,
+          478.5,
+          65,
+          25
+        ],
+        "group": "Menu buttons",
+        "ellipse": false
+      },
+      {
+        "action": "button:8",
+        "label": "Start",
+        "rect": [
+          948.5,
+          478.5,
+          65,
+          25
+        ],
+        "group": "Menu buttons",
+        "ellipse": false
+      },
+      {
+        "action": "button:512",
+        "label": "L",
+        "rect": [
+          100.5,
+          8.0,
+          95,
+          28
+        ],
+        "group": "Shoulders & triggers",
+        "ellipse": false
+      },
+      {
+        "action": "button:256",
+        "label": "R",
+        "rect": [
+          1058.5,
+          8.0,
+          95,
+          28
+        ],
+        "group": "Shoulders & triggers",
+        "ellipse": false
+      },
+      {
+        "action": "axis:1:-1",
+        "label": "\u2191",
+        "rect": [
+          126.3,
+          359.1,
+          29.4,
+          29.4
+        ],
+        "group": "Analog controls",
+        "ellipse": false
+      },
+      {
+        "action": "axis:1:1",
+        "label": "\u2193",
+        "rect": [
+          126.3,
+          409.5,
+          29.4,
+          29.4
+        ],
+        "group": "Analog controls",
+        "ellipse": false
+      },
+      {
+        "action": "axis:0:-1",
+        "label": "\u2190",
+        "rect": [
+          101.1,
+          384.3,
+          29.4,
+          29.4
+        ],
+        "group": "Analog controls",
+        "ellipse": false
+      },
+      {
+        "action": "axis:0:1",
+        "label": "\u2192",
+        "rect": [
+          151.5,
+          384.3,
+          29.4,
+          29.4
+        ],
+        "group": "Analog controls",
+        "ellipse": false
+      }
+    ],
+    "image": "psp.webp",
+    "extra_groups": {}
+  },
+  "gg": {
+    "title": "Game Gear",
+    "size": [
+      1220,
+      652
+    ],
+    "note": "",
+    "controls": [
+      {
+        "action": "button:64",
+        "label": "\u2191",
+        "rect": [
+          114.5,
+          190.5,
+          43,
+          43
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:128",
+        "label": "\u2193",
+        "rect": [
+          114.5,
+          282.5,
+          43,
+          43
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:32",
+        "label": "\u2190",
+        "rect": [
+          68.5,
+          236.5,
+          43,
+          43
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:16",
+        "label": "\u2192",
+        "rect": [
+          160.5,
+          236.5,
+          43,
+          43
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:2",
+        "label": "1",
+        "rect": [
+          990.5,
+          272.5,
+          65,
+          65
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:1",
+        "label": "2",
+        "rect": [
+          1082.5,
+          202.5,
+          65,
+          65
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:8",
+        "label": "Start",
+        "rect": [
+          1023.0,
+          120.5,
+          28,
+          45
+        ],
+        "group": "Menu buttons",
+        "ellipse": true
+      }
+    ],
+    "image": "gg.webp",
+    "extra_groups": {}
+  },
+  "lynx": {
+    "title": "Atari Lynx",
+    "size": [
+      1208,
+      480
+    ],
+    "note": "Both A/B pairs are available for the two holding orientations.",
+    "controls": [
+      {
+        "action": "button:64",
+        "label": "\u2191",
+        "rect": [
+          193.0,
+          184.0,
+          34,
+          34
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:128",
+        "label": "\u2193",
+        "rect": [
+          193.0,
+          262.0,
+          34,
+          34
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:32",
+        "label": "\u2190",
+        "rect": [
+          154.0,
+          223.0,
+          34,
+          34
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:16",
+        "label": "\u2192",
+        "rect": [
+          232.0,
+          223.0,
+          34,
+          34
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:2",
+        "label": "B",
+        "rect": [
+          994.5,
+          54.5,
+          63,
+          63
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:1",
+        "label": "A",
+        "rect": [
+          1076.5,
+          41.5,
+          63,
+          63
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:2",
+        "label": "B",
+        "rect": [
+          994.5,
+          362.5,
+          63,
+          63
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:1",
+        "label": "A",
+        "rect": [
+          1076.5,
+          375.5,
+          63,
+          63
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:512",
+        "label": "Option 1",
+        "rect": [
+          898.0,
+          165.0,
+          46,
+          16
+        ],
+        "group": "Menu buttons",
+        "ellipse": false
+      },
+      {
+        "action": "button:8",
+        "label": "Pause",
+        "rect": [
+          898.0,
+          232.0,
+          46,
+          16
+        ],
+        "group": "Menu buttons",
+        "ellipse": false
+      },
+      {
+        "action": "button:256",
+        "label": "Option 2",
+        "rect": [
+          898.0,
+          298.0,
+          46,
+          16
+        ],
+        "group": "Menu buttons",
+        "ellipse": false
+      }
+    ],
+    "image": "lynx.webp",
+    "extra_groups": {}
+  },
+  "ngpc": {
+    "title": "Neo Geo Pocket Color",
+    "size": [
+      1104,
+      678
+    ],
+    "note": "",
+    "controls": [
+      {
+        "action": "button:64",
+        "label": "\u2191",
+        "rect": [
+          132.0,
+          217.0,
+          40,
+          40
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:128",
+        "label": "\u2193",
+        "rect": [
+          132.0,
+          311.0,
+          40,
+          40
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:32",
+        "label": "\u2190",
+        "rect": [
+          85.0,
+          264.0,
+          40,
+          40
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:16",
+        "label": "\u2192",
+        "rect": [
+          179.0,
+          264.0,
+          40,
+          40
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:1",
+        "label": "A",
+        "rect": [
+          860.0,
+          247.0,
+          72,
+          72
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:2",
+        "label": "B",
+        "rect": [
+          964.0,
+          175.0,
+          72,
+          72
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:8",
+        "label": "Option",
+        "rect": [
+          974.0,
+          52.0,
+          40,
+          40
+        ],
+        "group": "Menu buttons",
+        "ellipse": true
+      }
+    ],
+    "image": "ngpc.webp",
+    "extra_groups": {}
+  },
+  "wsc": {
+    "title": "WonderSwan Color \u00b7 SwanCrystal",
+    "size": [
+      1091,
+      645
+    ],
+    "note": "Screen rotation is available in the binding list.",
+    "controls": [
+      {
+        "action": "button:8192",
+        "label": "Y1",
+        "rect": [
+          120.5,
+          92.0,
+          49,
+          42
+        ],
+        "group": "Y buttons",
+        "ellipse": false
+      },
+      {
+        "action": "button:4096",
+        "label": "Y3",
+        "rect": [
+          120.5,
+          212.0,
+          49,
+          42
+        ],
+        "group": "Y buttons",
+        "ellipse": false
+      },
+      {
+        "action": "button:512",
+        "label": "Y4",
+        "rect": [
+          66.0,
+          148.5,
+          40,
+          51
+        ],
+        "group": "Y buttons",
+        "ellipse": false
+      },
+      {
+        "action": "button:256",
+        "label": "Y2",
+        "rect": [
+          184.0,
+          148.5,
+          40,
+          51
+        ],
+        "group": "Y buttons",
+        "ellipse": false
+      },
+      {
+        "action": "button:64",
+        "label": "X1",
+        "rect": [
+          124.5,
+          390.0,
+          49,
+          42
+        ],
+        "group": "X buttons",
+        "ellipse": false
+      },
+      {
+        "action": "button:128",
+        "label": "X3",
+        "rect": [
+          124.5,
+          514.0,
+          49,
+          42
+        ],
+        "group": "X buttons",
+        "ellipse": false
+      },
+      {
+        "action": "button:32",
+        "label": "X4",
+        "rect": [
+          69.0,
+          447.5,
+          40,
+          51
+        ],
+        "group": "X buttons",
+        "ellipse": false
+      },
+      {
+        "action": "button:16",
+        "label": "X2",
+        "rect": [
+          188.0,
+          447.5,
+          40,
+          51
+        ],
+        "group": "X buttons",
+        "ellipse": false
+      },
+      {
+        "action": "button:1",
+        "label": "A",
+        "rect": [
+          1003.5,
+          431.0,
+          41,
+          54
+        ],
+        "group": "Buttons",
+        "ellipse": false
+      },
+      {
+        "action": "button:2",
+        "label": "B",
+        "rect": [
+          939.0,
+          498.0,
+          52,
+          38
+        ],
+        "group": "Buttons",
+        "ellipse": false
+      },
+      {
+        "action": "button:8",
+        "label": "Start",
+        "rect": [
+          449.5,
+          560.5,
+          61,
+          29
+        ],
+        "group": "Menu buttons",
+        "ellipse": false
+      }
+    ],
+    "image": "wsc.webp",
+    "extra_groups": {}
+  },
+  "sms": {
+    "title": "Master System control pad",
+    "size": [
+      1112,
+      460
+    ],
+    "note": "Pause is on the console; configure it in the list.",
+    "controls": [
+      {
+        "action": "button:64",
+        "label": "\u2191",
+        "rect": [
+          254.0,
+          110.0,
+          72,
+          72
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:128",
+        "label": "\u2193",
+        "rect": [
+          254.0,
+          278.0,
+          72,
+          72
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:32",
+        "label": "\u2190",
+        "rect": [
+          170.0,
+          194.0,
+          72,
+          72
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:16",
+        "label": "\u2192",
+        "rect": [
+          338.0,
+          194.0,
+          72,
+          72
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:2",
+        "label": "1",
+        "rect": [
+          722.0,
+          232.0,
+          106,
+          106
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:1",
+        "label": "2",
+        "rect": [
+          908.0,
+          232.0,
+          106,
+          106
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      }
+    ],
+    "image": "sms.webp",
+    "extra_groups": {}
+  },
+  "atari2600": {
+    "title": "Atari 2600 \u00b7 CX40 joystick",
+    "size": [
+      834,
+      834
+    ],
+    "note": "Select, Reset, difficulty and color switches are on the console; configure them in the list.",
+    "controls": [
+      {
+        "action": "button:64",
+        "label": "\u2191",
+        "rect": [
+          384.0,
+          310.0,
+          66,
+          66
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:128",
+        "label": "\u2193",
+        "rect": [
+          384.0,
+          458.0,
+          66,
+          66
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:32",
+        "label": "\u2190",
+        "rect": [
+          310.0,
+          384.0,
+          66,
+          66
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:16",
+        "label": "\u2192",
+        "rect": [
+          458.0,
+          384.0,
+          66,
+          66
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:2",
+        "label": "Fire",
+        "rect": [
+          80.0,
+          80.0,
+          128,
+          128
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      }
+    ],
+    "image": "atari2600.webp",
+    "extra_groups": {}
+  },
+  "atari7800": {
+    "title": "Atari 7800 \u00b7 CX78 gamepad",
+    "size": [
+      1038,
+      512
+    ],
+    "note": "Select, Pause, Reset and difficulty switches are on the console; configure them in the list.",
+    "controls": [
+      {
+        "action": "button:64",
+        "label": "\u2191",
+        "rect": [
+          158.0,
+          54.0,
+          54,
+          54
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:128",
+        "label": "\u2193",
+        "rect": [
+          158.0,
+          202.0,
+          54,
+          54
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:32",
+        "label": "\u2190",
+        "rect": [
+          84.0,
+          128.0,
+          54,
+          54
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:16",
+        "label": "\u2192",
+        "rect": [
+          232.0,
+          128.0,
+          54,
+          54
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:2",
+        "label": "1",
+        "rect": [
+          482.0,
+          305.0,
+          130,
+          130
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:1",
+        "label": "2",
+        "rect": [
+          727.0,
+          305.0,
+          130,
+          130
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      }
+    ],
+    "image": "atari7800.webp",
+    "extra_groups": {}
+  },
+  "colecovision": {
+    "title": "ColecoVision hand controller",
+    "size": [
+      426,
+      955
+    ],
+    "note": "",
+    "controls": [
+      {
+        "action": "button:64",
+        "label": "\u2191",
+        "rect": [
+          189.5,
+          55.5,
+          49,
+          49
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:128",
+        "label": "\u2193",
+        "rect": [
+          189.5,
+          169.5,
+          49,
+          49
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:32",
+        "label": "\u2190",
+        "rect": [
+          132.5,
+          112.5,
+          49,
+          49
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:16",
+        "label": "\u2192",
+        "rect": [
+          246.5,
+          112.5,
+          49,
+          49
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:2",
+        "label": "Left side button",
+        "rect": [
+          5.0,
+          263.0,
+          54,
+          84
+        ],
+        "group": "Buttons",
+        "ellipse": false
+      },
+      {
+        "action": "button:1",
+        "label": "Right side button",
+        "rect": [
+          363.0,
+          263.0,
+          54,
+          84
+        ],
+        "group": "Buttons",
+        "ellipse": false
+      },
+      {
+        "action": "button:2048",
+        "label": "1",
+        "rect": [
+          54.0,
+          477.0,
+          94,
+          94
+        ],
+        "group": "Keypad",
+        "ellipse": false
+      },
+      {
+        "action": "button:1024",
+        "label": "2",
+        "rect": [
+          167.0,
+          477.0,
+          94,
+          94
+        ],
+        "group": "Keypad",
+        "ellipse": false
+      },
+      {
+        "action": "button:512",
+        "label": "3",
+        "rect": [
+          279.0,
+          477.0,
+          94,
+          94
+        ],
+        "group": "Keypad",
+        "ellipse": false
+      },
+      {
+        "action": "button:256",
+        "label": "4",
+        "rect": [
+          54.0,
+          591.0,
+          94,
+          94
+        ],
+        "group": "Keypad",
+        "ellipse": false
+      },
+      {
+        "action": "button:4096",
+        "label": "5",
+        "rect": [
+          167.0,
+          591.0,
+          94,
+          94
+        ],
+        "group": "Keypad",
+        "ellipse": false
+      },
+      {
+        "action": "button:8192",
+        "label": "6",
+        "rect": [
+          279.0,
+          591.0,
+          94,
+          94
+        ],
+        "group": "Keypad",
+        "ellipse": false
+      },
+      {
+        "action": "button:16384",
+        "label": "7",
+        "rect": [
+          54.0,
+          705.0,
+          94,
+          94
+        ],
+        "group": "Keypad",
+        "ellipse": false
+      },
+      {
+        "action": "button:32768",
+        "label": "8",
+        "rect": [
+          167.0,
+          705.0,
+          94,
+          94
+        ],
+        "group": "Keypad",
+        "ellipse": false
+      },
+      {
+        "action": "axis:1:1",
+        "label": "9",
+        "rect": [
+          279.0,
+          705.0,
+          94,
+          94
+        ],
+        "group": "Keypad",
+        "ellipse": false
+      },
+      {
+        "action": "button:8",
+        "label": "*",
+        "rect": [
+          54.0,
+          818.0,
+          94,
+          94
+        ],
+        "group": "Keypad",
+        "ellipse": false
+      },
+      {
+        "action": "axis:0:1",
+        "label": "0",
+        "rect": [
+          167.0,
+          818.0,
+          94,
+          94
+        ],
+        "group": "Keypad",
+        "ellipse": false
+      },
+      {
+        "action": "button:4",
+        "label": "#",
+        "rect": [
+          279.0,
+          818.0,
+          94,
+          94
+        ],
+        "group": "Keypad",
+        "ellipse": false
+      }
+    ],
+    "image": "colecovision.webp",
+    "extra_groups": {}
+  },
+  "intellivision": {
+    "title": "Intellivision hand controller",
+    "size": [
+      488,
+      998
+    ],
+    "note": "Other keypad numbers use the core\u2019s on-screen keypad; its controls are in the list.",
+    "controls": [
+      {
+        "action": "button:32768",
+        "label": "5",
+        "rect": [
+          211.5,
+          308.5,
+          65,
+          65
+        ],
+        "group": "Keypad",
+        "ellipse": false
+      },
+      {
+        "action": "button:4096",
+        "label": "Clear",
+        "rect": [
+          107.5,
+          512.5,
+          65,
+          65
+        ],
+        "group": "Keypad",
+        "ellipse": false
+      },
+      {
+        "action": "button:16384",
+        "label": "0",
+        "rect": [
+          211.5,
+          512.5,
+          65,
+          65
+        ],
+        "group": "Keypad",
+        "ellipse": false
+      },
+      {
+        "action": "button:8192",
+        "label": "Enter",
+        "rect": [
+          315.5,
+          512.5,
+          65,
+          65
+        ],
+        "group": "Keypad",
+        "ellipse": false
+      },
+      {
+        "action": "button:2048",
+        "label": "Top action",
+        "rect": [
+          1.0,
+          306.0,
+          12,
+          48
+        ],
+        "group": "Buttons",
+        "ellipse": false
+      },
+      {
+        "action": "button:2048",
+        "label": "Top action",
+        "rect": [
+          475.0,
+          306.0,
+          12,
+          48
+        ],
+        "group": "Buttons",
+        "ellipse": false
+      },
+      {
+        "action": "button:2",
+        "label": "Left action",
+        "rect": [
+          1.0,
+          365.0,
+          12,
+          48
+        ],
+        "group": "Buttons",
+        "ellipse": false
+      },
+      {
+        "action": "button:1",
+        "label": "Right action",
+        "rect": [
+          475.0,
+          365.0,
+          12,
+          48
+        ],
+        "group": "Buttons",
+        "ellipse": false
+      },
+      {
+        "action": "axis:1:-1",
+        "label": "\u2191",
+        "rect": [
+          205.5,
+          720.5,
+          77.0,
+          77.0
+        ],
+        "group": "Analog controls",
+        "ellipse": false
+      },
+      {
+        "action": "axis:1:1",
+        "label": "\u2193",
+        "rect": [
+          205.5,
+          852.5,
+          77.0,
+          77.0
+        ],
+        "group": "Analog controls",
+        "ellipse": false
+      },
+      {
+        "action": "axis:0:-1",
+        "label": "\u2190",
+        "rect": [
+          139.5,
+          786.5,
+          77.0,
+          77.0
+        ],
+        "group": "Analog controls",
+        "ellipse": false
+      },
+      {
+        "action": "axis:0:1",
+        "label": "\u2192",
+        "rect": [
+          271.5,
+          786.5,
+          77.0,
+          77.0
+        ],
+        "group": "Analog controls",
+        "ellipse": false
+      }
+    ],
+    "image": "intellivision.webp",
+    "extra_groups": {}
+  },
+  "vectrex": {
+    "title": "Vectrex controller",
+    "size": [
+      1075,
+      390
+    ],
+    "note": "",
+    "controls": [
+      {
+        "action": "button:64",
+        "label": "\u2191",
+        "rect": [
+          252.5,
+          147.5,
+          29,
+          29
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:128",
+        "label": "\u2193",
+        "rect": [
+          252.5,
+          217.5,
+          29,
+          29
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:32",
+        "label": "\u2190",
+        "rect": [
+          217.5,
+          182.5,
+          29,
+          29
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:16",
+        "label": "\u2192",
+        "rect": [
+          287.5,
+          182.5,
+          29,
+          29
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:1",
+        "label": "1",
+        "rect": [
+          471.5,
+          157.5,
+          77,
+          77
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:2",
+        "label": "2",
+        "rect": [
+          610.5,
+          157.5,
+          77,
+          77
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:1024",
+        "label": "3",
+        "rect": [
+          749.5,
+          157.5,
+          77,
+          77
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:2048",
+        "label": "4",
+        "rect": [
+          889.5,
+          157.5,
+          77,
+          77
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      }
+    ],
+    "image": "vectrex.webp",
+    "extra_groups": {}
+  }
+}

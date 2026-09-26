@@ -1,0 +1,853 @@
+{
+  "gb": {
+    "players": 1,
+    "shape": "handheld",
+    "primary": [
+      64,
+      128,
+      32,
+      16,
+      8,
+      4,
+      1,
+      2
+    ],
+    "labels": {},
+    "analog": false,
+    "diagram": "gb"
+  },
+  "gbc": {
+    "players": 1,
+    "shape": "handheld",
+    "primary": [
+      64,
+      128,
+      32,
+      16,
+      8,
+      4,
+      1,
+      2
+    ],
+    "labels": {},
+    "analog": false,
+    "diagram": "gbc"
+  },
+  "gba": {
+    "players": 1,
+    "shape": "handheld",
+    "primary": [
+      64,
+      128,
+      32,
+      16,
+      8,
+      4,
+      1,
+      2,
+      512,
+      256
+    ],
+    "labels": {},
+    "analog": false,
+    "diagram": "gba"
+  },
+  "snes": {
+    "players": 2,
+    "shape": "gamepad",
+    "primary": [
+      64,
+      128,
+      32,
+      16,
+      8,
+      4,
+      1,
+      2,
+      1024,
+      2048,
+      512,
+      256
+    ],
+    "labels": {},
+    "analog": false,
+    "diagram": "snes"
+  },
+  "nes": {
+    "players": 2,
+    "shape": "gamepad",
+    "primary": [
+      64,
+      128,
+      32,
+      16,
+      8,
+      4,
+      1,
+      2
+    ],
+    "labels": {},
+    "analog": false,
+    "diagram": "nes"
+  },
+  "fds": {
+    "players": 2,
+    "shape": "gamepad",
+    "primary": [
+      64,
+      128,
+      32,
+      16,
+      8,
+      4,
+      1,
+      2
+    ],
+    "labels": {},
+    "analog": false,
+    "diagram": "fds"
+  },
+  "atari2600": {
+    "players": 2,
+    "shape": "joystick",
+    "primary": [
+      64,
+      128,
+      32,
+      16,
+      2,
+      4,
+      8,
+      512,
+      256,
+      4096,
+      8192,
+      16384,
+      32768
+    ],
+    "labels": {
+      "2": "Fire",
+      "4": "Console Select",
+      "8": "Console Reset",
+      "512": "Left difficulty A",
+      "256": "Right difficulty A",
+      "4096": "Left difficulty B",
+      "8192": "Right difficulty B",
+      "16384": "Color",
+      "32768": "Black & white"
+    },
+    "analog": false,
+    "diagram": "atari2600"
+  },
+  "atari5200": {
+    "players": 2,
+    "shape": "joystick",
+    "primary": [
+      64,
+      128,
+      32,
+      16,
+      1,
+      2,
+      8,
+      4,
+      1024,
+      2048,
+      512,
+      256,
+      4096,
+      8192,
+      16384,
+      32768
+    ],
+    "labels": {
+      "1": "Fire 1",
+      "2": "Fire 2",
+      "8": "Start",
+      "4": "Pause",
+      "1024": "Keypad #",
+      "2048": "Keypad *",
+      "512": "Show keypad",
+      "256": "Keypad 0",
+      "4096": "Keypad 3",
+      "8192": "Keypad 1",
+      "16384": "Keypad 7",
+      "32768": "Keypad 5"
+    },
+    "analog": true,
+    "diagram": "atari5200",
+    "sticks": [
+      "Joystick"
+    ]
+  },
+  "atari7800": {
+    "players": 2,
+    "shape": "joystick",
+    "primary": [
+      64,
+      128,
+      32,
+      16,
+      2,
+      1,
+      4,
+      8,
+      1024,
+      512,
+      256
+    ],
+    "labels": {
+      "2": "1",
+      "1": "2",
+      "4": "Console Select",
+      "8": "Console Pause",
+      "1024": "Console Reset",
+      "512": "Left difficulty",
+      "256": "Right difficulty"
+    },
+    "analog": false,
+    "diagram": "atari7800"
+  },
+  "lynx": {
+    "players": 1,
+    "shape": "handheld",
+    "primary": [
+      64,
+      128,
+      32,
+      16,
+      1,
+      2,
+      8,
+      512,
+      256
+    ],
+    "labels": {
+      "8": "Pause",
+      "512": "Option 1",
+      "256": "Option 2"
+    },
+    "analog": false,
+    "diagram": "lynx"
+  },
+  "colecovision": {
+    "players": 2,
+    "shape": "joystick",
+    "primary": [
+      64,
+      128,
+      32,
+      16,
+      2,
+      1,
+      2048,
+      1024,
+      512,
+      256,
+      4096,
+      8192,
+      16384,
+      32768,
+      8,
+      4
+    ],
+    "labels": {
+      "2": "Left side button",
+      "1": "Right side button",
+      "2048": "Keypad 1",
+      "1024": "Keypad 2",
+      "512": "Keypad 3",
+      "256": "Keypad 4",
+      "4096": "Keypad 5",
+      "8192": "Keypad 6",
+      "16384": "Keypad 7",
+      "32768": "Keypad 8",
+      "8": "Keypad *",
+      "4": "Keypad #"
+    },
+    "analog": false,
+    "diagram": "colecovision",
+    "extra_actions": {
+      "axis:1:1": "Keypad 9",
+      "axis:0:1": "Keypad 0"
+    }
+  },
+  "intellivision": {
+    "players": 2,
+    "shape": "joystick",
+    "primary": [
+      64,
+      128,
+      32,
+      16,
+      2,
+      1,
+      2048,
+      1024,
+      512,
+      256,
+      4096,
+      8192,
+      16384,
+      32768,
+      8,
+      4
+    ],
+    "labels": {
+      "2": "Left action",
+      "1": "Right action",
+      "2048": "Top action",
+      "1024": "Last keypad key",
+      "512": "Show keypad (L)",
+      "256": "Show keypad (R)",
+      "4096": "Keypad Clear",
+      "8192": "Keypad Enter",
+      "16384": "Keypad 0",
+      "32768": "Keypad 5",
+      "8": "Pause",
+      "4": "Swap controllers"
+    },
+    "analog": true,
+    "diagram": "intellivision",
+    "sticks": [
+      "Disc",
+      "Keypad"
+    ]
+  },
+  "gg": {
+    "players": 1,
+    "shape": "handheld",
+    "primary": [
+      64,
+      128,
+      32,
+      16,
+      2,
+      1,
+      8
+    ],
+    "labels": {
+      "2": "1",
+      "1": "2"
+    },
+    "analog": false,
+    "diagram": "gg"
+  },
+  "genesis": {
+    "players": 2,
+    "shape": "gamepad",
+    "primary": [
+      64,
+      128,
+      32,
+      16,
+      8,
+      4,
+      1,
+      2,
+      1024,
+      2048,
+      512,
+      256
+    ],
+    "labels": {
+      "2048": "A",
+      "2": "B",
+      "1": "C",
+      "512": "X",
+      "1024": "Y",
+      "256": "Z",
+      "4": "Mode"
+    },
+    "analog": false,
+    "diagram": "genesis"
+  },
+  "sms": {
+    "players": 2,
+    "shape": "gamepad",
+    "primary": [
+      64,
+      128,
+      32,
+      16,
+      2,
+      1,
+      8
+    ],
+    "labels": {
+      "2": "1",
+      "1": "2",
+      "8": "Console Pause"
+    },
+    "analog": false,
+    "diagram": "sms"
+  },
+  "sg1000": {
+    "players": 2,
+    "shape": "gamepad",
+    "primary": [
+      64,
+      128,
+      32,
+      16,
+      2,
+      1,
+      8
+    ],
+    "labels": {
+      "2": "1",
+      "1": "2",
+      "8": "Console Pause"
+    },
+    "analog": false,
+    "diagram": "sg1000"
+  },
+  "sega32x": {
+    "players": 2,
+    "shape": "gamepad",
+    "primary": [
+      64,
+      128,
+      32,
+      16,
+      8,
+      4,
+      1,
+      2,
+      1024,
+      2048,
+      512,
+      256
+    ],
+    "labels": {
+      "2048": "A",
+      "2": "B",
+      "1": "C",
+      "512": "X",
+      "1024": "Y",
+      "256": "Z",
+      "4": "Mode"
+    },
+    "analog": false,
+    "diagram": "genesis"
+  },
+  "segacd": {
+    "players": 2,
+    "shape": "gamepad",
+    "primary": [
+      64,
+      128,
+      32,
+      16,
+      8,
+      4,
+      1,
+      2,
+      1024,
+      2048,
+      512,
+      256
+    ],
+    "labels": {
+      "2048": "A",
+      "2": "B",
+      "1": "C",
+      "512": "X",
+      "1024": "Y",
+      "256": "Z",
+      "4": "Mode"
+    },
+    "analog": false,
+    "diagram": "genesis"
+  },
+  "saturn": {
+    "players": 2,
+    "shape": "gamepad",
+    "primary": [
+      64,
+      128,
+      32,
+      16,
+      8,
+      2,
+      1,
+      256,
+      2048,
+      1024,
+      512,
+      4096,
+      8192
+    ],
+    "labels": {
+      "2": "A",
+      "1": "B",
+      "256": "C",
+      "2048": "X",
+      "1024": "Y",
+      "512": "Z",
+      "4096": "L",
+      "8192": "R"
+    },
+    "analog": false,
+    "diagram": "saturn"
+  },
+  "ngp": {
+    "players": 1,
+    "shape": "handheld",
+    "primary": [
+      64,
+      128,
+      32,
+      16,
+      1,
+      2,
+      8
+    ],
+    "labels": {
+      "8": "Option"
+    },
+    "analog": false,
+    "diagram": "ngp"
+  },
+  "ngpc": {
+    "players": 1,
+    "shape": "handheld",
+    "primary": [
+      64,
+      128,
+      32,
+      16,
+      1,
+      2,
+      8
+    ],
+    "labels": {
+      "8": "Option"
+    },
+    "analog": false,
+    "diagram": "ngpc"
+  },
+  "n64": {
+    "players": 4,
+    "shape": "gamepad",
+    "primary": [
+      64,
+      128,
+      32,
+      16,
+      8,
+      2,
+      2048,
+      4096,
+      512,
+      256
+    ],
+    "labels": {
+      "2": "A",
+      "2048": "B",
+      "4096": "Z trigger"
+    },
+    "analog": true,
+    "diagram": "n64",
+    "sticks": [
+      "Control stick",
+      "C buttons"
+    ]
+  },
+  "nds": {
+    "players": 1,
+    "shape": "handheld",
+    "primary": [
+      64,
+      128,
+      32,
+      16,
+      8,
+      4,
+      1,
+      2,
+      1024,
+      2048,
+      512,
+      256
+    ],
+    "labels": {},
+    "analog": false,
+    "diagram": "nds"
+  },
+  "odyssey2": {
+    "players": 2,
+    "shape": "joystick",
+    "primary": [
+      64,
+      128,
+      32,
+      16,
+      2,
+      4,
+      2048
+    ],
+    "labels": {
+      "2": "Action",
+      "4": "Show keyboard",
+      "2048": "Move keyboard"
+    },
+    "analog": false,
+    "diagram": "odyssey2"
+  },
+  "pce": {
+    "players": 2,
+    "shape": "gamepad",
+    "primary": [
+      64,
+      128,
+      32,
+      16,
+      8,
+      4,
+      1,
+      2,
+      2048,
+      1024,
+      512,
+      256,
+      4096
+    ],
+    "labels": {
+      "8": "Run",
+      "1": "I",
+      "2": "II",
+      "2048": "III",
+      "1024": "IV",
+      "512": "V",
+      "256": "VI",
+      "4096": "Two / six-button mode"
+    },
+    "analog": false,
+    "unbound_gamepad": [
+      4096
+    ],
+    "diagram": "pce"
+  },
+  "pcecd": {
+    "players": 2,
+    "shape": "gamepad",
+    "primary": [
+      64,
+      128,
+      32,
+      16,
+      8,
+      4,
+      1,
+      2,
+      2048,
+      1024,
+      512,
+      256,
+      4096
+    ],
+    "labels": {
+      "8": "Run",
+      "1": "I",
+      "2": "II",
+      "2048": "III",
+      "1024": "IV",
+      "512": "V",
+      "256": "VI",
+      "4096": "Two / six-button mode"
+    },
+    "analog": false,
+    "unbound_gamepad": [
+      4096
+    ],
+    "diagram": "pce"
+  },
+  "psx": {
+    "players": 2,
+    "shape": "gamepad",
+    "primary": [
+      64,
+      128,
+      32,
+      16,
+      8,
+      4,
+      1,
+      2,
+      1024,
+      2048,
+      512,
+      256,
+      4096,
+      8192,
+      16384,
+      32768
+    ],
+    "labels": {
+      "2": "Cross",
+      "1": "Circle",
+      "2048": "Square",
+      "1024": "Triangle",
+      "512": "L1",
+      "256": "R1",
+      "4096": "L2",
+      "8192": "R2",
+      "16384": "L3",
+      "32768": "R3"
+    },
+    "analog": true,
+    "diagram": "psx",
+    "sticks": [
+      "Left stick",
+      "Right stick"
+    ]
+  },
+  "psp": {
+    "players": 1,
+    "shape": "handheld",
+    "primary": [
+      64,
+      128,
+      32,
+      16,
+      8,
+      4,
+      1,
+      2,
+      1024,
+      2048,
+      512,
+      256
+    ],
+    "labels": {
+      "2": "Cross",
+      "1": "Circle",
+      "2048": "Square",
+      "1024": "Triangle",
+      "512": "L",
+      "256": "R"
+    },
+    "analog": true,
+    "diagram": "psp",
+    "sticks": [
+      "Analog stick"
+    ]
+  },
+  "vectrex": {
+    "players": 2,
+    "shape": "joystick",
+    "primary": [
+      64,
+      128,
+      32,
+      16,
+      1,
+      2,
+      1024,
+      2048
+    ],
+    "labels": {
+      "1": "1",
+      "2": "2",
+      "1024": "3",
+      "2048": "4"
+    },
+    "analog": false,
+    "diagram": "vectrex"
+  },
+  "vb": {
+    "players": 1,
+    "shape": "handheld",
+    "primary": [
+      64,
+      128,
+      32,
+      16,
+      8,
+      4,
+      1,
+      2,
+      512,
+      256,
+      4096,
+      8192,
+      16384,
+      32768
+    ],
+    "labels": {
+      "64": "Left pad up",
+      "128": "Left pad down",
+      "32": "Left pad left",
+      "16": "Left pad right",
+      "4096": "Right pad up",
+      "16384": "Right pad down",
+      "8192": "Right pad left",
+      "32768": "Right pad right"
+    },
+    "analog": false,
+    "diagram": "vb"
+  },
+  "ws": {
+    "players": 1,
+    "shape": "handheld",
+    "primary": [
+      64,
+      128,
+      32,
+      16,
+      8,
+      4,
+      1,
+      2,
+      512,
+      256,
+      4096,
+      8192
+    ],
+    "labels": {
+      "64": "X1 (up)",
+      "128": "X3 (down)",
+      "32": "X4 (left)",
+      "16": "X2 (right)",
+      "8192": "Y1 (up)",
+      "4096": "Y3 (down)",
+      "512": "Y4 (left)",
+      "256": "Y2 (right)",
+      "4": "Rotate screen"
+    },
+    "analog": false,
+    "diagram": "ws"
+  },
+  "wsc": {
+    "players": 1,
+    "shape": "handheld",
+    "primary": [
+      64,
+      128,
+      32,
+      16,
+      8,
+      4,
+      1,
+      2,
+      512,
+      256,
+      4096,
+      8192
+    ],
+    "labels": {
+      "64": "X1 (up)",
+      "128": "X3 (down)",
+      "32": "X4 (left)",
+      "16": "X2 (right)",
+      "8192": "Y1 (up)",
+      "4096": "Y3 (down)",
+      "512": "Y4 (left)",
+      "256": "Y2 (right)",
+      "4": "Rotate screen"
+    },
+    "analog": false,
+    "diagram": "wsc"
+  }
+}

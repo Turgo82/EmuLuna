@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=EmuLuna
+Comment=Your retro games, together
+Exec=EmuLuna %F
+Icon=emuluna
+Terminal=false
+Categories=Game;Emulator;
+MimeType=application/x-game-rom;
+StartupWMClass=emuluna

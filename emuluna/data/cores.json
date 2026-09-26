@@ -1,0 +1,1081 @@
+{
+  "gambatte": {
+    "name": "Gambatte",
+    "systems": [
+      "gb",
+      "gbc"
+    ],
+    "extensions": [
+      "gb",
+      "gbc",
+      "dmg"
+    ],
+    "firmware": [
+      {
+        "path": "gb_bios.bin",
+        "description": "gb_bios.bin (Game Boy BIOS)",
+        "optional": true,
+        "md5": "32fbbd84168d3482956eb3c5051637f5",
+        "requirement": "Optional"
+      },
+      {
+        "path": "gbc_bios.bin",
+        "description": "gbc_bios.bin (Game Boy Color BIOS)",
+        "optional": true,
+        "md5": "dbfce9db9deaa2567f6a84fde55f9680",
+        "requirement": "Optional"
+      }
+    ],
+    "notes": "(!) gb_bios.bin (md5): 32fbbd84168d3482956eb3c5051637f5|(!) gbc_bios.bin (md5): dbfce9db9deaa2567f6a84fde55f9680",
+    "source": "https://raw.githubusercontent.com/libretro/libretro-core-info/master/gambatte_libretro.info"
+  },
+  "mgba": {
+    "name": "mGBA",
+    "systems": [
+      "gb",
+      "gbc",
+      "gba"
+    ],
+    "extensions": [
+      "gb",
+      "gbc",
+      "gba"
+    ],
+    "firmware": [
+      {
+        "path": "gba_bios.bin",
+        "description": "gba_bios.bin (Game Boy Advance BIOS)",
+        "optional": true,
+        "md5": "a860e8c0b6d573d191e4ec7db1b1e4f6",
+        "requirement": "Optional"
+      },
+      {
+        "path": "gb_bios.bin",
+        "description": "gb_bios.bin (Game Boy BIOS)",
+        "optional": true,
+        "md5": "32fbbd84168d3482956eb3c5051637f5",
+        "requirement": "Optional"
+      },
+      {
+        "path": "gbc_bios.bin",
+        "description": "gbc_bios.bin (Game Boy Color BIOS)",
+        "optional": true,
+        "md5": "dbfce9db9deaa2567f6a84fde55f9680",
+        "requirement": "Optional"
+      },
+      {
+        "path": "sgb_bios.bin",
+        "description": "sgb_bios.bin (Super Game Boy BIOS)",
+        "optional": true,
+        "requirement": "Optional"
+      }
+    ],
+    "notes": "(!) gba_bios.bin (md5): a860e8c0b6d573d191e4ec7db1b1e4f6|(!) gb_bios.bin (md5): 32fbbd84168d3482956eb3c5051637f5|(!) gbc_bios.bin (md5): dbfce9db9deaa2567f6a84fde55f9680",
+    "source": "https://raw.githubusercontent.com/libretro/libretro-core-info/master/mgba_libretro.info"
+  },
+  "snes9x": {
+    "name": "Snes9x",
+    "systems": [
+      "snes"
+    ],
+    "extensions": [
+      "smc",
+      "sfc",
+      "swc",
+      "fig",
+      "bs",
+      "st"
+    ],
+    "firmware": [
+      {
+        "path": "BS-X.bin",
+        "description": "BS-X.bin (BS-X - Sore wa Namae o Nusumareta Machi no Monogatari (Japan) (Rev 1))",
+        "optional": true,
+        "md5": "fed4d8242cfbed61343d53d48432aced",
+        "requirement": "Optional"
+      },
+      {
+        "path": "STBIOS.bin",
+        "description": "STBIOS.bin (Sufami Turbo (Japan))",
+        "optional": true,
+        "md5": "d3a44ba7d42a74d3ac58cb9c14c6a5ca",
+        "requirement": "Optional"
+      }
+    ],
+    "notes": "(!) BS-X.bin (md5): fed4d8242cfbed61343d53d48432aced|(!) STBIOS.bin (md5): d3a44ba7d42a74d3ac58cb9c14c6a5ca|(!) To start BS-X games from the RPG-like interface, go back into the house and select the 1st option.",
+    "source": "https://raw.githubusercontent.com/libretro/libretro-core-info/master/snes9x_libretro.info"
+  },
+  "nestopia": {
+    "name": "Nestopia",
+    "systems": [
+      "nes",
+      "fds"
+    ],
+    "extensions": [
+      "nes",
+      "fds",
+      "unf",
+      "unif"
+    ],
+    "firmware": [
+      {
+        "path": "disksys.rom",
+        "description": "disksys.rom (Family Computer Disk System BIOS)",
+        "optional": true,
+        "md5": "ca30b50f880eb660a320674ed365ef7a",
+        "requirement": "Required for Famicom Disk System",
+        "required_systems": [
+          "fds"
+        ]
+      }
+    ],
+    "notes": "(!) disksys.rom (md5): ca30b50f880eb660a320674ed365ef7a|Press Retropad L1 to switch disk side.",
+    "source": "https://raw.githubusercontent.com/libretro/libretro-core-info/master/nestopia_libretro.info",
+    "options": {
+      "nestopia_blargg_ntsc_filter": "disabled"
+    },
+    "notice": "Uses sharp pixel rendering by default. The current Linux build crashes with its composite filter enabled."
+  },
+  "stella": {
+    "name": "Stella",
+    "systems": [
+      "atari2600"
+    ],
+    "extensions": [
+      "a26",
+      "bin"
+    ],
+    "firmware": [],
+    "notes": "",
+    "source": "https://raw.githubusercontent.com/libretro/libretro-core-info/master/stella_libretro.info"
+  },
+  "a5200": {
+    "name": "a5200",
+    "systems": [
+      "atari5200"
+    ],
+    "extensions": [
+      "a52",
+      "bin"
+    ],
+    "firmware": [
+      {
+        "path": "5200.rom",
+        "description": "5200.rom (5200 BIOS)",
+        "optional": true,
+        "md5": "281f20ea4320404ec820fb7ec0693b38",
+        "requirement": "Optional"
+      }
+    ],
+    "notes": "(!) 5200.rom (md5): 281f20ea4320404ec820fb7ec0693b38",
+    "source": "https://raw.githubusercontent.com/libretro/libretro-core-info/master/a5200_libretro.info"
+  },
+  "prosystem": {
+    "name": "ProSystem",
+    "systems": [
+      "atari7800"
+    ],
+    "extensions": [
+      "a78",
+      "bin",
+      "cdf"
+    ],
+    "firmware": [
+      {
+        "path": "7800 BIOS (U).rom",
+        "description": "7800 BIOS (U).rom (7800 BIOS)",
+        "optional": true,
+        "requirement": "Optional"
+      }
+    ],
+    "notes": "(!) 7800 BIOS (U).rom (md5): 0763f1ffb006ddbe32e52d497ee848ae",
+    "source": "https://raw.githubusercontent.com/libretro/libretro-core-info/master/prosystem_libretro.info"
+  },
+  "handy": {
+    "name": "Handy",
+    "systems": [
+      "lynx"
+    ],
+    "extensions": [
+      "lnx",
+      "lyx",
+      "o"
+    ],
+    "firmware": [
+      {
+        "path": "lynxboot.img",
+        "description": "lynxboot.img (Lynx Boot Image)",
+        "optional": true,
+        "md5": "fcd403db69f54290b51035d82f835e7b",
+        "requirement": "Optional"
+      }
+    ],
+    "notes": "(!) lynxboot.img (md5): fcd403db69f54290b51035d82f835e7b",
+    "source": "https://raw.githubusercontent.com/libretro/libretro-core-info/master/handy_libretro.info"
+  },
+  "gearcoleco": {
+    "name": "Gearcoleco",
+    "systems": [
+      "colecovision"
+    ],
+    "extensions": [
+      "col",
+      "cv",
+      "bin",
+      "rom"
+    ],
+    "firmware": [
+      {
+        "path": "colecovision.rom",
+        "description": "colecovision.rom (ColecoVision BIOS)",
+        "optional": false,
+        "md5": "2c66f5911e5b42b8ebe113403548eee7",
+        "requirement": "Required"
+      }
+    ],
+    "notes": "(!) colecovision.rom (md5): 2c66f5911e5b42b8ebe113403548eee7",
+    "source": "https://raw.githubusercontent.com/libretro/libretro-core-info/master/gearcoleco_libretro.info"
+  },
+  "freeintv": {
+    "name": "FreeIntv",
+    "systems": [
+      "intellivision"
+    ],
+    "extensions": [
+      "int",
+      "bin",
+      "rom"
+    ],
+    "firmware": [
+      {
+        "path": "exec.bin",
+        "description": "exec.bin",
+        "optional": false,
+        "md5": "62e761035cb657903761800f4437b8af",
+        "requirement": "Required"
+      },
+      {
+        "path": "grom.bin",
+        "description": "grom.bin",
+        "optional": false,
+        "md5": "0cd5946c6473e42e8e4c2137785e427f",
+        "requirement": "Required"
+      }
+    ],
+    "notes": "(!) exec.bin (md5): 62e761035cb657903761800f4437b8af|(!) grom.bin (md5): 0cd5946c6473e42e8e4c2137785e427f",
+    "source": "https://raw.githubusercontent.com/libretro/libretro-core-info/master/freeintv_libretro.info"
+  },
+  "genesis_plus_gx": {
+    "name": "Genesis Plus GX",
+    "systems": [
+      "gg",
+      "genesis",
+      "sms",
+      "sg1000",
+      "segacd"
+    ],
+    "extensions": [
+      "mdx",
+      "md",
+      "smd",
+      "gen",
+      "bin",
+      "cue",
+      "iso",
+      "sms",
+      "bms",
+      "gg",
+      "sg",
+      "68k",
+      "sgd",
+      "chd",
+      "m3u"
+    ],
+    "firmware": [
+      {
+        "path": "bios_MD.bin",
+        "description": "bios_MD.bin (Mega Drive startup ROM)",
+        "optional": true,
+        "requirement": "Optional"
+      },
+      {
+        "path": "bios_CD_E.bin",
+        "description": "bios_CD_E.bin (MegaCD EU BIOS)",
+        "optional": true,
+        "md5": "e66fa1dc5820d254611fdcdba0662372",
+        "requirement": "Sega CD: supply the BIOS for your game region",
+        "group": "sega_cd",
+        "required_systems": [
+          "segacd"
+        ]
+      },
+      {
+        "path": "bios_CD_U.bin",
+        "description": "bios_CD_U.bin (SegaCD US BIOS)",
+        "optional": true,
+        "md5": "2efd74e3232ff260e371b99f84024f7f",
+        "requirement": "Sega CD: supply the BIOS for your game region",
+        "group": "sega_cd",
+        "required_systems": [
+          "segacd"
+        ]
+      },
+      {
+        "path": "bios_CD_J.bin",
+        "description": "bios_CD_J.bin (MegaCD JP BIOS)",
+        "optional": true,
+        "md5": "278a9397d192149e84e820ac621a8edd",
+        "requirement": "Sega CD: supply the BIOS for your game region",
+        "group": "sega_cd",
+        "required_systems": [
+          "segacd"
+        ]
+      },
+      {
+        "path": "bios_E.sms",
+        "description": "bios_E.sms (MasterSystem EU BIOS)",
+        "optional": true,
+        "requirement": "Optional"
+      },
+      {
+        "path": "bios_U.sms",
+        "description": "bios_U.sms (MasterSystem US BIOS)",
+        "optional": true,
+        "requirement": "Optional"
+      },
+      {
+        "path": "bios_J.sms",
+        "description": "bios_J.sms (MasterSystem JP BIOS)",
+        "optional": true,
+        "requirement": "Optional"
+      },
+      {
+        "path": "bios.gg",
+        "description": "bios.gg (GameGear BIOS)",
+        "optional": true,
+        "requirement": "Optional"
+      },
+      {
+        "path": "sk.bin",
+        "description": "sk.bin (Sonic & Knuckles ROM)",
+        "optional": true,
+        "md5": "4ea493ea4e9f6c9ebfccbdb15110367e",
+        "requirement": "Optional"
+      },
+      {
+        "path": "sk2chip.bin",
+        "description": "sk2chip.bin (Sonic & Knuckles UPMEM ROM)",
+        "optional": true,
+        "md5": "b4e76e416b887f4e7413ba76fa735f16",
+        "requirement": "Optional"
+      },
+      {
+        "path": "areplay.bin",
+        "description": "areplay.bin (Action Replay ROM)",
+        "optional": true,
+        "requirement": "Optional"
+      },
+      {
+        "path": "ggenie.bin",
+        "description": "ggenie.bin (Game Genie ROM)",
+        "optional": true,
+        "requirement": "Optional"
+      }
+    ],
+    "notes": "(!) sk2chip.bin (md5): b4e76e416b887f4e7413ba76fa735f16|(!) sk.bin (md5): 4ea493ea4e9f6c9ebfccbdb15110367e",
+    "source": "https://raw.githubusercontent.com/libretro/libretro-core-info/master/genesis_plus_gx_libretro.info",
+    "system_options": {
+      "genesis": {
+        "genesis_plus_gx_audio_filter": "low-pass",
+        "genesis_plus_gx_lowpass_range": "60"
+      }
+    },
+    "runtime_options": {
+      "genesis": [
+        {
+          "group": "Genesis Audio",
+          "label": "Model 1 low-pass filter",
+          "key": "genesis_plus_gx_audio_filter",
+          "default": "low-pass",
+          "enabled": "low-pass",
+          "disabled": "disabled"
+        }
+      ]
+    }
+  },
+  "picodrive": {
+    "name": "PicoDrive",
+    "systems": [
+      "genesis",
+      "sms",
+      "sega32x",
+      "segacd"
+    ],
+    "extensions": [
+      "bin",
+      "gen",
+      "smd",
+      "md",
+      "32x",
+      "cue",
+      "iso",
+      "chd",
+      "sms",
+      "gg",
+      "sg",
+      "sc",
+      "m3u",
+      "68k",
+      "sgd",
+      "pco"
+    ],
+    "firmware": [
+      {
+        "path": "bios_CD_E.bin",
+        "description": "bios_CD_E.bin (MegaCD EU BIOS)",
+        "optional": true,
+        "md5": "e66fa1dc5820d254611fdcdba0662372",
+        "requirement": "Sega CD: supply the BIOS for your game region",
+        "group": "sega_cd",
+        "required_systems": [
+          "segacd"
+        ]
+      },
+      {
+        "path": "bios_CD_U.bin",
+        "description": "bios_CD_U.bin (SegaCD US BIOS)",
+        "optional": true,
+        "md5": "2efd74e3232ff260e371b99f84024f7f",
+        "requirement": "Sega CD: supply the BIOS for your game region",
+        "group": "sega_cd",
+        "required_systems": [
+          "segacd"
+        ]
+      },
+      {
+        "path": "bios_CD_J.bin",
+        "description": "bios_CD_J.bin (MegaCD JP BIOS)",
+        "optional": true,
+        "md5": "278a9397d192149e84e820ac621a8edd",
+        "requirement": "Sega CD: supply the BIOS for your game region",
+        "group": "sega_cd",
+        "required_systems": [
+          "segacd"
+        ]
+      }
+    ],
+    "notes": "(!) bios_CD_U.bin (md5): 2efd74e3232ff260e371b99f84024f7f|(!) bios_CD_E.bin (md5): e66fa1dc5820d254611fdcdba0662372|(!) bios_CD_J.bin (md5): 278a9397d192149e84e820ac621a8edd",
+    "source": "https://raw.githubusercontent.com/libretro/libretro-core-info/master/picodrive_libretro.info"
+  },
+  "mednafen_saturn": {
+    "name": "Beetle Saturn",
+    "systems": [
+      "saturn"
+    ],
+    "extensions": [
+      "ccd",
+      "chd",
+      "cue",
+      "toc",
+      "m3u",
+      "zip"
+    ],
+    "firmware": [
+      {
+        "path": "sega_101.bin",
+        "description": "sega_101.bin (Saturn JP BIOS)",
+        "optional": false,
+        "md5": "85ec9ca47d8f6807718151cbcca8b964",
+        "requirement": "Required for the matching game region",
+        "group": "saturn"
+      },
+      {
+        "path": "mpr-17933.bin",
+        "description": "mpr-17933.bin (Saturn US/EU BIOS)",
+        "optional": false,
+        "md5": "3240872c70984b6cbfda1586cab68dbe",
+        "requirement": "Required for the matching game region",
+        "group": "saturn"
+      },
+      {
+        "path": "mpr-18811-mx.ic1",
+        "description": "mpr-18811-mx.ic1 (The King of Fighters '95 ROM Cartridge)",
+        "optional": true,
+        "md5": "255113ba943c92a54facd25a10fd780c",
+        "requirement": "Optional"
+      },
+      {
+        "path": "mpr-19367-mx.ic1",
+        "description": "mpr-19367-mx.ic1 (Ultraman: Hikari no Kyojin Densetsu ROM Cartridge)",
+        "optional": true,
+        "md5": "1cd19988d1d72a3e7caa0b73234c96b4",
+        "requirement": "Optional"
+      }
+    ],
+    "notes": "(!) sega_101.bin (md5): 85ec9ca47d8f6807718151cbcca8b964|(!) mpr-17933.bin (md5): 3240872c70984b6cbfda1586cab68dbe|(!) mpr-18811-mx.ic1 (md5): 255113ba943c92a54facd25a10fd780c|(!) mpr-19367-mx.ic1 (md5): 1cd19988d1d72a3e7caa0b73234c96b4",
+    "source": "https://raw.githubusercontent.com/libretro/libretro-core-info/master/mednafen_saturn_libretro.info"
+  },
+  "mednafen_ngp": {
+    "name": "Beetle NeoPop",
+    "systems": [
+      "ngp",
+      "ngpc"
+    ],
+    "extensions": [
+      "ngp",
+      "ngc",
+      "ngpc",
+      "npc"
+    ],
+    "firmware": [],
+    "notes": "",
+    "source": "https://raw.githubusercontent.com/libretro/libretro-core-info/master/mednafen_ngp_libretro.info"
+  },
+  "parallel_n64": {
+    "name": "ParaLLEl N64",
+    "systems": [
+      "n64"
+    ],
+    "extensions": [
+      "n64",
+      "v64",
+      "z64",
+      "bin",
+      "u1",
+      "ndd"
+    ],
+    "firmware": [
+      {
+        "path": "64DD_IPL.bin",
+        "description": "64DD_IPL.bin (64DD IPL ROM)",
+        "optional": true,
+        "md5": "8d3d9f294b6e174bc7b1d2fd1c727530",
+        "requirement": "Optional"
+      }
+    ],
+    "notes": "(!) 64DD_IPL.bin (md5): 8d3d9f294b6e174bc7b1d2fd1c727530",
+    "source": "https://raw.githubusercontent.com/libretro/libretro-core-info/master/parallel_n64_libretro.info",
+    "options": {
+      "parallel-n64-gfxplugin": "angrylion",
+      "parallel-n64-rspplugin": "cxd4",
+      "parallel-n64-upscaling": "1x"
+    },
+    "accessories": [
+      {
+        "label": "Controller Pak",
+        "count": 4,
+        "key": "parallel-n64-pak{player}",
+        "defaults": ["memory", "none", "none", "none"],
+        "choices": [["memory", "Memory Pak"], ["rumble", "Rumble Pak"], ["none", "None"]],
+        "restart": false
+      }
+    ],
+    "notice": "Software rendering at console resolution. Supports the analog stick and C buttons. See F1 in the game for controls."
+  },
+  "desmume": {
+    "name": "DeSmuME",
+    "systems": [
+      "nds"
+    ],
+    "extensions": [
+      "nds",
+      "ids",
+      "bin"
+    ],
+    "firmware": [
+      {
+        "path": "firmware.bin",
+        "description": "firmware.bin (NDS Firmware)",
+        "optional": true,
+        "requirement": "Optional"
+      },
+      {
+        "path": "bios7.bin",
+        "description": "bios7.bin (ARM7 BIOS)",
+        "optional": true,
+        "md5": "df692a80a5b1bc90728bc3dfc76cd948",
+        "requirement": "Optional"
+      },
+      {
+        "path": "bios9.bin",
+        "description": "bios9.bin (ARM9 BIOS)",
+        "optional": true,
+        "md5": "a392174eb3e572fed6447e956bde4b25",
+        "requirement": "Optional"
+      }
+    ],
+    "notes": "(!) bios7.bin (md5): df692a80a5b1bc90728bc3dfc76cd948|(!) bios9.bin (md5): a392174eb3e572fed6447e956bde4b25|[1] Enable 'Use External BIOS/Firmware' core option to use firmware files",
+    "source": "https://raw.githubusercontent.com/libretro/libretro-core-info/master/desmume_libretro.info",
+    "notice": "Software rendering; touchscreen input and screen layout controls are pending."
+  },
+  "o2em": {
+    "name": "O2EM",
+    "systems": [
+      "odyssey2"
+    ],
+    "extensions": [
+      "bin"
+    ],
+    "firmware": [
+      {
+        "path": "o2rom.bin",
+        "description": "o2rom.bin (Odyssey2 BIOS - G7000 model)",
+        "optional": false,
+        "md5": "562d5ebf9e030a40d6fabfc2f33139fd",
+        "requirement": "Required (default model)"
+      },
+      {
+        "path": "c52.bin",
+        "description": "c52.bin (Videopac French BIOS - G7000 model)",
+        "optional": true,
+        "md5": "f1071cdb0b6b10dde94d3bc8a6146387",
+        "requirement": "Optional alternate model"
+      },
+      {
+        "path": "g7400.bin",
+        "description": "g7400.bin (Videopac+ European BIOS - G7400 model)",
+        "optional": true,
+        "md5": "c500ff71236068e0dc0d0603d265ae76",
+        "requirement": "Optional alternate model"
+      },
+      {
+        "path": "jopac.bin",
+        "description": "jopac.bin (Videopac+ French BIOS - G7400 model)",
+        "optional": true,
+        "md5": "279008e4a0db2dc5f1c048853b033828",
+        "requirement": "Optional alternate model"
+      }
+    ],
+    "notes": "(!) o2rom.bin (md5): 562d5ebf9e030a40d6fabfc2f33139fd|(!) c52.bin (md5): f1071cdb0b6b10dde94d3bc8a6146387|(!) g7400.bin (md5): c500ff71236068e0dc0d0603d265ae76|(!) jopac.bin (md5): 279008e4a0db2dc5f1c048853b033828",
+    "source": "https://raw.githubusercontent.com/libretro/libretro-core-info/master/o2em_libretro.info"
+  },
+  "mednafen_pce_fast": {
+    "name": "Beetle PCE FAST",
+    "systems": [
+      "pce",
+      "pcecd"
+    ],
+    "extensions": [
+      "pce",
+      "cue",
+      "ccd",
+      "chd",
+      "toc",
+      "m3u"
+    ],
+    "firmware": [
+      {
+        "path": "syscard3.pce",
+        "description": "syscard3.pce (PCE-CD BIOS)",
+        "optional": true,
+        "md5": "38179df8f4ac870017db21ebcbf53114",
+        "requirement": "Required for PC Engine CD (default BIOS)",
+        "required_systems": [
+          "pcecd"
+        ]
+      },
+      {
+        "path": "syscard2.pce",
+        "description": "syscard2.pce (PCE-CD BIOS)",
+        "optional": true,
+        "requirement": "Optional"
+      },
+      {
+        "path": "syscard1.pce",
+        "description": "syscard1.pce (PCE-CD BIOS)",
+        "optional": true,
+        "requirement": "Optional"
+      },
+      {
+        "path": "gexpress.pce",
+        "description": "gexpress.pce (PCE-CD BIOS)",
+        "optional": true,
+        "requirement": "Optional"
+      }
+    ],
+    "notes": "(!) syscard3.pce (md5): 38179df8f4ac870017db21ebcbf53114|[i] For cue files track type use:|[i] OGG for ogg files|[i] WAVE for wav files|[i] BINARY for iso files",
+    "source": "https://raw.githubusercontent.com/libretro/libretro-core-info/master/mednafen_pce_fast_libretro.info",
+    "system_options": {
+      "pce": {
+        "pce_fast_default_joypad_type_p1": "2 Buttons",
+        "pce_fast_default_joypad_type_p2": "2 Buttons",
+        "pce_fast_last_scanline": "227"
+      },
+      "pcecd": {
+        "pce_fast_default_joypad_type_p1": "2 Buttons",
+        "pce_fast_default_joypad_type_p2": "2 Buttons",
+        "pce_fast_last_scanline": "227"
+      }
+    }
+  },
+  "pcsx_rearmed": {
+    "name": "PCSX ReARMed",
+    "systems": [
+      "psx"
+    ],
+    "extensions": [
+      "bin",
+      "cue",
+      "img",
+      "mdf",
+      "pbp",
+      "toc",
+      "cbn",
+      "m3u",
+      "ccd",
+      "chd",
+      "iso",
+      "exe"
+    ],
+    "firmware": [
+      {
+        "path": "scph5500.bin",
+        "description": "scph5500.bin (PS1 JP BIOS)",
+        "optional": true,
+        "md5": "8dd7d5296a650fac7319bce665a6a53c",
+        "requirement": "Optional"
+      },
+      {
+        "path": "scph5501.bin",
+        "description": "scph5501.bin (PS1 US BIOS)",
+        "optional": true,
+        "md5": "490f666e1afb15b7362b406ed1cea246",
+        "requirement": "Optional"
+      },
+      {
+        "path": "scph5502.bin",
+        "description": "scph5502.bin (PS1 EU BIOS)",
+        "optional": true,
+        "md5": "32736f17079d0b2b7024407c39bd3050",
+        "requirement": "Optional"
+      },
+      {
+        "path": "psxonpsp660.bin",
+        "description": "psxonpsp660.bin (PSP PSX Emu BIOS)",
+        "optional": true,
+        "md5": "c53ca5908936d412331790f4426c6c33",
+        "requirement": "Optional"
+      }
+    ],
+    "notes": "(!) scph5500.bin (md5): 8dd7d5296a650fac7319bce665a6a53c|(!) scph5501.bin (md5): 490f666e1afb15b7362b406ed1cea246|(!) scph5502.bin (md5): 32736f17079d0b2b7024407c39bd3050|(!) psxonpsp660.bin (md5): c53ca5908936d412331790f4426c6c33",
+    "source": "https://raw.githubusercontent.com/libretro/libretro-core-info/master/pcsx_rearmed_libretro.info",
+    "accessories": [
+      {
+        "label": "Second Memory Card",
+        "count": 1,
+        "key": "pcsx_rearmed_memcard2",
+        "default": "disabled",
+        "choices": [["enabled", "Inserted"], ["disabled", "Not inserted"]],
+        "restart": true
+      }
+    ]
+  },
+  "ppsspp": {
+    "name": "PPSSPP",
+    "systems": [
+      "psp"
+    ],
+    "extensions": [
+      "elf",
+      "iso",
+      "cso",
+      "prx",
+      "pbp",
+      "chd"
+    ],
+    "firmware": [
+      {
+        "path": "PPSSPP/ppge_atlas.zim",
+        "description": "ppge_atlas.zim (PPSSPP Data ROM)",
+        "optional": false,
+        "md5": "866855cc330b9b95cc69135fb7b41d38",
+        "requirement": "Required"
+      }
+    ],
+    "notes": "(!) ppge_atlas.zim (md5): 866855cc330b9b95cc69135fb7b41d38|(!) PPSSPP requires the asset files, lang folder, and flash0 folder inside the 'system\\PPSSPP' directory.|(!) Check https://docs.libretro.com/library/ppsspp/#bios to find out how to get the assets files.",
+    "source": "https://raw.githubusercontent.com/libretro/libretro-core-info/master/ppsspp_libretro.info",
+    "options": {
+      "ppsspp_backend": "none",
+      "ppsspp_software_rendering": "enabled",
+      "ppsspp_internal_resolution": "480x272"
+    },
+    "notice": "Uses PPSSPP's software renderer at the PSP's native resolution. Install the required PPSSPP assets from System Files before playing."
+  },
+  "vecx": {
+    "name": "vecx",
+    "systems": [
+      "vectrex"
+    ],
+    "extensions": [
+      "bin",
+      "vec"
+    ],
+    "firmware": [],
+    "notes": "",
+    "source": "https://raw.githubusercontent.com/libretro/libretro-core-info/master/vecx_libretro.info",
+    "options": {
+      "vecx_use_hw": "Software"
+    },
+    "notice": "Uses VecX's software renderer. Vectrex games retain their original portrait display and controller layout."
+  },
+  "mednafen_vb": {
+    "name": "Beetle VB",
+    "systems": [
+      "vb"
+    ],
+    "extensions": [
+      "vb",
+      "vboy",
+      "bin"
+    ],
+    "firmware": [],
+    "notes": "",
+    "source": "https://raw.githubusercontent.com/libretro/libretro-core-info/master/mednafen_vb_libretro.info"
+  },
+  "mednafen_wswan": {
+    "name": "Beetle Wonderswan",
+    "systems": [
+      "ws",
+      "wsc"
+    ],
+    "extensions": [
+      "ws",
+      "wsc",
+      "pc2",
+      "pcv2"
+    ],
+    "firmware": [],
+    "notes": "",
+    "source": "https://raw.githubusercontent.com/libretro/libretro-core-info/master/mednafen_wswan_libretro.info"
+  },
+  "sameboy": {
+    "name": "SameBoy",
+    "systems": [
+      "gb",
+      "gbc"
+    ],
+    "extensions": [
+      "gb",
+      "gbc"
+    ],
+    "firmware": [
+      {
+        "path": "dmg_boot.bin",
+        "description": "dmg_boot.bin (Game Boy boot ROM)",
+        "optional": true,
+        "md5": "32fbbd84168d3482956eb3c5051637f5",
+        "requirement": "Optional"
+      },
+      {
+        "path": "cgb_boot.bin",
+        "description": "cgb_boot.bin (Game Boy Color boot ROM)",
+        "optional": true,
+        "md5": "dbfce9db9deaa2567f6a84fde55f9680",
+        "requirement": "Optional"
+      }
+    ],
+    "notes": "(!) dmg_boot.bin (md5): 32fbbd84168d3482956eb3c5051637f5|(!) cgb_boot.bin (md5): dbfce9db9deaa2567f6a84fde55f9680",
+    "source": "https://raw.githubusercontent.com/libretro/libretro-core-info/master/sameboy_libretro.info"
+  },
+  "snes9x2010": {
+    "name": "Snes9x 2010",
+    "systems": [
+      "snes"
+    ],
+    "extensions": [
+      "smc",
+      "fig",
+      "sfc",
+      "gd3",
+      "gd7",
+      "dx2",
+      "bsx",
+      "swc"
+    ],
+    "firmware": [],
+    "notes": "",
+    "source": "https://raw.githubusercontent.com/libretro/libretro-core-info/master/snes9x2010_libretro.info"
+  },
+  "bsnes": {
+    "name": "bsnes",
+    "systems": [
+      "snes"
+    ],
+    "extensions": [
+      "smc",
+      "sfc",
+      "swc",
+      "fig",
+      "gb",
+      "gbc",
+      "bs"
+    ],
+    "firmware": [
+      {
+        "path": "dsp1.data.rom",
+        "description": "dsp1.data.rom",
+        "optional": true,
+        "requirement": "Optional"
+      },
+      {
+        "path": "dsp1.program.rom",
+        "description": "dsp1.program.rom",
+        "optional": true,
+        "requirement": "Optional"
+      },
+      {
+        "path": "dsp1b.data.rom",
+        "description": "dsp1b.data.rom",
+        "optional": true,
+        "requirement": "Optional"
+      },
+      {
+        "path": "dsp1b.program.rom",
+        "description": "dsp1b.program.rom",
+        "optional": true,
+        "requirement": "Optional"
+      },
+      {
+        "path": "dsp2.data.rom",
+        "description": "dsp2.data.rom",
+        "optional": true,
+        "requirement": "Optional"
+      },
+      {
+        "path": "dsp2.program.rom",
+        "description": "dsp2.program.rom",
+        "optional": true,
+        "requirement": "Optional"
+      },
+      {
+        "path": "dsp3.data.rom",
+        "description": "dsp3.data.rom",
+        "optional": true,
+        "requirement": "Optional"
+      },
+      {
+        "path": "dsp3.program.rom",
+        "description": "dsp3.program.rom",
+        "optional": true,
+        "requirement": "Optional"
+      },
+      {
+        "path": "dsp4.data.rom",
+        "description": "dsp4.data.rom",
+        "optional": true,
+        "requirement": "Optional"
+      },
+      {
+        "path": "dsp4.program.rom",
+        "description": "dsp4.program.rom",
+        "optional": true,
+        "requirement": "Optional"
+      },
+      {
+        "path": "cx4.data.rom",
+        "description": "cx4.data.rom",
+        "optional": true,
+        "requirement": "Optional"
+      },
+      {
+        "path": "st010.data.rom",
+        "description": "st010.data.rom",
+        "optional": true,
+        "requirement": "Optional"
+      },
+      {
+        "path": "st010.program.rom",
+        "description": "st010.program.rom",
+        "optional": true,
+        "requirement": "Optional"
+      },
+      {
+        "path": "st011.data.rom",
+        "description": "st011.data.rom",
+        "optional": true,
+        "requirement": "Optional"
+      },
+      {
+        "path": "st011.program.rom",
+        "description": "st011.program.rom",
+        "optional": true,
+        "requirement": "Optional"
+      },
+      {
+        "path": "st018.data.rom",
+        "description": "st018.data.rom",
+        "optional": true,
+        "requirement": "Optional"
+      },
+      {
+        "path": "st018.program.rom",
+        "description": "st018.program.rom",
+        "optional": true,
+        "requirement": "Optional"
+      },
+      {
+        "path": "SGB1.sfc",
+        "description": "SGB1.sfc (SGB Boot Image)",
+        "optional": true,
+        "md5": "b15ddb15721c657d82c5bab6db982ee9",
+        "requirement": "Optional"
+      },
+      {
+        "path": "SGB2.sfc",
+        "description": "SGB2.sfc (SGB Boot Image)",
+        "optional": true,
+        "md5": "8ecd73eb4edf7ed7e81aef1be80031d5",
+        "requirement": "Optional"
+      },
+      {
+        "path": "BS-X.bin",
+        "description": "BS-X.bin (BS-X - Sore wa Namae o Nusumareta Machi no Monogatari (Japan) (Rev 1))",
+        "optional": true,
+        "md5": "fed4d8242cfbed61343d53d48432aced",
+        "requirement": "Optional"
+      }
+    ],
+    "notes": "[1] bsnes uses split ROMS for special chip games.|[*] Notable DSP1/DSP1B Games: Super Mario Kart,  Pilotwings|[*] Notable DSP2 Games: Dungeon Master|[*] Notable DSP3 Games: SD Gundam GX|[*] Notable DSP4 Games: Top Gear 3000|[*] Notable Cx4 Games: Mega Man X2,  Mega Man X3|[2] SGB Emulation needs No-Intro Super Game Boy ROMs renamed to SGB1.sfc or SGB2.sfc|(!) SGB1.sfc (md5): b15ddb15721c657d82c5bab6db982ee9|(!) SGB2.sfc (md5): 8ecd73eb4edf7ed7e81aef1be80031d5|[3] To start BS-X games from the RPG-like interface, go back into the house and select the 1st option.|(!) BS-X.bin (md5): fed4d8242cfbed61343d53d48432aced",
+    "source": "https://raw.githubusercontent.com/libretro/libretro-core-info/master/bsnes_libretro.info"
+  },
+  "fceumm": {
+    "name": "FCEUmm",
+    "systems": [
+      "nes",
+      "fds"
+    ],
+    "extensions": [
+      "fds",
+      "nes",
+      "unif",
+      "unf"
+    ],
+    "firmware": [
+      {
+        "path": "disksys.rom",
+        "description": "disksys.rom (Family Computer Disk System BIOS)",
+        "optional": true,
+        "md5": "ca30b50f880eb660a320674ed365ef7a",
+        "requirement": "Required for Famicom Disk System",
+        "required_systems": [
+          "fds"
+        ]
+      },
+      {
+        "path": "nes.pal",
+        "description": "nes.pal (custom NES Palette)",
+        "optional": true,
+        "requirement": "Optional"
+      },
+      {
+        "path": "gamegenie.nes",
+        "description": "gamegenie.nes (Game Genie add-on cartridge)",
+        "optional": true,
+        "md5": "7f98d77d7a094ad7d069b74bd553ec98",
+        "requirement": "Optional"
+      }
+    ],
+    "notes": "(!) disksys.rom (md5): ca30b50f880eb660a320674ed365ef7a|(!) gamegenie.nes (md5): 7f98d77d7a094ad7d069b74bd553ec98|(!) nes.pal must be located in system directory.",
+    "source": "https://raw.githubusercontent.com/libretro/libretro-core-info/master/fceumm_libretro.info"
+  }
+}

@@ -1,0 +1,438 @@
+{
+  "nes": {
+    "artist": "Pinapple_Graphics",
+    "source": "Nintendo NES.png",
+    "collection": "Controller_Vectors_by_Pinapple_Graphics_(Normal_300ppi)_v2.1",
+    "source_sha256": "9ee0569a43192c973120bc3454985cb32eb812fce31bebaf28f8de2834110d47",
+    "source_size": [
+      1100,
+      476
+    ],
+    "source_bytes": 396078,
+    "image_size": [
+      1100,
+      476
+    ],
+    "image_bytes": 242288,
+    "image_sha256": "ede8102cb013641d921968449f498e214698cbfa3aa0f2df325f9a8b9b9b6c1b",
+    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved",
+    "converted_image_sha256": "06d0a198482fd75e6ae48da3d72bae336731eab23b1fd34a057e31ec217b7018",
+    "local_edit": "Existing local artwork edits retained; not regenerated"
+  },
+  "fds": {
+    "artist": "Pinapple_Graphics",
+    "source": "Nintendo Famicom.png",
+    "collection": "Controller_Vectors_by_Pinapple_Graphics_(Normal_300ppi)_v2.1",
+    "source_sha256": "1e87827836c4556f5fe84cc3439662e229282853a13b8ba0dda7d4f22e6a7121",
+    "source_size": [
+      1077,
+      470
+    ],
+    "source_bytes": 263225,
+    "image_size": [
+      1077,
+      470
+    ],
+    "image_bytes": 162078,
+    "image_sha256": "831ffc6a9016d00fc7d34befb47b51d679c894d4a75867bc69a865b9fcbfed38",
+    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved"
+  },
+  "snes": {
+    "artist": "Pinapple_Graphics",
+    "source": "Super Nintendo.png",
+    "collection": "Controller_Vectors_by_Pinapple_Graphics_(Normal_300ppi)_v2.1",
+    "source_sha256": "34141eef0cd07f4422f4dc0db6bda81d945da65834d459adda81bc37655f55e2",
+    "source_size": [
+      1244,
+      546
+    ],
+    "source_bytes": 422558,
+    "image_size": [
+      1100,
+      483
+    ],
+    "image_bytes": 299804,
+    "image_sha256": "6e9e64e304f597cc5f44e3a1dc38f0c67f7f59411e6eadc971c87bf4cc52f50b",
+    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved",
+    "converted_image_sha256": "1607963012c3f67284273c0ef6321f2d52eb6ffb8135f11b936fe88ac66a3a04",
+    "local_edit": "Existing local artwork edits retained; not regenerated"
+  },
+  "genesis": {
+    "artist": "Pinapple_Graphics",
+    "source": "Sega Genesis 6 Button.png",
+    "collection": "Controller_Vectors_by_Pinapple_Graphics_(Normal_300ppi)_v2.1",
+    "source_sha256": "98bb9c2e40d47a9b55edadbed12299af7da90e91ecf9a3ac1dd5bb8c62d04765",
+    "source_size": [
+      1186,
+      610
+    ],
+    "source_bytes": 427148,
+    "image_size": [
+      1100,
+      566
+    ],
+    "image_bytes": 210040,
+    "image_sha256": "20bd1ece114950de1fe66b1a7b1a32b75514d6a383ef6c50dc1e6cef7f8c53b5",
+    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved"
+  },
+  "saturn": {
+    "artist": "Pinapple_Graphics",
+    "source": "Sega Saturn A.png",
+    "collection": "Controller_Vectors_by_Pinapple_Graphics_(Normal_300ppi)_v2.1",
+    "source_sha256": "3fa6b6f521aa0fe9c0f591de71260fad3e87e275490a46138526cb6f11b4e272",
+    "source_size": [
+      1278,
+      716
+    ],
+    "source_bytes": 404464,
+    "image_size": [
+      1100,
+      616
+    ],
+    "image_bytes": 184880,
+    "image_sha256": "89285def7c150d06ed4eb14d50d4b4f64edfa7caf31bcd41f4d98bd6a7ca0264",
+    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved"
+  },
+  "pce": {
+    "artist": "Pinapple_Graphics",
+    "source": "NEC TurboGrafx-16.png",
+    "collection": "Controller_Vectors_by_Pinapple_Graphics_(Normal_300ppi)_v2.1",
+    "source_sha256": "bc2a7bb2d2a8a53e65ff2ba82c5ecbb2a86376725f2ee5fa345ff6a70c0477cb",
+    "source_size": [
+      1190,
+      566
+    ],
+    "source_bytes": 322140,
+    "image_size": [
+      1100,
+      523
+    ],
+    "image_bytes": 202340,
+    "image_sha256": "c073a6adc26b0eb4e053432d64e8550487984fbe598f8fe942e5ad7e0a3accf3",
+    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved"
+  },
+  "psx": {
+    "artist": "Pinapple_Graphics",
+    "source": "Sony PlayStation DualShock1.png",
+    "collection": "Controller_Vectors_by_Pinapple_Graphics_(Normal_300ppi)_v2.1",
+    "source_sha256": "db85d578f55b488e77e5c3e7532ec0e9306c158ad1b10db50f3fd8af43b81d7b",
+    "source_size": [
+      1286,
+      766
+    ],
+    "source_bytes": 632634,
+    "image_size": [
+      1100,
+      655
+    ],
+    "image_bytes": 337440,
+    "image_sha256": "bf59712673cc641d28cf73b3ec52078906b9225f95dbd8cc847b2f135be10cf1",
+    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved"
+  },
+  "n64": {
+    "artist": "Pinapple_Graphics",
+    "source": "Nintendo 64.png",
+    "collection": "Controller_Vectors_by_Pinapple_Graphics_(Normal_300ppi)_v2.1",
+    "source_sha256": "4ea188e0cbddc7317b2cc25498731f6e6a39bd9213d3de2b1cd8dda60a7ed5b1",
+    "source_size": [
+      1156,
+      1104
+    ],
+    "source_bytes": 838028,
+    "image_size": [
+      1100,
+      1051
+    ],
+    "image_bytes": 671496,
+    "image_sha256": "6e1f2210110df7a12f5ca98bd8e05c9e223e668c959869dca83cbee7fe740e11",
+    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved"
+  },
+  "vb": {
+    "artist": "Pinapple_Graphics",
+    "source": "Nintendo Virtual Boy.png",
+    "collection": "Controller_Vectors_by_Pinapple_Graphics_(Normal_300ppi)_v2.1",
+    "source_sha256": "6ad28b9b47fc6ea65e91a3028c542c2051aae4182b36f2f3d5feeae6af8f4b4c",
+    "source_size": [
+      1138,
+      960
+    ],
+    "source_bytes": 523875,
+    "image_size": [
+      1100,
+      928
+    ],
+    "image_bytes": 328400,
+    "image_sha256": "93d1de66d97d87546e13c2f1f5fb8ee32156917b67e1caafb72abb77e6d63ad9",
+    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved"
+  },
+  "gb": {
+    "artist": "Pinapple_Graphics",
+    "source": "Nintendo Game Boy.png",
+    "collection": "Controller_Vectors_by_Pinapple_Graphics_(Normal_300ppi)_v2.1",
+    "source_sha256": "7aac8a5a19f983e5760164ec0cef2b7e46f4d784a5a7f12ed1920c1ba1bb81d8",
+    "source_size": [
+      592,
+      980
+    ],
+    "source_bytes": 199443,
+    "image_size": [
+      592,
+      980
+    ],
+    "image_bytes": 128684,
+    "image_sha256": "37fd2e7d5f61be5c2e978fe17ecb888a229bc13bd263f59b08ec95bd383a7ee9",
+    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved"
+  },
+  "gbc": {
+    "artist": "Pinapple_Graphics",
+    "source": "Nintendo Game Boy Color purple.png",
+    "collection": "Controller_Vectors_by_Pinapple_Graphics_(Normal_300ppi)_v2.1",
+    "source_sha256": "93c09e1287aa2e7f907e07a14695cf789a1a6b04e321ffdfced0444c0ad3ec3a",
+    "source_size": [
+      598,
+      970
+    ],
+    "source_bytes": 235569,
+    "image_size": [
+      598,
+      970
+    ],
+    "image_bytes": 163416,
+    "image_sha256": "59c1c8f9b5d5bb06a926cd8af40cfd4a47eb056ecc1cb4145254c3e1dfaba8c0",
+    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved"
+  },
+  "gba": {
+    "artist": "Pinapple_Graphics",
+    "source": "Nintendo Game Boy Advance.png",
+    "collection": "Controller_Vectors_by_Pinapple_Graphics_(Normal_300ppi)_v2.1",
+    "source_sha256": "b1e1ee204bc69b3d3b206da22cfdd64070f2c617b30041cc5996df2639ba4dc1",
+    "source_size": [
+      1170,
+      664
+    ],
+    "source_bytes": 407663,
+    "image_size": [
+      1100,
+      624
+    ],
+    "image_bytes": 401304,
+    "image_sha256": "881e204f60068cc76541c7460a3601008c85d88d18fc7ceff748fa9d8cb01789",
+    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved"
+  },
+  "nds": {
+    "artist": "Pinapple_Graphics",
+    "source": "Nintendo DS.png",
+    "collection": "Controller_Vectors_by_Pinapple_Graphics_(Normal_300ppi)_v2.1",
+    "source_sha256": "248da3bd69dbd663080430e50dc470270cc880e0ab2b5f5cff00430671b85d2e",
+    "source_size": [
+      1020,
+      1060
+    ],
+    "source_bytes": 523612,
+    "image_size": [
+      1020,
+      1060
+    ],
+    "image_bytes": 341036,
+    "image_sha256": "18fd8e9996b41fe97483064c920819cb46b062d1ac37e6ac3854c7039c593a8a",
+    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved"
+  },
+  "psp": {
+    "artist": "Pinapple_Graphics",
+    "source": "Sony PSP.png",
+    "collection": "Controller_Vectors_by_Pinapple_Graphics_(Normal_300ppi)_v2.1",
+    "source_sha256": "069605b47e1a0f56a084e33666d0c9c9c5fa70b8b9e0fdaeba799c2ab80ceccf",
+    "source_size": [
+      1254,
+      524
+    ],
+    "source_bytes": 150501,
+    "image_size": [
+      1100,
+      460
+    ],
+    "image_bytes": 65126,
+    "image_sha256": "0e01cfea427d592e7569b9f02fd9b94824a2276d241c51c3f330ddcb4e744e00",
+    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved"
+  },
+  "gg": {
+    "artist": "Pinapple_Graphics",
+    "source": "Sega Game Gear.png",
+    "collection": "Controller_Vectors_by_Pinapple_Graphics_(Normal_300ppi)_v2.1",
+    "source_sha256": "310cb0e7cd28b300cc7cc382122e78667bd3d252eac0a2bac232ba02ae19ae73",
+    "source_size": [
+      1220,
+      652
+    ],
+    "source_bytes": 507354,
+    "image_size": [
+      1100,
+      588
+    ],
+    "image_bytes": 319688,
+    "image_sha256": "90de22d54d2f82d82b581e76284c00a3b2295b5d9b35325094daa90cf39aa79f",
+    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved"
+  },
+  "lynx": {
+    "artist": "Pinapple_Graphics",
+    "source": "Atari Lynx.png",
+    "collection": "Controller_Vectors_by_Pinapple_Graphics_(Normal_300ppi)_v2.1",
+    "source_sha256": "8dd58c729fd7508b21d8e241c385986c52ce4ff4ab9e82556f8dd2bc9f325016",
+    "source_size": [
+      1208,
+      480
+    ],
+    "source_bytes": 307854,
+    "image_size": [
+      1100,
+      437
+    ],
+    "image_bytes": 254746,
+    "image_sha256": "9a713cc6b4aa5e318fd08a3a33eabc1944a05d327c870c5eafca897c87acc789",
+    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved"
+  },
+  "ngpc": {
+    "artist": "Pinapple_Graphics",
+    "source": "SNK Neo Geo Pocket Color.png",
+    "collection": "Controller_Vectors_by_Pinapple_Graphics_(Normal_300ppi)_v2.1",
+    "source_sha256": "3f0433a7d1910eab935b5c99f7f62c38901f2b6474486602ef0994ce0d6a3892",
+    "source_size": [
+      1104,
+      678
+    ],
+    "source_bytes": 950520,
+    "image_size": [
+      1100,
+      676
+    ],
+    "image_bytes": 787974,
+    "image_sha256": "79c274bed93487814895104368a5880d3a4980ec10505c8531091f5d9ecf4f9f",
+    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved"
+  },
+  "wsc": {
+    "artist": "Pinapple_Graphics",
+    "source": "Bandai Wonderswan Color Crystal Blue Violet.png",
+    "collection": "Controller_Vectors_by_Pinapple_Graphics_(Normal_300ppi)_v2.1",
+    "source_sha256": "d7dc02049902992c28c6887e0640a7e3dffd1b8ecfeadbf6c083d2ade017cc2c",
+    "source_size": [
+      1091,
+      645
+    ],
+    "source_bytes": 281729,
+    "image_size": [
+      1091,
+      645
+    ],
+    "image_bytes": 151182,
+    "image_sha256": "ff278a4c4763317eed44442ad53d4356f2c52569804c43f5f51cd7a1a7b268be",
+    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved"
+  },
+  "sms": {
+    "artist": "Pinapple_Graphics",
+    "source": "Sega Master System.png",
+    "collection": "Controller_Vectors_by_Pinapple_Graphics_(Normal_300ppi)_v2.1",
+    "source_sha256": "13996c845acdcb60a33908de6f61f01c24055b54e0aa0b73f070d1fa879cb072",
+    "source_size": [
+      1112,
+      460
+    ],
+    "source_bytes": 224295,
+    "image_size": [
+      1100,
+      455
+    ],
+    "image_bytes": 132970,
+    "image_sha256": "3cf44f1a987732d9ac8f31654a07d5a02c2963ea4859739627aab6e57a59135e",
+    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved"
+  },
+  "atari2600": {
+    "artist": "Pinapple_Graphics",
+    "source": "Atari 2600.png",
+    "collection": "Controller_Vectors_by_Pinapple_Graphics_(Normal_300ppi)_v2.1",
+    "source_sha256": "f544999c1718928935ef1ddc896f0a57e1c55d7790be8fb86d1d4000e9d46cdd",
+    "source_size": [
+      834,
+      834
+    ],
+    "source_bytes": 415644,
+    "image_size": [
+      834,
+      834
+    ],
+    "image_bytes": 254906,
+    "image_sha256": "b71d36b3e18fdd647766693aaf2241336bc688e99291a9db333c26e311c0ed23",
+    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved"
+  },
+  "atari7800": {
+    "artist": "Pinapple_Graphics",
+    "source": "Atari 7800.png",
+    "collection": "Controller_Vectors_by_Pinapple_Graphics_(Normal_300ppi)_v2.1",
+    "source_sha256": "79545ddfa8fd0f4d71865375a2f991b795ef1c6a40fbf5c861105db9f748c7e7",
+    "source_size": [
+      1038,
+      512
+    ],
+    "source_bytes": 344298,
+    "image_size": [
+      1038,
+      512
+    ],
+    "image_bytes": 193926,
+    "image_sha256": "16b42fdb80023366071bec07c4db0c16e6d539c19567913689c71849c2fd639f",
+    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved"
+  },
+  "colecovision": {
+    "artist": "Pinapple_Graphics",
+    "source": "Coleco Colecovision.png",
+    "collection": "Controller_Vectors_by_Pinapple_Graphics_(Normal_300ppi)_v2.1",
+    "source_sha256": "ad9c32b7a7e8c79ab23177784be98a944528cc6619ad54da4b905ffc30474574",
+    "source_size": [
+      426,
+      955
+    ],
+    "source_bytes": 192240,
+    "image_size": [
+      426,
+      955
+    ],
+    "image_bytes": 118064,
+    "image_sha256": "3c468006304e86d393f79f16282292e29ab55f579dc11511aa79386901bbe4c9",
+    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved"
+  },
+  "intellivision": {
+    "artist": "Pinapple_Graphics",
+    "source": "Mattel Intellivision.png",
+    "collection": "Controller_Vectors_by_Pinapple_Graphics_(Normal_300ppi)_v2.1",
+    "source_sha256": "38bd2f3f116ea5e69ac8b81e90136f88eaf263750297c7e2e67d8f1947ea0648",
+    "source_size": [
+      488,
+      998
+    ],
+    "source_bytes": 402521,
+    "image_size": [
+      488,
+      998
+    ],
+    "image_bytes": 254740,
+    "image_sha256": "91a0713231a3fa8896e8dc2f55a24f34c3bd38726721261979a6d6fa75eccb15",
+    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved"
+  },
+  "vectrex": {
+    "artist": "Pinapple_Graphics",
+    "source": "GCE Vectrex General Consumer Electronics.png",
+    "collection": "Controller_Vectors_by_Pinapple_Graphics_(Normal_300ppi)_v2.1",
+    "source_sha256": "fb1c9c2b7a613e6ea385315fb31b2cf611c1fe4c8377b5f290d0c18160d13ab5",
+    "source_size": [
+      1075,
+      390
+    ],
+    "source_bytes": 186809,
+    "image_size": [
+      1075,
+      390
+    ],
+    "image_bytes": 100934,
+    "image_sha256": "33989a719bb5fa44f3a459cd546b8549a4d9b29ec5e2f7579b50c9147354fa41",
+    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved"
+  }
+}

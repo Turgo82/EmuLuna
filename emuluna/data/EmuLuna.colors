@@ -1,0 +1,12 @@
+[General]
+Name=EmuLuna
+
+[Colors:Window]
+BackgroundNormal=27,28,33
+ForegroundNormal=235,234,240
+
+[WM]
+activeBackground=27,28,33
+activeForeground=235,234,240
+inactiveBackground=27,28,33
+inactiveForeground=164,165,178
