@@ -6,7 +6,8 @@ import os
 from pathlib import Path
 import sys
 
-from PySide6.QtCore import Qt, QSize, QProcess, QThread, Signal, QTimer, QRect, QUrl, QItemSelectionModel, QEvent
+from PySide6.QtCore import (Qt, QSize, QProcess, QProcessEnvironment, QThread, Signal,
+                           QTimer, QRect, QUrl, QItemSelectionModel, QEvent)
 from PySide6.QtGui import QAction, QColor, QDesktopServices, QFont, QFontMetrics, QIcon, QPainter, QPixmap, QLinearGradient
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QHBoxLayout, QVBoxLayout,
     QLabel, QPushButton, QListWidget, QListWidgetItem, QLineEdit, QFileDialog, QMessageBox, QGridLayout, QToolButton,
@@ -1236,7 +1237,8 @@ class Window(QMainWindow):
                 return
         process = QProcess(self)
         process.setProgram(sys.executable)
-        args = (["--player-process"] if getattr(sys, "frozen", False)
+        frozen = getattr(sys, "frozen", False)
+        args = (["--player-process"] if frozen
                 else ["-m", "emuluna.player"])
         args.extend(["--data-dir", str(self.library.root), "--game", game_id])
         if restart_auto:
@@ -1245,6 +1247,14 @@ class Window(QMainWindow):
             args.extend(["--state-file", str(state_path)])
             args.extend(["--core-id", selected["id"], "--core-sha256", selected["sha256"]])
         process.setArguments(args)
+        if frozen:
+            # PyInstaller 6.9+ otherwise assumes that a second invocation of
+            # sys.executable is a worker belonging to this frozen process. A
+            # game player is a complete, independent Qt application and needs
+            # a fresh bootloader environment so its top-level window is mapped.
+            environment = QProcessEnvironment.systemEnvironment()
+            environment.insert("PYINSTALLER_RESET_ENVIRONMENT", "1")
+            process.setProcessEnvironment(environment)
         process.setWorkingDirectory(str(ROOT))
         process.setProcessChannelMode(QProcess.MergedChannels)
         process.log = bytearray()

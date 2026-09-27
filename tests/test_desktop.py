@@ -2,6 +2,7 @@
 import ctypes as C
 import os
 from pathlib import Path
+import sys
 import tempfile
 import unittest
 from media_stub import isolate_audio
@@ -99,6 +100,29 @@ class DesktopIntegration(unittest.TestCase):
                 self.assertIsNone(window.game_restore_state)
                 self.assertFalse(window.processes)
             finally:
+                window.close()
+                library.close()
+
+    def test_frozen_player_starts_as_an_independent_application(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            rom = root / "Player process.sfc"
+            rom.write_bytes(snes())
+            library = Library(root / "library")
+            game_id = library.import_file(rom)[0]
+            window = Window(library, auto_artwork=False)
+            try:
+                with (patch("emuluna.app.QProcess") as process,
+                      patch("emuluna.app.CoreManager.selection", return_value={"id": "snes9x"}),
+                      patch.object(sys, "frozen", True, create=True)):
+                    window.launch_game(game_id)
+                    child = process.return_value
+                    args = child.setArguments.call_args.args[0]
+                    self.assertEqual(args[0], "--player-process")
+                    environment = child.setProcessEnvironment.call_args.args[0]
+                    self.assertEqual(environment.value("PYINSTALLER_RESET_ENVIRONMENT"), "1")
+            finally:
+                window.processes.clear()
                 window.close()
                 library.close()
 
