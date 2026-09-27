@@ -13,6 +13,10 @@ RetroArch. Linux is tested; Windows remains a development target.
   <img src="screenshots/emuluna-gameplay.png" alt="EmuLuna library with a Sega Mega Drive game running in its gameplay window">
 </p>
 
+<p align="center">
+  <a href="https://buymeacoffee.com/turgo"><strong>☕ Buy me a coffee and support EmuLuna</strong></a>
+</p>
+
 ## Run
 
 Open **Launch EmuLuna.sh**, or run `./run.sh`. The supplied native build is for
