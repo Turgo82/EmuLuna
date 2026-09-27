@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#11151c">
+  <meta name="description" content="Meet EmuLuna: a beautiful game library for Linux, with familiar controllers, save states, and community-made video filters.">
+  <title>EmuLuna — A home for your classics</title>
+  <link rel="icon" type="image/png" href="assets/emuluna.png">
+  <link rel="stylesheet" href="styles.css">
+  <script src="site.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <nav class="nav wrap" aria-label="Main navigation">
+      <a class="brand" href="#top" aria-label="EmuLuna home"><img src="assets/emuluna.png" width="38" height="38" alt=""><span>EmuLuna</span></a>
+      <div class="nav-links"><a href="#library">The library</a><a href="#controls">Your controls</a><a href="https://github.com/Turgo82/EmuLuna" class="github-link nav-github">GitHub <span aria-hidden="true">↗</span></a></div>
+    </nav>
+  </header>
+  <main id="main">
+    <section class="hero wrap" id="top">
+      <img class="hero-logo" src="assets/emuluna-logo.png" width="390" height="390" alt="EmuLuna">
+      <p class="eyebrow"><span class="status-dot" aria-hidden="true"></span> A new chapter in classic gaming</p>
+      <h1>A new home for<br><em>old favorites.</em></h1>
+      <p class="hero-copy">Your games, beautifully together. EmuLuna brings your favorite consoles into one thoughtful desktop library.</p>
+      <div class="hero-actions"><a class="button primary github-link" href="https://github.com/Turgo82/EmuLuna">View on GitHub <span aria-hidden="true">↗</span></a><a class="button coffee-button support-link" href="https://buymeacoffee.com/turgo" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">☕</span> Buy me a coffee</a><a class="button text-button" href="#library">Take a closer look <span aria-hidden="true">↓</span></a></div>
+      <p class="platform-note">Built for Linux <span aria-hidden="true">·</span> Actively in development</p>
+      <figure class="hero-product">
+        <div class="window-frame"><img src="assets/gameplay.png" width="1860" height="1164" fetchpriority="high" alt="EmuLuna's game library with Sonic the Hedgehog 2 running in its gameplay window"></div>
+        <figcaption><span>Your collection and your game, together.</span><span>Actual EmuLuna screenshot <span aria-hidden="true">↗</span></span></figcaption>
+      </figure>
+    </section>
+    <div class="console-band" aria-label="Some supported consoles"><div class="wrap"><span>Many consoles.<br><strong>One place to play.</strong></span><p>NES</p><p>Super Nintendo</p><p>Game Boy</p><p>Mega Drive</p><p>PlayStation</p><span class="and-more">&amp; more</span></div></div>
+    <section class="intro wrap reveal" id="library">
+      <div><p class="eyebrow">01 / THE LIBRARY</p><h2>Less looking.<br>More playing.</h2></div>
+      <div class="intro-copy"><p>Browse by console, collect your favorites, and find the game you had in mind. Box art, instant search, and a clean grid keep your collection close.</p><div class="detail-tags"><span>Automatic box art</span><span>Your own collections</span><span>Instant search</span></div></div>
+    </section>
+    <section class="showcase wrap reveal" aria-labelledby="showcase-title">
+      <div class="showcase-heading"><h3 id="showcase-title">A place for every part of the game.</h3><div class="view-tabs" role="tablist" aria-label="App screenshots"><button id="gameplay-tab" role="tab" aria-selected="true" aria-controls="gameplay-panel" data-view="gameplay">Gameplay</button><button id="library-tab" role="tab" aria-selected="false" tabindex="-1" aria-controls="library-panel" data-view="library">Library</button><button id="states-tab" role="tab" aria-selected="false" tabindex="-1" aria-controls="states-panel" data-view="states">Save states</button></div></div>
+      <div class="screenshot-panel" id="gameplay-panel" role="tabpanel" aria-labelledby="gameplay-tab" tabindex="0"><button class="image-button" data-image="assets/gameplay.png" data-caption="Gameplay in EmuLuna" aria-label="Enlarge gameplay screenshot"><img src="assets/gameplay.png" width="1860" height="1164" loading="lazy" alt="EmuLuna library with a Sega Mega Drive game running in the gameplay window"><span class="enlarge-label" aria-hidden="true">View full size ↗</span></button></div>
+      <div class="screenshot-panel" id="library-panel" role="tabpanel" aria-labelledby="library-tab" tabindex="0" hidden><button class="image-button" data-image="assets/library.webp" data-caption="The EmuLuna library" aria-label="Enlarge library screenshot"><img src="assets/library.webp" width="1280" height="810" loading="lazy" alt="EmuLuna library showing box art, star ratings, and console collections"><span class="enlarge-label" aria-hidden="true">View full size ↗</span></button></div>
+      <div class="screenshot-panel" id="states-panel" role="tabpanel" aria-labelledby="states-tab" tabindex="0" hidden><button class="image-button" data-image="assets/states.webp" data-caption="Save states in EmuLuna" aria-label="Enlarge save states screenshot"><img src="assets/states.webp" width="1280" height="810" loading="lazy" alt="Save states grouped by console, with gameplay previews and small box art thumbnails"><span class="enlarge-label" aria-hidden="true">View full size ↗</span></button></div>
+      <p class="screenshot-note" id="screenshot-note" aria-live="polite">Launch from your library and keep the controls you need close at hand.</p>
+    </section>
+    <section class="controls-section" id="controls"><div class="wrap">
+      <div class="section-heading reveal"><div><p class="eyebrow">02 / TAKE CONTROL</p><h2>Feels like<br>coming home.</h2></div><p>The controller you remember. The bindings you prefer. Set up buttons, sticks, shoulders, and triggers for each console and player.</p></div>
+      <figure class="controls-figure reveal"><button class="image-button" data-image="assets/controls.webp" data-caption="Console-specific controller settings" aria-label="Enlarge controller settings screenshot"><img src="assets/controls.webp" width="1200" height="800" loading="lazy" alt="EmuLuna Controls settings with a PlayStation DualShock illustration and editable button bindings"><span class="enlarge-label" aria-hidden="true">View full size ↗</span></button><figcaption>Keyboard or gamepad. Your choice.<span>Controller artwork by Pinapple_Graphics</span></figcaption></figure>
+    </div></section>
+    <section class="details wrap" id="features">
+      <div class="section-heading reveal"><div><p class="eyebrow">03 / THE LITTLE THINGS</p><h2>Made for one<br>more level.</h2></div><p>Spend time with your games. Keep the useful controls close and the technical details out of the way.</p></div>
+      <div class="feature-rows">
+        <article class="feature-row reveal"><span class="feature-number">01</span><h3>Pick up where<br>you left off.</h3><p>Automatic saves help you return to a game. Keep manual states, browse screenshot previews, and revisit a favorite moment.</p><span class="feature-symbol" aria-hidden="true">↺</span></article>
+        <article class="feature-row reveal"><span class="feature-number">02</span><h3>Yesterday’s look.<br>Today’s display.</h3><p>Explore community-made CRT, LCD, and pixel filters. Adjust them while you play, with GPU rendering on supported hardware.</p><span class="filter-swatch" aria-hidden="true"></span></article>
+        <article class="feature-row reveal"><span class="feature-number">03</span><h3>Great cores.<br>Quietly working.</h3><p>Standard libretro cores power your games inside EmuLuna. Install, update, and choose cores without leaving your library.</p><span class="feature-symbol asterisk" aria-hidden="true">✳</span></article>
+      </div>
+    </section>
+    <section class="closing wrap reveal"><img class="closing-mascot" src="assets/luna-mascot.png" width="230" height="230" loading="lazy" alt="Luna, EmuLuna's moon-and-stars fox mascot"><p class="eyebrow">THE NEXT CHAPTER IS YOURS</p><h2>Your collection.<br>Your next adventure.</h2><p>Luna will keep your classics company.</p><div class="closing-actions"><a class="button primary github-link" href="https://github.com/Turgo82/EmuLuna">Find us on GitHub <span aria-hidden="true">↗</span></a><a class="button coffee-button support-link" href="https://buymeacoffee.com/turgo" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">☕</span> Buy me a coffee</a></div><small>Linux development preview · Windows support planned</small></section>
+  </main>
+  <footer class="wrap"><div class="footer-top"><a class="brand" href="#top"><img src="assets/emuluna.png" width="30" height="30" alt=""><span>EmuLuna</span></a><p>A home for your classics.</p><a class="support-link" href="https://buymeacoffee.com/turgo" target="_blank" rel="noopener noreferrer">Support ☕</a><a class="github-link" href="https://github.com/Turgo82/EmuLuna">GitHub ↗</a><a href="#top">Back to top ↑</a></div><div class="footer-bottom"><p>An independent project, inspired by a love of classic games. Not affiliated with OpenEmu or console manufacturers.</p><p>Controller artwork: Pinapple_Graphics. Game artwork and trademarks belong to their respective owners. Games and BIOS files are not included.</p></div></footer>
+  <dialog id="image-dialog" aria-labelledby="image-dialog-title"><div class="dialog-top"><h2 id="image-dialog-title">App screenshot</h2><button class="dialog-close" type="button" aria-label="Close screenshot">Close <span aria-hidden="true">×</span></button></div><img id="dialog-image" alt=""></dialog>
+</body>
+</html>

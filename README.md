@@ -17,6 +17,12 @@ RetroArch. Linux is tested; Windows remains a development target.
   <a href="https://buymeacoffee.com/turgo"><strong>☕ Buy me a coffee and support EmuLuna</strong></a>
 </p>
 
+## Website
+
+Visit [emuluna-retro-library.turgo82.chatgpt.site](https://emuluna-retro-library.turgo82.chatgpt.site).
+The editable static website and its deployment configuration are in
+[`website/`](website/).
+
 ## Run
 
 Open **Launch EmuLuna.sh**, or run `./run.sh`. The supplied native build is for
