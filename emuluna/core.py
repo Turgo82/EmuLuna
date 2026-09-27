@@ -5,6 +5,7 @@ import json
 import os
 from pathlib import Path
 import tempfile
+from .hashing import file_hexdigest
 from .systems import core_launch_options
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -49,7 +50,7 @@ class Core:
             fn.restype, fn.argtypes = result, args
         Path(save_dir).mkdir(parents=True, exist_ok=True)
         with self.rom.open("rb") as file:
-            self.digest = content_digest or hashlib.file_digest(file, "sha256").hexdigest()
+            self.digest = content_digest or file_hexdigest(file, "sha256")
         self.lib.el_libretro_create.restype = C.c_void_p
         self.lib.el_libretro_create.argtypes = [C.c_char_p] * 4
         self.lib.el_error.restype = C.c_char_p

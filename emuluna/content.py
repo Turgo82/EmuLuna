@@ -6,6 +6,8 @@ import re
 import shutil
 import tempfile
 
+from .hashing import file_hexdigest
+
 DESCRIPTORS = {'.cue', '.ccd', '.m3u'}
 DISC_FILES = DESCRIPTORS | {'.chd', '.iso', '.cso', '.pbp'}
 MAX_DISC = 8 * 1024**3
@@ -76,7 +78,7 @@ def inventory(path):
     rows = []
     for relative, file in content_files(path).items():
         with file.open('rb') as stream:
-            digest = hashlib.file_digest(stream, 'sha256').hexdigest()
+            digest = file_hexdigest(stream, 'sha256')
         rows.append({'path': relative, 'sha256': digest, 'size': file.stat().st_size})
     return rows
 
@@ -98,14 +100,14 @@ def copy_content(source, folder, rows):
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(source.parent / row['path'], target)
             with target.open('rb') as file:
-                if hashlib.file_digest(file, 'sha256').hexdigest() != row['sha256']:
+                if file_hexdigest(file, 'sha256') != row['sha256']:
                     raise ValueError('A disc file changed while copying. Close programs editing it, then retry.')
         if folder.exists():
             # A previous import may have left an intact copy. Never replace it
             # with an incomplete or different set.
             for row in rows:
                 with (folder / row['path']).open('rb') as file:
-                    if hashlib.file_digest(file, 'sha256').hexdigest() != row['sha256']:
+                    if file_hexdigest(file, 'sha256') != row['sha256']:
                         raise ValueError('An existing managed disc copy differs. Choose another library location or restore that copy.')
         else:
             staged.rename(folder)

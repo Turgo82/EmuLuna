@@ -10,6 +10,8 @@ import time
 import zipfile
 import zlib
 
+from .hashing import file_hexdigest
+
 MAX_ROM = 512 * 1024 * 1024
 
 
@@ -326,7 +328,7 @@ class Library:
                 raise ValueError('A disc file changed since import. Restore the original disc set before playing.')
             return path
         with path.open("rb") as file:
-            digest = hashlib.file_digest(file, 'sha256').hexdigest()
+            digest = file_hexdigest(file, 'sha256')
         if digest != game_id:
             raise ValueError("The ROM file has changed since import. Locate the original ROM, or import the changed file as a separate game.")
         return path

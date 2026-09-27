@@ -5,6 +5,7 @@ from pathlib import Path
 import tempfile
 
 from .core import CoreError
+from .hashing import file_hexdigest
 from .systems import CATALOG
 
 MAX_BIOS = 64 * 1024 * 1024
@@ -26,7 +27,7 @@ def bios_status(directory, entry):
             return 'Invalid size', False
         if entry.get('md5'):
             with path.open('rb') as file:
-                digest = hashlib.file_digest(file, 'md5').hexdigest()
+                digest = file_hexdigest(file, 'md5')
             if digest != entry['md5']:
                 return 'Checksum mismatch', False
             return 'Verified', True

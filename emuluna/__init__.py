@@ -1,2 +1,2 @@
 """EmuLuna: an independent game library and libretro frontend."""
-__version__ = "0.13.2"
+__version__ = "0.13.3"
