@@ -220,9 +220,11 @@ class GameplayTests(unittest.TestCase):
     def test_gameplay_settings_and_default_fullscreen(self):
         settings = SettingsDialog(self.library)
         settings.show_page('gameplay')
+        self.assertTrue(settings.game_mode_keep_awake.isChecked())
         self.assertFalse(settings.minimize_library.isChecked())
         settings.fullscreen_default.setChecked(True)
         settings.hide_cursor.setChecked(False)
+        settings.game_mode_keep_awake.setChecked(False)
         settings.minimize_library.setChecked(True)
         settings.fast_speed.setValue(7)
         settings.latency.setValue(120)
@@ -234,6 +236,7 @@ class GameplayTests(unittest.TestCase):
         self.assertEqual(player.fast_speed, 7)
         self.assertIsNone(player.screen.display_aspect)
         self.assertEqual(self.library.setting("audio_latency"), "120")
+        self.assertEqual(self.library.setting("game_mode.keep_awake"), "0")
         self.assertEqual(self.library.setting("experimental.minimize_library_during_game"), "1")
 
     def test_audio_output_selection_and_disconnect_fallback_keep_pause_state(self):

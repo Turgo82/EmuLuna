@@ -24,6 +24,7 @@ from .library import Library
 from .gameplay import GameplayHUD, GameplayNotice, set_hud_icon
 from .controls import LAYOUTS, layout_for, keyboard_buttons, keyboard_axes, combined_axes
 from .controller_profiles import SPECS, load_profile, keyboard_layout
+from .game_mode import GameMode
 
 KEYS = keyboard_buttons(LAYOUTS["default"])
 
@@ -38,6 +39,8 @@ class Player(QMainWindow):
         follow_system_theme(library)
         self.setPalette(theme_palette())
         self.closed = False
+        self.game_mode = GameMode()
+        self.game_mode_enabled = None
         self.library = library
         self.game = library.get(game_id)
         if not self.game:
@@ -158,6 +161,7 @@ class Player(QMainWindow):
         self.fast_speed = self.preference_int("fast_forward_speed", 3, 2, 10)
         self.frames = 0
         self.frame_limit, self.capture_path = frame_limit, screenshot
+        self.refresh_game_mode()
         self.audio = self.audio_device = None
         self.audio_latency_ms = self.preference_int("audio_latency", 80, 20, 250)
         self.audio_underruns = 0
@@ -355,6 +359,7 @@ class Player(QMainWindow):
         """Pick up settings from the library process without restarting a core."""
         if self.closed:
             return
+        self.refresh_game_mode()
         system = self.game['system']
         self.rumble_enabled = self.library.setting("controller_rumble", "1") == "1"
         self.rumble_intensity = self.preference_int("controller_rumble_intensity", 100, 0, 100)
@@ -387,6 +392,19 @@ class Player(QMainWindow):
         self.key_bindings = self.key_bindings_by_player[0]
         self.axis_bindings = self.axis_bindings_by_player[0]
         self.pad = self.pads[0]
+
+    def refresh_game_mode(self):
+        enabled = (not self.frame_limit
+                   and self.library.setting("game_mode.keep_awake", "1") == "1")
+        if enabled == self.game_mode_enabled:
+            return
+        self.game_mode_enabled = enabled
+        if enabled:
+            available = self.game_mode.start()
+            print("Game mode: display sleep " + ("inhibited" if available else "inhibition unavailable"),
+                  flush=True)
+        else:
+            self.game_mode.stop()
 
     def initial_fullscreen(self):
         if not self.closed and self.isVisible() and not self.isFullScreen():
@@ -852,6 +870,7 @@ class Player(QMainWindow):
         self.screen.close_renderer()
         self.hud.stop()
         self.notice.timer.stop()
+        self.game_mode.stop()
         self.save_auto()
         self.core.close()
         for pad in self.pads:

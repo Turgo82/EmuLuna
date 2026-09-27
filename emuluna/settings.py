@@ -195,6 +195,13 @@ class SettingsDialog(QDialog):
         form = QFormLayout(page)
         form.setContentsMargins(20, 22, 20, 20)
         form.setSpacing(16)
+        game_mode = QLabel("Game Mode")
+        game_mode.setObjectName("controlGroup")
+        form.addRow(game_mode)
+        self.game_mode_keep_awake = self.checkbox(
+            form, "Keep the display awake while playing", "game_mode.keep_awake", "1")
+        self.game_mode_keep_awake.setToolTip(
+            "Prevent screen dimming, the screen saver, and automatic sleep while a game is open.")
         self.fullscreen_default = self.checkbox(form, "Open games in fullscreen", "fullscreen_default", "0")
         self.hide_cursor = self.checkbox(form, "Hide the pointer when gameplay controls disappear", "hide_game_cursor", "1")
         self.fast_speed = QSpinBox()
