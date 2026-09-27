@@ -88,6 +88,7 @@ class Window(QMainWindow):
         self.auto_cores_enabled = auto_artwork
         self.closing = False
         self.processes = {}
+        self.game_restore_state = None
         self.library_tab = "library"
         self.library_selection = []
         self.rows = {}
@@ -1248,6 +1249,7 @@ class Window(QMainWindow):
         process.setProcessChannelMode(QProcess.MergedChannels)
         process.log = bytearray()
         process.ready_notified = False
+        process.focus_notified = False
         process.readyReadStandardOutput.connect(lambda: self.process_output(process))
         process.finished.connect(lambda code, status: self.game_closed(game_id, code))
         process.errorOccurred.connect(lambda error: self.notifications.post(f"Game process error: {process.errorString()}"))
@@ -1261,6 +1263,11 @@ class Window(QMainWindow):
         if not process.ready_notified and b"EMULUNA_GAME_READY" in process.log:
             process.ready_notified = True
             self.notifications.post("Game opened in its own window.", 5000)
+        if not process.focus_notified and b"EMULUNA_GAME_NEEDS_FOCUS" in process.log:
+            process.focus_notified = True
+            if self.game_restore_state is None and self.isVisible() and not self.isMinimized():
+                self.game_restore_state = self.windowState()
+                self.showMinimized()
 
     def game_closed(self, game_id, code):
         process = self.processes.pop(game_id)
@@ -1269,6 +1276,12 @@ class Window(QMainWindow):
             self.notifications.post("The game stopped: " + (process.log.decode(errors="replace")[-2000:] or "The emulator process exited unexpectedly."))
         process.deleteLater()
         self.refresh()
+        if not self.processes and self.game_restore_state is not None and not self.closing:
+            state, self.game_restore_state = self.game_restore_state, None
+            self.setWindowState(state)
+            self.show()
+            self.raise_()
+            self.activateWindow()
 
     def context_menu(self, position, view=None):
         view = view or self.games

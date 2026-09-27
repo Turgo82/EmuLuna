@@ -885,8 +885,29 @@ def main():
         print(str(e), file=sys.stderr)
         QMessageBox.critical(None, "Could not start game", str(e))
         return 1
+    def present_player():
+        """Ask the desktop to expose and focus a newly launched game window."""
+        if player.closed:
+            return
+        player.show()
+        player.raise_()
+        player.activateWindow()
+        handle = player.windowHandle()
+        if handle:
+            handle.requestActivate()
+
     player.show()
+    present_player()
     print("EMULUNA_GAME_READY", flush=True)
+    # Wayland compositors may reject the first activation request from a child
+    # process. Retry after the surface is mapped, then let the library expose
+    # this window if the compositor still keeps it behind the parent.
+    def verify_player_focus():
+        present_player()
+        if (QApplication.platformName().lower().startswith("wayland")
+                and player.isVisible() and not player.isActiveWindow()):
+            print("EMULUNA_GAME_NEEDS_FOCUS", flush=True)
+    QTimer.singleShot(250, verify_player_focus)
     result = app.exec()
     library.close()
     return result

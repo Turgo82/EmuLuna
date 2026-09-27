@@ -1,7 +1,7 @@
 # EmuLuna development roadmap
 
 This roadmap tracks the requested feature blueprint, including work still to
-ship. Current preview: **0.13.3**, tested on Linux x86_64. Windows is a target,
+ship. Current preview: **0.13.4**, tested on Linux x86_64. Windows is a target,
 not yet a working or tested release.
 
 ## Architecture to preserve

@@ -6,10 +6,10 @@ import tempfile
 import unittest
 from media_stub import isolate_audio
 isolate_audio()
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QByteArray
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QMainWindow, QMenu
 from emuluna.app import Window
@@ -72,6 +72,35 @@ class DesktopIntegration(unittest.TestCase):
                 p.close()
                 window.close()
             self.assertTrue(p.state_path("auto.oesavestate").exists())
+
+    def test_hidden_wayland_player_exposes_window_and_restores_library(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            library = Library(Path(tmp) / "library")
+            window = Window(library, auto_artwork=False)
+            window.show()
+            process = Mock()
+            process.log = bytearray()
+            process.ready_notified = False
+            process.focus_notified = False
+            process.readAllStandardOutput.side_effect = [
+                QByteArray(b"EMULUNA_GAME_READY\nEMULUNA_GAME_NEEDS_FOCUS\n"),
+                QByteArray(),
+            ]
+            game_id = "focus-diagnostic"
+            window.processes[game_id] = process
+            try:
+                with patch.object(window, "showMinimized") as minimize:
+                    window.process_output(process)
+                    minimize.assert_called_once_with()
+                self.assertTrue(process.ready_notified)
+                self.assertTrue(process.focus_notified)
+                self.assertIsNotNone(window.game_restore_state)
+                window.game_closed(game_id, 0)
+                self.assertIsNone(window.game_restore_state)
+                self.assertFalse(window.processes)
+            finally:
+                window.close()
+                library.close()
 
     def test_virtual_controller_buttons_and_disconnect(self):
         pad = Gamepad()
