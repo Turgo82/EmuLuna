@@ -14,7 +14,7 @@ from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QHBoxLayout, 
 
 from . import __version__
 from .artwork import ArtworkWorker
-from .branding import ICON, configure_application, navigation_icon
+from .branding import ICON, LOGO, configure_application, navigation_icon
 from .core import ROOT, CoreError
 from .core_manager import CoreManager, DefaultCoreWorker
 from .library import Library, SYSTEMS, EXTENSIONS
@@ -454,7 +454,7 @@ class Window(QMainWindow):
     def show_about(self):
         self.about_dialog = QMessageBox(self)
         self.about_dialog.setWindowTitle("About EmuLuna")
-        self.about_dialog.setIconPixmap(QPixmap(str(ICON)).scaled(96, 96, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+        self.about_dialog.setIconPixmap(QPixmap(str(LOGO)).scaled(220, 220, Qt.KeepAspectRatio, Qt.SmoothTransformation))
         self.about_dialog.setText(f"EmuLuna {__version__}")
         self.about_dialog.setInformativeText("An independent game library and emulator frontend.\nRuns standard libretro cores directly.\n\n32 systems and 27 downloadable cores.\nArtwork: OpenVGDB and Libretro thumbnails.\n\nSee README.md and THIRD_PARTY_NOTICES.md for capabilities and credits.")
         self.about_dialog.setStandardButtons(QMessageBox.Ok)

@@ -4,6 +4,8 @@ from PySide6.QtCore import QByteArray
 from PySide6.QtGui import QIcon, QPixmap, QPalette
 
 ICON = Path(__file__).parent / 'data' / 'branding' / 'emuluna.png'
+LOGO = Path(__file__).parent / 'data' / 'branding' / 'emuluna-logo.png'
+MASCOT = Path(__file__).parent / 'data' / 'branding' / 'emuluna-mascot.png'
 COLLECTION_ICON_DIR = Path(__file__).parent / 'data' / 'icons' / 'collections'
 COLLECTION_ICONS = {
     'collection-all': 'all-games.svg',

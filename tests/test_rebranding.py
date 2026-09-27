@@ -13,7 +13,7 @@ from PySide6.QtGui import QImage
 from emuluna.app import Window
 from emuluna.library import Library, SYSTEMS, default_data_dir
 from emuluna.settings import SettingsDialog
-from emuluna.branding import ICON, configure_application
+from emuluna.branding import ICON, LOGO, MASCOT, configure_application
 from snes_rom import snes
 
 
@@ -29,6 +29,11 @@ class Rebranding(unittest.TestCase):
         icon = QImage(str(ICON))
         self.assertTrue(icon.hasAlphaChannel())
         self.assertEqual(icon.pixelColor(0,0).alpha(), 0)
+        for artwork in (LOGO, MASCOT):
+            image = QImage(str(artwork))
+            self.assertFalse(image.isNull())
+            self.assertTrue(image.hasAlphaChannel())
+            self.assertEqual(image.pixelColor(0, 0).alpha(), 0)
         with tempfile.TemporaryDirectory() as folder, patch.dict(os.environ, {'XDG_DATA_HOME': folder}):
             base = Path(folder)
             self.assertEqual(default_data_dir(), base/'emuluna')

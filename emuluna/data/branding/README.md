@@ -1,4 +1,15 @@
-# EmuLuna icon
+# EmuLuna branding
+
+The current brand set contains:
+
+- `emuluna.png`: compact app icon used at small desktop sizes.
+- `emuluna-logo.png`: full moon/controller wordmark used in About and project pages.
+- `emuluna-mascot.png`: Luna, used sparingly in project and website material.
+
+The full logo and Luna artwork were supplied for EmuLuna on 2026-09-26. Their
+original PNG pixels and transparency are preserved.
+
+## Compact app icon
 
 Created for EmuLuna with the built-in image-generation tool on 2026-09-19.
 Original PNG pixels and alpha are preserved.
