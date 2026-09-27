@@ -20,8 +20,6 @@ RetroArch. Linux is tested; Windows remains a development target.
 ## Website
 
 Visit [emuluna-retro-library.turgo82.chatgpt.site](https://emuluna-retro-library.turgo82.chatgpt.site).
-The editable static website and its deployment configuration are in
-[`website/`](website/).
 
 ## Run
 
