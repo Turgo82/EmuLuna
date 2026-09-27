@@ -13,7 +13,12 @@ jobs:
   appimage:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+
+      - name: Use the tested Python runtime
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
 
       - name: Install build dependencies
         run: |
@@ -21,16 +26,21 @@ jobs:
           sudo apt-get install -y cmake ninja-build g++ python3-venv curl desktop-file-utils libegl1 libgl1
 
       - name: Build AppImage
-        run: ./packaging/appimage/build-appimage.sh
+        run: |
+          python --version
+          PYTHON=python ./packaging/appimage/build-appimage.sh
 
       - name: Verify package
         run: |
           desktop-file-validate packaging/appimage/emuluna.desktop
           QT_QPA_PLATFORM=offscreen timeout 15 ./dist/EmuLuna-*.AppImage --appimage-extract-and-run --data-dir "$RUNNER_TEMP/emuluna-smoke" --screenshot "$RUNNER_TEMP/emuluna.png"
+          ./dist/EmuLuna-*.AppImage --appimage-extract >/dev/null
+          test ! -e squashfs-root/usr/bin/EmuLuna/_internal/libstdc++.so.6
+          test ! -e squashfs-root/usr/bin/EmuLuna/_internal/libgcc_s.so.1
           (cd dist && sha256sum EmuLuna-*.AppImage > SHA256SUMS)
 
       - name: Keep manually built artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: EmuLuna-AppImage
           path: |

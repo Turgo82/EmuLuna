@@ -23,6 +23,12 @@ a = Analysis(
     excludes=["PySide6.QtWebEngineCore", "PySide6.QtWebEngineWidgets"],
     noarchive=False,
 )
+# The AppImage must use the host compiler runtimes. Bundling Ubuntu's older
+# copies ahead of Fedora's Mesa/DRM stack prevents libEGL from loading the GPU
+# driver, leaving the gameplay QOpenGLWidget without a drawable window.
+host_graphics_runtimes = {"libstdc++.so.6", "libgcc_s.so.1"}
+a.binaries = [entry for entry in a.binaries
+              if Path(entry[0]).name not in host_graphics_runtimes]
 pyz = PYZ(a.pure)
 exe = EXE(
     pyz,

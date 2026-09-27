@@ -64,6 +64,10 @@ if [[ ! -x "$tool" ]]; then
 fi
 
 rm -f "$output"
-ARCH="$architecture" "$tool" --appimage-extract-and-run "$appdir" "$output"
+runtime_args=()
+if [[ -n "${APPIMAGE_RUNTIME_FILE:-}" ]]; then
+    runtime_args=(--runtime-file "$APPIMAGE_RUNTIME_FILE")
+fi
+ARCH="$architecture" "$tool" --appimage-extract-and-run "${runtime_args[@]}" "$appdir" "$output"
 chmod +x "$output"
 printf 'Created %s\n' "$output"
