@@ -10,6 +10,7 @@ import os
 from pathlib import Path
 import re
 import sqlite3
+import ssl
 import tempfile
 import time
 import unicodedata
@@ -18,6 +19,7 @@ from urllib.parse import quote, urlsplit, urlunsplit
 from urllib.request import Request, urlopen
 import zipfile
 
+import certifi
 from PySide6.QtCore import QBuffer, QByteArray, QIODevice, QLocale, QSize, Qt, QThread, Signal
 from PySide6.QtGui import QImageReader
 
@@ -55,6 +57,12 @@ def atomic_bytes(path, data):
 class Downloads:
     def __init__(self, cancelled=lambda: False):
         self.cancelled = cancelled
+        # Frozen Python keeps the build machine's OpenSSL certificate paths.
+        # Those paths differ across Linux distributions, so an AppImage built
+        # on Ubuntu may otherwise fail every HTTPS request on Fedora. Preserve
+        # locally installed roots and add a portable Mozilla root bundle.
+        self.ssl_context = ssl.create_default_context()
+        self.ssl_context.load_verify_locations(cafile=certifi.where())
 
     def check(self):
         if self.cancelled():
@@ -66,7 +74,7 @@ class Downloads:
                                                    "Accept": "*/*"})
         start = time.monotonic()
         try:
-            response = urlopen(request, timeout=10)
+            response = urlopen(request, timeout=10, context=self.ssl_context)
         except HTTPError as error:
             error.close()
             raise

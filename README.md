@@ -4,7 +4,7 @@
 
 # EmuLuna
 
-EmuLuna **0.13.7** is an independent desktop game library and libretro frontend.
+EmuLuna **0.13.8** is an independent desktop game library and libretro frontend.
 Python/Qt provides the interface, SQLite stores the library, and a reusable C++
 host loads standard, unmodified libretro cores directly. It does not launch
 RetroArch. Linux is tested; Windows remains a development target.

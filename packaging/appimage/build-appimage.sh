@@ -28,10 +28,17 @@ else
     exit 1
 fi
 
-if [[ ! -x "$venv/bin/pyinstaller" ]]; then
-    "${PYTHON:-python3}" -m venv "$venv"
+requirements_hash="$(sha256sum requirements.txt | cut -d' ' -f1)"
+requirements_stamp="$venv/.emuluna-requirements"
+installed_requirements="$(cat "$requirements_stamp" 2>/dev/null || true)"
+if [[ ! -x "$venv/bin/pyinstaller" || "$installed_requirements" != "$requirements_hash" ]]; then
+    if [[ ! -x "$venv/bin/python" ]]; then
+        rm -rf "$venv"
+        "${PYTHON:-python3}" -m venv "$venv"
+    fi
     "$venv/bin/python" -m pip install --upgrade pip
     "$venv/bin/pip" install -r requirements.txt 'pyinstaller>=6.11,<7'
+    printf '%s\n' "$requirements_hash" > "$requirements_stamp"
 fi
 
 rm -rf "$work" "$project/dist/EmuLuna"

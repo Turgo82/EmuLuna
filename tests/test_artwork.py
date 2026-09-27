@@ -180,9 +180,12 @@ class ArtworkTests(unittest.TestCase):
         class Response(io.BytesIO):
             headers = {}
             url = "https://example.org/image"
-        with patch.object(art, "urlopen", return_value=Response(b"123456")):
+        downloads = art.Downloads()
+        self.assertGreater(len(downloads.ssl_context.get_ca_certs()), 100)
+        with patch.object(art, "urlopen", return_value=Response(b"123456")) as open_url:
             with self.assertRaises(ValueError):
-                art.Downloads().get(Response.url, 5)
+                downloads.get(Response.url, 5)
+            self.assertIs(open_url.call_args.kwargs["context"], downloads.ssl_context)
         with self.assertRaises(ValueError):
             art.Downloads().get("file:///etc/passwd", 5)
         with self.assertRaises(art.Cancelled):
