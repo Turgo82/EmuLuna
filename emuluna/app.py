@@ -1275,7 +1275,10 @@ class Window(QMainWindow):
             self.notifications.post("Game opened in its own window.", 5000)
         if not process.focus_notified and b"EMULUNA_GAME_NEEDS_FOCUS" in process.log:
             process.focus_notified = True
-            if self.game_restore_state is None and self.isVisible() and not self.isMinimized():
+            minimize_library = self.library.setting(
+                "experimental.minimize_library_during_game", "0") == "1"
+            if (minimize_library and self.game_restore_state is None
+                    and self.isVisible() and not self.isMinimized()):
                 self.game_restore_state = self.windowState()
                 self.showMinimized()
 

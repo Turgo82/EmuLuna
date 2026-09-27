@@ -270,6 +270,18 @@ class SettingsDialog(QDialog):
         note.setWordWrap(True)
         note.setStyleSheet("color:palette(placeholder-text)")
         form.addRow(note)
+        experimental = QLabel("Experimental")
+        experimental.setObjectName("controlGroup")
+        form.addRow(experimental)
+        self.minimize_library = self.checkbox(
+            form,
+            "Minimize the library while a game is running",
+            "experimental.minimize_library_during_game",
+            "0",
+        )
+        self.minimize_library.setToolTip(
+            "Minimize the library after the game window opens, then restore it when the game closes."
+        )
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setWidget(page)

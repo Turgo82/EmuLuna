@@ -77,6 +77,7 @@ class DesktopIntegration(unittest.TestCase):
     def test_hidden_wayland_player_exposes_window_and_restores_library(self):
         with tempfile.TemporaryDirectory() as tmp:
             library = Library(Path(tmp) / "library")
+            library.set_setting("experimental.minimize_library_during_game", "1")
             window = Window(library, auto_artwork=False)
             window.show()
             process = Mock()
@@ -99,6 +100,28 @@ class DesktopIntegration(unittest.TestCase):
                 window.game_closed(game_id, 0)
                 self.assertIsNone(window.game_restore_state)
                 self.assertFalse(window.processes)
+            finally:
+                window.close()
+                library.close()
+
+    def test_game_focus_does_not_minimize_library_by_default(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            library = Library(Path(tmp) / "library")
+            window = Window(library, auto_artwork=False)
+            window.show()
+            process = Mock()
+            process.log = bytearray()
+            process.ready_notified = False
+            process.focus_notified = False
+            process.readAllStandardOutput.return_value = QByteArray(
+                b"EMULUNA_GAME_READY\nEMULUNA_GAME_NEEDS_FOCUS\n")
+            try:
+                with patch.object(window, "showMinimized") as minimize:
+                    window.process_output(process)
+                    minimize.assert_not_called()
+                self.assertTrue(process.ready_notified)
+                self.assertTrue(process.focus_notified)
+                self.assertIsNone(window.game_restore_state)
             finally:
                 window.close()
                 library.close()
