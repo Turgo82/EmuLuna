@@ -11,7 +11,7 @@ from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QImage
 from PySide6.QtTest import QTest
-from emuluna.app import Window
+from emuluna.app import AboutDialog, Window
 from emuluna.library import Library, SYSTEMS, default_data_dir
 from emuluna.settings import SettingsDialog
 from emuluna.branding import ICON, LOGO, MASCOT, UNLOCK_SOUND, configure_application
@@ -122,3 +122,14 @@ class Rebranding(unittest.TestCase):
                 if settings:
                     settings.close()
                 window.close()
+
+    def test_about_unlock_falls_back_when_multimedia_is_unavailable(self):
+        with patch('emuluna.app.QSoundEffect', None), \
+             patch.object(QApplication, 'beep') as beep:
+            dialog = AboutDialog()
+            try:
+                self.assertIsNone(dialog.unlock_sound)
+                dialog.play_unlock_chime()
+                beep.assert_called_once_with()
+            finally:
+                dialog.close()

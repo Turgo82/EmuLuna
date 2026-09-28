@@ -23,7 +23,7 @@ jobs:
       - name: Install build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y cmake ninja-build g++ python3-venv curl desktop-file-utils libegl1 libgl1
+          sudo apt-get install -y cmake ninja-build g++ python3-venv curl desktop-file-utils libegl1 libgl1 libpulse0
 
       - name: Build AppImage
         run: |

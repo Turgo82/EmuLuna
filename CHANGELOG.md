@@ -30,6 +30,8 @@ This file records user-facing changes to EmuLuna releases.
 
 ### Fixed
 
+- Kept the AppImage launchable on systems without the optional PulseAudio
+  client library; the Advanced unlock effect falls back to the system alert.
 - Fixed **Move game files to Trash** so every selected game is processed instead
   of stopping after the first file on PySide versions where Trash returns a
   boolean result.

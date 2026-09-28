@@ -11,10 +11,16 @@ from PySide6.QtCore import (Qt, QSize, QProcess, QProcessEnvironment, QThread, S
                            QTimer, QRect, QUrl, QItemSelectionModel, QEvent, Property,
                            QEasingCurve, QPropertyAnimation)
 from PySide6.QtGui import QAction, QColor, QDesktopServices, QFont, QFontMetrics, QIcon, QPainter, QPixmap, QLinearGradient
-from PySide6.QtMultimedia import QSoundEffect
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QHBoxLayout, QVBoxLayout,
     QLabel, QPushButton, QListWidget, QListWidgetItem, QLineEdit, QFileDialog, QMessageBox, QGridLayout, QToolButton,
     QInputDialog, QMenu, QAbstractItemView, QStackedWidget, QSlider, QButtonGroup, QHeaderView, QDialog)
+
+try:
+    # QtMultimedia loads the host PulseAudio library on Linux. Keep that
+    # optional so a missing audio service cannot prevent EmuLuna from opening.
+    from PySide6.QtMultimedia import QSoundEffect
+except (ImportError, OSError):
+    QSoundEffect = None
 
 from . import __version__
 from .artwork import ArtworkWorker
@@ -113,11 +119,12 @@ class AboutDialog(QDialog):
         self.logo_animation.setEndValue(360.0)
         self.logo_animation.setEasingCurve(QEasingCurve.OutCubic)
         self.logo_animation.finished.connect(lambda: self.logo_button.set_angle(0))
-        self.unlock_sound = QSoundEffect(self)
-        self.unlock_sound.setSource(QUrl.fromLocalFile(str(UNLOCK_SOUND)))
-        self.unlock_sound.setVolume(0.6)
         self.unlock_sound_pending = False
-        self.unlock_sound.statusChanged.connect(self.unlock_sound_status_changed)
+        self.unlock_sound = QSoundEffect(self) if QSoundEffect is not None else None
+        if self.unlock_sound is not None:
+            self.unlock_sound.setSource(QUrl.fromLocalFile(str(UNLOCK_SOUND)))
+            self.unlock_sound.setVolume(0.6)
+            self.unlock_sound.statusChanged.connect(self.unlock_sound_status_changed)
 
     def logo_clicked(self):
         if self.is_advanced_unlocked:
@@ -132,6 +139,9 @@ class AboutDialog(QDialog):
 
     def play_unlock_chime(self):
         """Play the bundled About-logo unlock sound."""
+        if self.unlock_sound is None:
+            QApplication.beep()
+            return
         status = self.unlock_sound.status()
         if status == QSoundEffect.Ready:
             self.unlock_sound.play()
@@ -141,7 +151,7 @@ class AboutDialog(QDialog):
             self.unlock_sound_pending = True
 
     def unlock_sound_status_changed(self):
-        if not self.unlock_sound_pending:
+        if self.unlock_sound is None or not self.unlock_sound_pending:
             return
         if self.unlock_sound.status() == QSoundEffect.Ready:
             self.unlock_sound_pending = False
