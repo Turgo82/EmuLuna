@@ -6,6 +6,7 @@ from PySide6.QtGui import QIcon, QPixmap, QPalette
 ICON = Path(__file__).parent / 'data' / 'branding' / 'emuluna.png'
 LOGO = Path(__file__).parent / 'data' / 'branding' / 'emuluna-logo.png'
 MASCOT = Path(__file__).parent / 'data' / 'branding' / 'emuluna-mascot.png'
+UNLOCK_SOUND = Path(__file__).parent / 'data' / 'sounds' / 'unlock-pop.wav'
 COLLECTION_ICON_DIR = Path(__file__).parent / 'data' / 'icons' / 'collections'
 COLLECTION_ICONS = {
     'collection-all': 'all-games.svg',
@@ -23,6 +24,7 @@ def navigation_icon(name, foreground=None):
         return QIcon(str(COLLECTION_ICON_DIR / COLLECTION_ICONS[name]))
     paths = {
         'menu': '<path d="M3 5h18M3 12h18M3 19h18"/>',
+        'plus': '<path d="M12 4v16M4 12h16"/>',
         'search': '<circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/>',
         'general': '<path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/><circle cx="12" cy="12" r="4"/>',
         'gameplay': '<path d="M7 8h10a5 5 0 0 1 4.6 7l-1 2.4a2 2 0 0 1-3.2.8L15 16H9l-2.4 2.2a2 2 0 0 1-3.2-.8L2.4 15A5 5 0 0 1 7 8Z M7 11v4M5 13h4"/><circle cx="16" cy="12" r="1"/><circle cx="18" cy="14" r="1"/>',
@@ -30,6 +32,7 @@ def navigation_icon(name, foreground=None):
         'cores': '<path d="M7 7h10v10H7Z M9 1v4M15 1v4M9 19v4M15 19v4M1 9h4M1 15h4M19 9h4M19 15h4"/>',
         'downloads': '<path d="M12 3v12M7 10l5 5 5-5M4 19h16"/>',
         'bios': '<path d="M5 4h14v16H5Z M8 8h8M8 12h8M8 16h5"/>',
+        'advanced': '<path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/>',
         'library': '<path d="M16 3a9 9 0 1 0 5 14A8 8 0 0 1 16 3Z"/>',
         'states': '<path d="M4 3h13l3 3v15H4Z M8 3v6h8V3 M8 21v-8h8v8"/>',
         'screenshots': '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8" cy="9" r="1.5"/><path d="m3 18 5-5 4 3 4-6 5 6"/>',

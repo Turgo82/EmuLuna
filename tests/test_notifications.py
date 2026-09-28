@@ -86,3 +86,32 @@ class Notifications(unittest.TestCase):
         window.worker = None
         window.close()
         window.import_done(1, [])
+
+    def test_sidebar_add_button_transitions_through_real_task_progress(self):
+        activity = self.window.sidebar_activity
+        sidebar = self.window.findChild(type(activity), 'sidebarActivity').parentWidget()
+        self.assertEqual(activity.pages.currentIndex(), 0)
+        self.assertTrue(activity.add_button.isVisible())
+        self.assertGreaterEqual(activity.geometry().top(), sidebar.height() - activity.height() - 14)
+        self.assertEqual([action.text() for action in activity.add_button.menu().actions() if not action.isSeparator()],
+                         ['Import games…', 'Import folder…', 'New collection…', 'New smart collection…'])
+
+        cancelled = []
+        activity.begin('import', 'Game Scanner', 'Scanning folders…', cancel=lambda: cancelled.append(True))
+        QTest.qWait(240)
+        self.assertEqual(activity.pages.currentIndex(), 1)
+        self.assertEqual(activity.maximumHeight(), activity.EXPANDED_HEIGHT)
+        activity.update('import', detail='Processed 3 of 5 files', current=3, total=5)
+        self.assertEqual((activity.progress.value(), activity.progress.maximum()), (3, 5))
+        QTest.mouseClick(activity.cancel_button, Qt.LeftButton)
+        self.assertEqual(cancelled, [True])
+
+        activity.update_message('artwork', 'Downloading covers',
+                                'Finding box art… 4 of 9 · Example Game')
+        self.assertEqual((activity.progress.value(), activity.progress.maximum()), (4, 9))
+        activity.finish('artwork')
+        self.assertEqual(activity.title.text(), 'Game Scanner')
+        activity.finish('import')
+        QTest.qWait(700)
+        self.assertEqual(activity.pages.currentIndex(), 0)
+        self.assertEqual(activity.maximumHeight(), activity.COLLAPSED_HEIGHT)

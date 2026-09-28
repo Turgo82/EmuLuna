@@ -49,6 +49,7 @@ class SystemTheme(unittest.TestCase):
             lib = Library(Path(folder))
             window = Window(lib, auto_artwork=False)
             settings = SettingsDialog(lib, window)
+            settings.show_page('gameplay')
             try:
                 window.show(); settings.show()
                 window.search.setText('Theme check')

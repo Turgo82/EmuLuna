@@ -123,11 +123,12 @@ class ManagerTests(unittest.TestCase):
     def test_settings_selection_and_general_options_persist(self):
         self.manager.install_bytes(binary(), "snes9x")
         dialog = SettingsDialog(self.lib)
+        dialog.show_page('gameplay')
+        dialog.focus_pause.setChecked(False)
+        dialog.integer.setChecked(True)
         dialog.show_page('cores')
         dialog.choices["snes"].setCurrentIndex(dialog.choices["snes"].findData("snes9x"))
         dialog.volume.setValue(37)
-        dialog.focus_pause.setChecked(False)
-        dialog.integer.setChecked(True)
         dialog.accept()
         reopened = Library(self.lib.root)
         try:
@@ -142,6 +143,32 @@ class ManagerTests(unittest.TestCase):
                 self.manager.selection(reopened, "snes")
         finally:
             reopened.close()
+
+    def test_settings_controls_are_grouped_with_their_features(self):
+        dialog = SettingsDialog(self.lib)
+        try:
+            general = dialog.tabs.widget(dialog.page_keys.index('general'))
+            library = dialog.tabs.widget(dialog.page_keys.index('library'))
+            self.assertTrue(general.isAncestorOf(dialog.volume))
+            self.assertTrue(library.isAncestorOf(dialog.auto_art))
+            self.assertTrue(library.isAncestorOf(dialog.backup_art))
+
+            dialog.show_page('gameplay')
+            gameplay = dialog.tabs.widget(dialog.page_keys.index('gameplay'))
+            self.assertTrue(gameplay.isAncestorOf(dialog.focus_pause))
+            self.assertTrue(gameplay.isAncestorOf(dialog.integer))
+
+            dialog.unlock_advanced()
+            advanced = dialog.tabs.widget(dialog.page_keys.index('advanced'))
+            self.assertTrue(advanced.isAncestorOf(dialog.minimize_library))
+            self.assertFalse(gameplay.isAncestorOf(dialog.minimize_library))
+
+            dialog.show_page('bios')
+            system_files = dialog.tabs.widget(dialog.page_keys.index('bios'))
+            self.assertTrue(system_files.isAncestorOf(dialog.bios_path))
+            self.assertFalse(general.isAncestorOf(dialog.bios_path))
+        finally:
+            dialog.close()
 
     def test_settings_download_button_installs_and_enables_selection(self):
         data = binary()

@@ -83,6 +83,14 @@ class ThumbnailCache(QObject):
             self.cache.popitem(last=False)
         self.ready.emit(key[0])
 
+    def discard(self, game_ids):
+        """Drop cached artwork for games that no longer belong to the library."""
+        removed = set(game_ids)
+        for store in (self.cache, self.sizes):
+            for key in list(store):
+                if key[0] in removed:
+                    store.pop(key, None)
+
     def close(self):
         self.closed = True
         self.pool.clear()

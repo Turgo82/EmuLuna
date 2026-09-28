@@ -221,6 +221,7 @@ class GameplayTests(unittest.TestCase):
         settings = SettingsDialog(self.library)
         settings.show_page('gameplay')
         self.assertTrue(settings.game_mode_keep_awake.isChecked())
+        settings.unlock_advanced()
         self.assertFalse(settings.minimize_library.isChecked())
         settings.fullscreen_default.setChecked(True)
         settings.hide_cursor.setChecked(False)

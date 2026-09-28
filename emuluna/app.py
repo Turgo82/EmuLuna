@@ -2,20 +2,23 @@
 import argparse
 from collections import OrderedDict
 import json
+import math
 import os
 from pathlib import Path
 import sys
 
 from PySide6.QtCore import (Qt, QSize, QProcess, QProcessEnvironment, QThread, Signal,
-                           QTimer, QRect, QUrl, QItemSelectionModel, QEvent)
+                           QTimer, QRect, QUrl, QItemSelectionModel, QEvent, Property,
+                           QEasingCurve, QPropertyAnimation)
 from PySide6.QtGui import QAction, QColor, QDesktopServices, QFont, QFontMetrics, QIcon, QPainter, QPixmap, QLinearGradient
+from PySide6.QtMultimedia import QSoundEffect
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QHBoxLayout, QVBoxLayout,
     QLabel, QPushButton, QListWidget, QListWidgetItem, QLineEdit, QFileDialog, QMessageBox, QGridLayout, QToolButton,
-    QInputDialog, QMenu, QAbstractItemView, QStackedWidget, QSlider, QButtonGroup, QHeaderView, QProgressBar)
+    QInputDialog, QMenu, QAbstractItemView, QStackedWidget, QSlider, QButtonGroup, QHeaderView, QDialog)
 
 from . import __version__
 from .artwork import ArtworkWorker
-from .branding import ICON, LOGO, configure_application, navigation_icon
+from .branding import ICON, LOGO, UNLOCK_SOUND, configure_application, navigation_icon
 from .core import ROOT, CoreError
 from .core_manager import CoreManager, DefaultCoreWorker
 from .library import Library, SYSTEMS, EXTENSIONS
@@ -24,11 +27,128 @@ from .metadata import MetadataWorker
 from .media_library import MediaBrowser
 from .thumbnails import ThumbnailCache
 from .notifications import NotificationBell
+from .sidebar_activity import SidebarActivity
 from .library_widgets import (GameGrid, GameTable, CoverDelegate, CoverSizeSlider, LibrarySidebar, SortItem, SmartCollectionDialog,
                               GameInfoDialog, date_text, AlphabetIndex, title_initial, LibraryScrollBar, ExpandableSearch,
                               SIDEBAR_COUNT_ROLE)
 
 from .theme import LIBRARY_STYLE as STYLE, follow_system_theme, theme_palette
+
+
+class AboutLogo(QToolButton):
+    """The full About logo, with a paintable angle for its unlock spin."""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._angle = 0.0
+        self.logo = QPixmap(str(LOGO)).scaled(
+            220, 220, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        self.setObjectName('aboutLogoButton')
+        self.setFixedSize(260, 260)
+        self.setToolTip('EmuLuna')
+        self.setAccessibleName('EmuLuna logo')
+
+    def get_angle(self):
+        return self._angle
+
+    def set_angle(self, angle):
+        self._angle = float(angle)
+        self.update()
+
+    angle = Property(float, get_angle, set_angle)
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setRenderHint(QPainter.SmoothPixmapTransform)
+        painter.translate(self.rect().center())
+        painter.rotate(self._angle)
+        radians = math.radians(self._angle % 90)
+        rotated_extent = self.logo.width() * (abs(math.cos(radians)) + abs(math.sin(radians)))
+        painter.scale(min(1.0, (self.width() - 10) / max(1.0, rotated_extent)),
+                      min(1.0, (self.height() - 10) / max(1.0, rotated_extent)))
+        painter.drawPixmap(-self.logo.width() // 2, -self.logo.height() // 2, self.logo)
+
+
+class AboutDialog(QDialog):
+    advanced_unlocked = Signal()
+
+    def __init__(self, already_unlocked=False, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle('About EmuLuna')
+        self.setAttribute(Qt.WA_DeleteOnClose)
+        self.setMinimumWidth(500)
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(26, 20, 26, 20)
+        layout.setSpacing(12)
+        self.logo_button = AboutLogo(self)
+        self.logo_button.clicked.connect(self.logo_clicked)
+        layout.addWidget(self.logo_button, 0, Qt.AlignHCenter)
+        title = QLabel(f'EmuLuna {__version__}')
+        title.setAlignment(Qt.AlignCenter)
+        title.setStyleSheet('font-size:20px;font-weight:600')
+        layout.addWidget(title)
+        information = QLabel(
+            'An independent game library and emulator frontend.\n'
+            'Runs standard libretro cores directly.\n\n'
+            '32 systems and 27 downloadable cores.\n'
+            'Artwork: OpenVGDB and Libretro thumbnails.\n\n'
+            'See README.md and THIRD_PARTY_NOTICES.md for capabilities and credits.')
+        information.setAlignment(Qt.AlignCenter)
+        information.setWordWrap(True)
+        layout.addWidget(information)
+        self.unlock_notice = QLabel('Advanced settings unlocked')
+        self.unlock_notice.setAlignment(Qt.AlignCenter)
+        self.unlock_notice.setStyleSheet('color:palette(highlight);font-weight:600')
+        self.unlock_notice.hide()
+        layout.addWidget(self.unlock_notice)
+        close = QPushButton('OK')
+        close.clicked.connect(self.accept)
+        layout.addWidget(close, 0, Qt.AlignRight)
+        self.logo_clicks = 0
+        self.is_advanced_unlocked = already_unlocked
+        self.logo_animation = QPropertyAnimation(self.logo_button, b'angle', self)
+        self.logo_animation.setDuration(650)
+        self.logo_animation.setStartValue(0.0)
+        self.logo_animation.setEndValue(360.0)
+        self.logo_animation.setEasingCurve(QEasingCurve.OutCubic)
+        self.logo_animation.finished.connect(lambda: self.logo_button.set_angle(0))
+        self.unlock_sound = QSoundEffect(self)
+        self.unlock_sound.setSource(QUrl.fromLocalFile(str(UNLOCK_SOUND)))
+        self.unlock_sound.setVolume(0.6)
+        self.unlock_sound_pending = False
+        self.unlock_sound.statusChanged.connect(self.unlock_sound_status_changed)
+
+    def logo_clicked(self):
+        if self.is_advanced_unlocked:
+            return
+        self.logo_clicks += 1
+        if self.logo_clicks == 4:
+            self.is_advanced_unlocked = True
+            self.unlock_notice.show()
+            self.play_unlock_chime()
+            self.logo_animation.start()
+            self.advanced_unlocked.emit()
+
+    def play_unlock_chime(self):
+        """Play the bundled About-logo unlock sound."""
+        status = self.unlock_sound.status()
+        if status == QSoundEffect.Ready:
+            self.unlock_sound.play()
+        elif status == QSoundEffect.Error:
+            QApplication.beep()
+        else:
+            self.unlock_sound_pending = True
+
+    def unlock_sound_status_changed(self):
+        if not self.unlock_sound_pending:
+            return
+        if self.unlock_sound.status() == QSoundEffect.Ready:
+            self.unlock_sound_pending = False
+            self.unlock_sound.play()
+        elif self.unlock_sound.status() == QSoundEffect.Error:
+            self.unlock_sound_pending = False
+            QApplication.beep()
 
 
 def cover_pixmap(game, library, dimensions=None):
@@ -88,6 +208,7 @@ class Window(QMainWindow):
         self.core_pending = set()
         self.auto_cores_enabled = auto_artwork
         self.closing = False
+        self.advanced_settings_unlocked = False
         self.processes = {}
         self.game_restore_state = None
         self.library_tab = "library"
@@ -141,7 +262,9 @@ class Window(QMainWindow):
         self.nav.games_dropped.connect(self.add_to_collection)
         self.nav.setContextMenuPolicy(Qt.CustomContextMenu)
         self.nav.customContextMenuRequested.connect(self.collection_menu)
-        side.addWidget(self.nav)
+        side.addWidget(self.nav, 1)
+        self.sidebar_activity = SidebarActivity()
+        side.addWidget(self.sidebar_activity)
         layout.addWidget(sidebar)
         content = QWidget()
         main = QVBoxLayout(content)
@@ -325,10 +448,15 @@ class Window(QMainWindow):
         main.addLayout(library_body, 1)
         layout.addWidget(content, 1)
         self.setup_menu()
-        self.import_progress = QProgressBar()
-        self.import_progress.setMaximumWidth(170)
-        self.import_progress.hide()
-        self.notifications.activity.addWidget(self.import_progress)
+        add_menu = QMenu(self.sidebar_activity.add_button)
+        add_menu.addAction(self.import_action)
+        add_menu.addAction(self.import_folder_action)
+        add_menu.addSeparator()
+        add_menu.addAction(self.new_collection_action)
+        add_menu.addAction(self.new_smart_collection_action)
+        self.sidebar_activity.set_menu(add_menu)
+        # Compatibility alias for callers interested in importer progress.
+        self.import_progress = self.sidebar_activity.progress
         self.cancel_import = QPushButton("Cancel import")
         self.cancel_import.clicked.connect(lambda: self.worker.requestInterruption() if self.worker else None)
         self.cancel_import.hide()
@@ -392,9 +520,11 @@ class Window(QMainWindow):
             file.addAction(a)
             if key == "Ctrl+O":
                 self.import_action = a
+            elif key == "Ctrl+Shift+O":
+                self.import_folder_action = a
         file.addSeparator()
-        file.addAction("New collection…", self.new_collection)
-        file.addAction("New smart collection…", self.new_smart_collection)
+        self.new_collection_action = file.addAction("New collection…", self.new_collection)
+        self.new_smart_collection_action = file.addAction("New smart collection…", self.new_smart_collection)
         file.addAction("Import issues…", self.show_import_issues)
         artwork = self.application_menu.addMenu("Artwork")
         self.download_art_action = artwork.addAction("Download missing box art")
@@ -439,6 +569,7 @@ class Window(QMainWindow):
             self.menu_button.setIcon(navigation_icon("menu"))
             self.grid_button.setIcon(navigation_icon("grid"))
             self.list_button.setIcon(navigation_icon("list"))
+            self.sidebar_activity.refresh_icon()
             self.notifications.update_badge()
             self.refresh_sidebar_icons()
             self.games.viewport().update()
@@ -454,14 +585,12 @@ class Window(QMainWindow):
                 button.setText("" if compact else button.accessibleName())
 
     def show_about(self):
-        self.about_dialog = QMessageBox(self)
-        self.about_dialog.setWindowTitle("About EmuLuna")
-        self.about_dialog.setIconPixmap(QPixmap(str(LOGO)).scaled(220, 220, Qt.KeepAspectRatio, Qt.SmoothTransformation))
-        self.about_dialog.setText(f"EmuLuna {__version__}")
-        self.about_dialog.setInformativeText("An independent game library and emulator frontend.\nRuns standard libretro cores directly.\n\n32 systems and 27 downloadable cores.\nArtwork: OpenVGDB and Libretro thumbnails.\n\nSee README.md and THIRD_PARTY_NOTICES.md for capabilities and credits.")
-        self.about_dialog.setStandardButtons(QMessageBox.Ok)
-        self.about_dialog.setAttribute(Qt.WA_DeleteOnClose)
+        self.about_dialog = AboutDialog(self.advanced_settings_unlocked, self)
+        self.about_dialog.advanced_unlocked.connect(self.unlock_advanced_settings)
         self.about_dialog.open()
+
+    def unlock_advanced_settings(self):
+        self.advanced_settings_unlocked = True
 
     def queue_default_cores(self, systems=None):
         if self.closing or not self.auto_cores_enabled:
@@ -485,6 +614,9 @@ class Window(QMainWindow):
         self.core_worker.result.connect(lambda message, success: self.notifications.finish("cores", message))
         self.core_worker.finished.connect(self.default_cores_finished)
         self.cancel_cores.show()
+        self.sidebar_activity.begin(
+            "cores", "Adding emulator core", "Preparing a default core for your games…",
+            cancel=lambda: self.core_worker.requestInterruption() if self.core_worker else None)
         self.set_core_status("Preparing a default core for your games…")
         self.core_worker.start()
 
@@ -492,6 +624,9 @@ class Window(QMainWindow):
         self.core_status.setText(message)
         self.core_status.setToolTip(message)
         self.core_status.show()
+        self.sidebar_activity.update_message(
+            "cores", "Adding emulator core", message,
+            cancel=lambda: self.core_worker.requestInterruption() if self.core_worker else None)
         self.notifications.post(message, key="cores")
 
     def default_cores_finished(self):
@@ -499,6 +634,7 @@ class Window(QMainWindow):
         self.core_worker = None
         self.cancel_cores.hide()
         self.core_status.hide()
+        self.sidebar_activity.finish("cores")
         if self.closing:
             self.close()
             return
@@ -514,7 +650,8 @@ class Window(QMainWindow):
 
     def open_settings(self, checked=False, *, system=None):
         from .settings import SettingsDialog
-        dialog = SettingsDialog(self.library, self)
+        dialog = SettingsDialog(
+            self.library, self, advanced_unlocked=self.advanced_settings_unlocked)
         if system in SYSTEMS:
             dialog.show_page('controls')
             page = dialog.controls_page
@@ -639,12 +776,15 @@ class Window(QMainWindow):
                 self.notifications.post("There are no missing covers to download.", 5000)
             return
         self.art_worker = ArtworkWorker(self.library.root, force=force, game_ids=game_ids, replace=replace)
-        self.art_worker.progress.connect(lambda message: self.notifications.post(message, key="artwork"))
+        self.art_worker.progress.connect(self.artwork_progress_changed)
         self.art_worker.changed.connect(self.cover_downloaded)
         self.art_worker.result.connect(self.artwork_done)
         self.art_worker.finished.connect(self.artwork_finished)
         self.download_art_action.setEnabled(False)
         self.cancel_art_action.setEnabled(True)
+        self.sidebar_activity.begin(
+            "artwork", "Downloading covers", "Preparing artwork lookup…",
+            cancel=self.cancel_artwork)
         self.art_worker.start()
 
     def cover_downloaded(self, game_id):
@@ -721,11 +861,17 @@ class Window(QMainWindow):
             message = " · ".join(parts)
         self.notifications.finish("artwork", message)
 
+    def artwork_progress_changed(self, message):
+        self.sidebar_activity.update_message(
+            "artwork", "Downloading covers", message, cancel=self.cancel_artwork)
+        self.notifications.post(message, key="artwork")
+
     def artwork_finished(self):
         self.art_worker.deleteLater()
         self.art_worker = None
         self.download_art_action.setEnabled(True)
         self.cancel_art_action.setEnabled(bool(self.art_pending))
+        self.sidebar_activity.finish("artwork")
         if self.closing:
             self.close()
         else:
@@ -1096,14 +1242,16 @@ class Window(QMainWindow):
         if self.issue_dialog:
             self.issue_dialog.set_busy(True)
         if not restore_names:
-            self.import_progress.setRange(0, 0)
-            self.import_progress.show()
+            self.sidebar_activity.begin(
+                "import", "Game Scanner", "Scanning for games…",
+                cancel=lambda: self.worker.requestInterruption() if self.worker else None)
             self.cancel_import.show()
         self.worker.start()
 
     def import_progress_changed(self, current, total, message):
-        self.import_progress.setRange(0, total)
-        self.import_progress.setValue(current)
+        self.sidebar_activity.update(
+            "import", title="Game Scanner", detail=message, current=current, total=total,
+            cancel=lambda: self.worker.requestInterruption() if self.worker else None)
         self.notifications.post(message, key="import")
 
     def update_issues(self):
@@ -1133,7 +1281,7 @@ class Window(QMainWindow):
         if self.closing:
             return
         self.import_action.setEnabled(True)
-        self.import_progress.hide()
+        self.sidebar_activity.finish("import")
         self.cancel_import.hide()
         if self.issue_dialog:
             self.issue_dialog.set_busy(False)
@@ -1383,11 +1531,22 @@ class Window(QMainWindow):
                                       states=dialog.states.isChecked(), screenshots=dialog.screenshots.isChecked())
             finally:
                 dialog.deleteLater()
-            self.refresh()
+            self.refresh_after_game_removal(game['id'] for game in result['games'])
             self.notifications.post(f'Removed {len(result["games"])} game(s) from the library.')
         except (OSError, ValueError) as error:
             self.notifications.post('Could not finish removal: ' + str(error))
             self.refresh()
+
+    def refresh_after_game_removal(self, game_ids):
+        """Clear deleted selections and artwork before rebuilding every library surface."""
+        removed = set(game_ids)
+        self.library_selection = [game_id for game_id in self.library_selection if game_id not in removed]
+        self.placeholder_cache = OrderedDict(
+            (key, icon) for key, icon in self.placeholder_cache.items() if key[0] not in removed)
+        self.thumbnails.discard(removed)
+        self.refresh()
+        self.games.viewport().update()
+        self.table.viewport().update()
 
     def download_replacement(self, game_ids):
         answer = QMessageBox.question(self, "Replace cover art?",

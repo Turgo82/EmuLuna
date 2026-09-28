@@ -17,8 +17,19 @@ QWidget#navigationDivider {background:palette(mid);border:0;}
 QToolButton#applicationMenuButton {background:transparent; border:0; border-radius:5px; padding:5px;}
 QToolButton#applicationMenuButton:hover, QToolButton#applicationMenuButton:pressed {background:palette(midlight);}
 QToolButton#applicationMenuButton::menu-indicator {image:none;}
+QToolButton#sidebarAddButton {background:transparent;border:0;border-radius:5px;padding:5px;}
+QToolButton#sidebarAddButton:hover,QToolButton#sidebarAddButton:pressed {background:palette(midlight);}
+QToolButton#sidebarAddButton::menu-indicator {image:none;}
+QLabel#sidebarActivityTitle {font-weight:600;color:palette(window-text);background:transparent;}
+QLabel#sidebarActivityDetail {font-size:11px;color:palette(placeholder-text);background:transparent;}
+QProgressBar#sidebarProgress {background:palette(window);border:1px solid palette(mid);border-radius:4px;}
+QProgressBar#sidebarProgress::chunk {background:palette(highlight);border-radius:3px;}
+QToolButton#sidebarCancelButton {background:transparent;color:palette(window-text);border:0;border-radius:4px;font-size:17px;padding:0;}
+QToolButton#sidebarCancelButton:hover {background:palette(midlight);}
 QToolButton#searchButton {background:transparent;border:0;border-radius:5px;padding:5px;}
 QToolButton#searchButton:hover,QToolButton#searchButton:focus {background:palette(midlight);}
+QToolButton#aboutLogoButton {background:transparent;border:0;padding:0;}
+QToolButton#aboutLogoButton:hover,QToolButton#aboutLogoButton:pressed {background:transparent;}
 QLineEdit#librarySearch {background:palette(window);color:palette(text);placeholder-text-color:palette(placeholder-text);border:1px solid palette(mid);border-radius:7px;padding:3px 8px;selection-background-color:palette(highlight);selection-color:palette(highlighted-text);}
 QLineEdit#librarySearch:focus {border-color:palette(highlight);}
 QPushButton#sectionNavigation {background:transparent; border:1px solid transparent; border-radius:5px; padding:3px 10px;}

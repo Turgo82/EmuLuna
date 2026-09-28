@@ -10,10 +10,11 @@ os.environ.setdefault('QT_QPA_PLATFORM','offscreen')
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QImage
+from PySide6.QtTest import QTest
 from emuluna.app import Window
 from emuluna.library import Library, SYSTEMS, default_data_dir
 from emuluna.settings import SettingsDialog
-from emuluna.branding import ICON, LOGO, MASCOT, configure_application
+from emuluna.branding import ICON, LOGO, MASCOT, UNLOCK_SOUND, configure_application
 from snes_rom import snes
 
 
@@ -79,3 +80,45 @@ class Rebranding(unittest.TestCase):
                 self.assertEqual(set(consoles()),set(SYSTEMS))
             finally:
                 settings.close();window.close()
+
+    def test_about_logo_unlocks_advanced_settings_after_four_clicks(self):
+        with tempfile.TemporaryDirectory() as folder:
+            lib = Library(Path(folder) / 'library')
+            window = Window(lib, auto_artwork=False)
+            settings = None
+            try:
+                window.show_about()
+                dialog = window.about_dialog
+                self.assertTrue(UNLOCK_SOUND.is_file())
+                self.assertEqual(Path(dialog.unlock_sound.source().toLocalFile()), UNLOCK_SOUND)
+                with patch.object(dialog, 'play_unlock_chime') as chime, \
+                     patch.object(dialog.logo_animation, 'start') as spin:
+                    for _ in range(3):
+                        QTest.mouseClick(dialog.logo_button, Qt.LeftButton)
+                    self.assertFalse(window.advanced_settings_unlocked)
+                    self.assertFalse(dialog.unlock_notice.isVisible())
+                    chime.assert_not_called()
+                    spin.assert_not_called()
+
+                    QTest.mouseClick(dialog.logo_button, Qt.LeftButton)
+                    self.assertTrue(window.advanced_settings_unlocked)
+                    self.assertTrue(dialog.unlock_notice.isVisible())
+                    chime.assert_called_once_with()
+                    spin.assert_called_once_with()
+
+                    # Once unlocked, extra clicks cannot retrigger the effect.
+                    QTest.mouseClick(dialog.logo_button, Qt.LeftButton)
+                    chime.assert_called_once_with()
+                    spin.assert_called_once_with()
+
+                settings = SettingsDialog(
+                    lib, window, advanced_unlocked=window.advanced_settings_unlocked)
+                self.assertIsNone(settings.tabs.cornerWidget(Qt.TopLeftCorner))
+                self.assertEqual(settings.tabs.tabText(settings.tabs.currentIndex()), 'Advanced')
+                self.assertEqual(settings.tabs.count(), 7)
+                advanced = settings.tabs.widget(settings.page_keys.index('advanced'))
+                self.assertTrue(advanced.isAncestorOf(settings.minimize_library))
+            finally:
+                if settings:
+                    settings.close()
+                window.close()

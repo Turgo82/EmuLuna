@@ -81,8 +81,11 @@ def removal_plan(library, game_ids, *, include_roms=True):
 
 
 def move_to_trash(path):
-    success, destination = QFile.moveToTrash(str(path))
-    if not success:
+    # The static overload returns bool on some supported PySide versions,
+    # despite its tuple return annotation. The instance overload consistently
+    # returns bool, so a successful move cannot fail during tuple unpacking.
+    file = QFile(str(path))
+    if not file.moveToTrash():
         raise OSError(f'Could not move “{path.name}” to Trash. Check its permissions and available disk space.')
 
 

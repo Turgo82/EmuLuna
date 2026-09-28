@@ -23,7 +23,7 @@ from .settings_style import (SETTINGS_STYLE, SettingsCheckBox as QCheckBox,
 class SettingsDialog(QDialog):
     changed = Signal()
 
-    def __init__(self, library, parent=None):
+    def __init__(self, library, parent=None, *, advanced_unlocked=False):
         super().__init__(parent)
         self.library = library
         follow_system_theme(library)
@@ -43,10 +43,11 @@ class SettingsDialog(QDialog):
         self.tabs.setDocumentMode(True)
         self.tabs.tabBar().setDrawBase(False)
         self.tabs.tabBar().setFocusPolicy(Qt.NoFocus)
+        self.advanced_unlocked = False
         layout.addWidget(self.tabs, 1)
         self.general_tab()
         self.library_tab()
-        self.page_keys = ('general', 'library', 'gameplay', 'controls', 'cores', 'bios')
+        self.page_keys = ['general', 'library', 'gameplay', 'controls', 'cores', 'bios']
         self.loaded_pages = {'general', 'library'}
         self.page_builders = {'gameplay': self.gameplay_tab, 'controls': self.controls_tab,
                               'cores': self.core_tab, 'bios': self.bios_tab}
@@ -58,6 +59,8 @@ class SettingsDialog(QDialog):
             self.tabs.addTab(page, title)
         self.tabs.currentChanged.connect(self.ensure_page)
         self.refresh_navigation_icons()
+        if advanced_unlocked:
+            self.unlock_advanced()
         self.status = QLabel()
         self.status.setWordWrap(True)
         self.status.hide()
@@ -82,6 +85,20 @@ class SettingsDialog(QDialog):
     def show_page(self, key):
         """Select a section, constructing its contents on the first visit."""
         self.tabs.setCurrentIndex(self.page_keys.index(key))
+
+    def unlock_advanced(self):
+        if self.advanced_unlocked:
+            return
+        self.advanced_unlocked = True
+        self.page_keys.append('advanced')
+        self.page_builders['advanced'] = self.advanced_tab
+        page = QWidget()
+        page.setObjectName('settings-advanced')
+        page_layout = QVBoxLayout(page)
+        page_layout.setContentsMargins(0, 0, 0, 0)
+        self.tabs.addTab(page, 'Advanced')
+        self.refresh_navigation_icons()
+        self.show_page('advanced')
 
     def ensure_page(self, index):
         if index < 0:
@@ -108,7 +125,7 @@ class SettingsDialog(QDialog):
         return self.core_pages
 
     def refresh_navigation_icons(self):
-        for index, key in enumerate(('general', 'library', 'gameplay', 'controls', 'cores', 'bios')):
+        for index, key in enumerate(self.page_keys):
             # Keep the same legible foreground in selected and unselected tabs;
             # the tab background and underline already communicate selection.
             base = navigation_icon(key).pixmap(23, 23, QIcon.Normal, QIcon.Off)
@@ -117,7 +134,7 @@ class SettingsDialog(QDialog):
     def changeEvent(self, event):
         super().changeEvent(event)
         if (event.type() in (QEvent.PaletteChange, QEvent.ApplicationPaletteChange)
-                and hasattr(self, 'tabs') and self.tabs.count() == 6):
+                and hasattr(self, 'tabs') and hasattr(self, 'page_keys')):
             self.refresh_navigation_icons()
 
     def set_status(self, message):
@@ -157,24 +174,6 @@ class SettingsDialog(QDialog):
         self.volume.setValue(int(self.library.setting("volume", "80")))
         self.volume.valueChanged.connect(lambda value: self.set_setting("volume", value))
         form.addRow("Game volume", self.volume)
-        self.focus_pause = self.checkbox(form, "Pause games when switching to another window", "pause_unfocused", "1")
-        self.integer = self.checkbox(form, "Use integer scaling for sharp pixels", "integer_scale", "0")
-        self.auto_art = self.checkbox(form, "Automatically download box art", "artwork_auto", "1")
-        self.backup_art = self.checkbox(form, "Use backup artwork source when needed", "artwork_backup", "1")
-        folder = QWidget()
-        row = QHBoxLayout(folder)
-        row.setContentsMargins(0, 0, 0, 0)
-        self.bios_path = QLineEdit(self.library.setting("bios_directory", str(self.library.root / "system")))
-        self.bios_path.setReadOnly(True)
-        row.addWidget(self.bios_path, 1)
-        browse = QPushButton("Choose…")
-        browse.clicked.connect(self.choose_bios)
-        row.addWidget(browse)
-        form.addRow("BIOS / system folder", folder)
-        explanation = QLabel("Use this folder for files required by a core. BIOS files are not downloaded by the app.")
-        explanation.setWordWrap(True)
-        explanation.setStyleSheet("color:palette(placeholder-text)")
-        form.addRow(explanation)
         self.tabs.addTab(page, "General")
 
     def choose_bios(self):
@@ -204,6 +203,10 @@ class SettingsDialog(QDialog):
             "Prevent screen dimming, the screen saver, and automatic sleep while a game is open.")
         self.fullscreen_default = self.checkbox(form, "Open games in fullscreen", "fullscreen_default", "0")
         self.hide_cursor = self.checkbox(form, "Hide the pointer when gameplay controls disappear", "hide_game_cursor", "1")
+        self.focus_pause = self.checkbox(
+            form, "Pause games when switching to another window", "pause_unfocused", "1")
+        self.integer = self.checkbox(
+            form, "Use integer scaling for sharp pixels", "integer_scale", "0")
         self.fast_speed = QSpinBox()
         self.fast_speed.setRange(2, 10)
         self.fast_speed.setSuffix("×")
@@ -277,6 +280,16 @@ class SettingsDialog(QDialog):
         note.setWordWrap(True)
         note.setStyleSheet("color:palette(placeholder-text)")
         form.addRow(note)
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setWidget(page)
+        return scroll
+
+    def advanced_tab(self):
+        page = QWidget()
+        form = QFormLayout(page)
+        form.setContentsMargins(20, 22, 20, 20)
+        form.setSpacing(16)
         experimental = QLabel("Experimental")
         experimental.setObjectName("controlGroup")
         form.addRow(experimental)
@@ -289,10 +302,13 @@ class SettingsDialog(QDialog):
         self.minimize_library.setToolTip(
             "Minimize the library after the game window opens, then restore it when the game closes."
         )
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setWidget(page)
-        return scroll
+        note = QLabel(
+            "Advanced options are experimental and may change as EmuLuna evolves."
+        )
+        note.setWordWrap(True)
+        note.setStyleSheet("color:palette(placeholder-text)")
+        form.addRow(note)
+        return page
 
     def test_vibration(self):
         """Test the first connected controller without requiring a game."""
@@ -370,6 +386,8 @@ class SettingsDialog(QDialog):
         self.hide_empty_consoles = self.checkbox(form, "Hide consoles with no games", "library.hide_empty_consoles", "0")
         self.copy_games = self.checkbox(form, "Copy games into library when importing", "copy_games", "1")
         self.auto_metadata = self.checkbox(form, "Automatically look up game information", "metadata_auto", "1")
+        self.auto_art = self.checkbox(form, "Automatically download box art", "artwork_auto", "1")
+        self.backup_art = self.checkbox(form, "Use backup artwork source when needed", "artwork_backup", "1")
         note = QLabel("When enabled, copies are organized by system and keep their original filenames.\n\nWhen disabled, games stay in their current folders. Keep those files and drives available to play. ZIP imports always extract a managed copy.\n\nThis setting applies to new imports. To copy an existing external game, right-click it and choose Consolidate files into library. Originals are never moved or deleted.")
         note.setWordWrap(True)
         form.addRow(note)
@@ -587,6 +605,20 @@ class SettingsDialog(QDialog):
         page = QWidget()
         layout = QVBoxLayout(page)
         layout.setContentsMargins(16, 18, 16, 16)
+        directory_form = QFormLayout()
+        directory_form.setSpacing(12)
+        folder = QWidget()
+        folder_row = QHBoxLayout(folder)
+        folder_row.setContentsMargins(0, 0, 0, 0)
+        self.bios_path = QLineEdit(
+            self.library.setting("bios_directory", str(self.library.root / "system")))
+        self.bios_path.setReadOnly(True)
+        folder_row.addWidget(self.bios_path, 1)
+        browse = QPushButton("Choose…")
+        browse.clicked.connect(self.choose_bios)
+        folder_row.addWidget(browse)
+        directory_form.addRow("BIOS / system folder", folder)
+        layout.addLayout(directory_form)
         note = QLabel("Check the BIOS / system folder for files required by each core. Import your own files using the required filename; originals are kept. No BIOS files are downloaded.")
         note.setWordWrap(True)
         layout.addWidget(note)

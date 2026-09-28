@@ -4,7 +4,7 @@
 
 # EmuLuna
 
-EmuLuna **0.13.9** is an independent desktop game library and libretro frontend.
+EmuLuna **0.14.0** is an independent desktop game library and libretro frontend.
 Python/Qt provides the interface, SQLite stores the library, and a reusable C++
 host loads standard, unmodified libretro cores directly. It does not launch
 RetroArch. Linux is tested; Windows remains a development target.
@@ -20,6 +20,8 @@ While the majority of the code is vibe coded the end result is always curated fo
 ## Website
 
 Visit [emuluna-retro-library.turgo82.chatgpt.site](https://emuluna-retro-library.turgo82.chatgpt.site).
+
+See [CHANGELOG.md](CHANGELOG.md) for release changes.
 
 ## Run
 
@@ -80,7 +82,7 @@ bell on the right.
 **Settings → General → Use system theme colors** follows the OS palette by
 default, including selection accents and live theme changes. Turn it off for
 EmuLuna’s dark theme. Library, Save States and Screenshots share image-only
-selection outlines and hover highlights. Help → About displays the EmuLuna app icon.
+selection outlines and hover highlights. Help → About displays the EmuLuna logo.
 **Settings → Library → Hide consoles with no
 games** hides empty systems immediately. It does not change core installation,
 collections or search, and newly imported systems appear automatically.

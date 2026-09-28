@@ -2,13 +2,17 @@
 import os
 from pathlib import Path
 import tempfile
+import subprocess
+import sys
+import textwrap
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 os.environ.setdefault('QT_QPA_PLATFORM','offscreen')
 from media_stub import isolate_audio
 isolate_audio()
 from PySide6.QtCore import Qt, QTimer
+from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QMessageBox, QDialog, QMenu
 from emuluna.app import Window
 from emuluna.file_management import (game_locks, removal_plan, remove_games,
@@ -71,6 +75,65 @@ class FileManagement(unittest.TestCase):
         self.assertEqual(set(self.moved),{self.rom,self.state,self.preview,self.screenshot})
         self.assertTrue(self.source.exists()); self.assertTrue(self.battery.exists())
         self.assertIsNone(self.lib.get(self.game_id))
+
+    def test_right_click_keeps_batch_selection_and_trashes_every_selected_rom(self):
+        ids = [self.game_id]
+        for number in (1, 2):
+            source = self.root / f'Batch {number}.nes'
+            data = bytearray(nes())
+            data[-number] = number
+            source.write_bytes(data)
+            ids.extend(self.lib.import_file(source))
+        roms = {self.lib.root / self.lib.get(game_id)['rom_path'] for game_id in ids}
+
+        self.window = Window(self.lib, auto_artwork=False)
+        self.window.show()
+        QTest.qWait(30)
+        self.window.restore_selection(ids)
+        self.assertEqual(set(self.window.selected_ids()), set(ids))
+        self.window.library_selection = list(ids)
+        for game_id in ids:
+            self.window.cover_icon(game_id)
+        self.assertTrue(any(key[0] in ids for key in self.window.placeholder_cache))
+        item = self.window.game_items[ids[0]]
+        point = self.window.games.visualItemRect(item).center()
+        menu = Mock()
+        with patch.object(self.window, 'game_menu', return_value=menu) as build_menu:
+            QTest.mouseClick(self.window.games.viewport(), Qt.RightButton, pos=point)
+            self.assertEqual(set(self.window.selected_ids()), set(ids))
+            self.window.context_menu(point)
+        build_menu.assert_called_once()
+        self.assertEqual(set(build_menu.call_args.args[0]), set(ids))
+
+        self.window.change_view('list')
+        self.window.restore_selection(ids)
+        row = next(row for row in range(self.window.table.rowCount())
+                   if self.window.table.item(row, 0).data(Qt.UserRole) == ids[0])
+        point = self.window.table.visualItemRect(self.window.table.item(row, 0)).center()
+        with patch.object(self.window, 'game_menu', return_value=Mock()) as build_menu:
+            QTest.mouseClick(self.window.table.viewport(), Qt.RightButton, pos=point)
+            self.assertEqual(set(self.window.selected_ids()), set(ids))
+            self.window.context_menu(point, self.window.table)
+        self.assertEqual(set(build_menu.call_args.args[0]), set(ids))
+
+        with patch('emuluna.removal_dialog.GameRemovalDialog') as dialog_type:
+            dialog = dialog_type.return_value
+            dialog.exec.return_value = True
+            dialog.trash.isChecked.return_value = True
+            dialog.states.isChecked.return_value = False
+            dialog.screenshots.isChecked.return_value = False
+            self.window.remove_games(ids)
+        self.assertEqual({path for path in self.moved if path in roms}, roms)
+        self.assertTrue(all(self.lib.get(game_id) is None for game_id in ids))
+        self.assertEqual(self.window.rows, {})
+        self.assertEqual(self.window.library_selection, [])
+        self.assertFalse(any(key[0] in ids for key in self.window.placeholder_cache))
+        self.assertEqual(self.window.games.count(), 0)
+        self.assertEqual(self.window.table.rowCount(), 0)
+        self.assertIs(self.window.pages.currentWidget(), self.window.pages.widget(1))
+        all_games = next(self.window.nav.item(row) for row in range(self.window.nav.count())
+                         if self.window.nav.item(row).data(Qt.UserRole) == 'all')
+        self.assertEqual(all_games.data(Qt.UserRole + 3), 0)
 
     def test_disc_removal_preserves_shared_tracks_and_unrelated_files(self):
         self.lib.set_setting('copy_games','0')
@@ -152,7 +215,7 @@ class FileManagement(unittest.TestCase):
 
     def test_unavailable_os_trash_never_falls_back_to_permanent_deletion(self):
         # Call the unpatched imported function; only stub Qt's platform call.
-        with patch('emuluna.file_management.QFile.moveToTrash',return_value=(False,'')):
+        with patch('emuluna.file_management.QFile.moveToTrash',return_value=False):
             with self.assertRaises(OSError): move_to_trash(self.rom)
         self.assertTrue(self.rom.exists())
 
@@ -209,6 +272,78 @@ class FileManagement(unittest.TestCase):
             window.media_browser.remove_entry(entry)
         self.assertEqual(self.moved,[self.screenshot])
         self.assertIsNotNone(self.lib.get(self.game_id))
+
+
+class RealTrashRemoval(unittest.TestCase):
+    @unittest.skipUnless(sys.platform.startswith('linux'), 'Linux desktop Trash integration')
+    def test_real_dialog_batch_trash_refresh_and_retry_after_partial_move(self):
+        # Use a fresh process so Qt reads our isolated Trash directory before
+        # caching standard paths. No user files or desktop Trash are touched.
+        script = textwrap.dedent('''
+            import sys
+            from pathlib import Path
+            from PySide6.QtCore import Qt, QTimer
+            from PySide6.QtWidgets import QApplication
+            from emuluna.app import Window
+            from emuluna.library import Library
+            from emuluna.file_management import move_to_trash
+            from emuluna.removal_dialog import GameRemovalDialog
+            from nes_rom import nes
+
+            app = QApplication([])
+            root = Path(sys.argv[1])
+            for mode in ('grid', 'list'):
+                library = Library(root / mode)
+                ids = []
+                for number in range(4):
+                    source = root / f'{mode}-{number}.nes'
+                    data = bytearray(nes()); data[-1] = number
+                    source.write_bytes(data)
+                    ids.extend(library.import_file(source))
+                paths = [library.root / library.get(key)['rom_path'] for key in ids]
+                # Recreate the user's partial failure: one ROM is already in
+                # Trash but all its database records still exist.
+                if mode == 'list':
+                    move_to_trash(paths[0])
+                window = Window(library, auto_artwork=False)
+                window.show(); window.change_view(mode)
+                selected = ids[:3]
+                window.restore_selection(selected)
+                confirmed = []
+                def confirm():
+                    dialog = app.activeModalWidget()
+                    assert isinstance(dialog, GameRemovalDialog)
+                    dialog.trash.setChecked(True)
+                    confirmed.append(True)
+                    dialog.remove_button.click()
+                QTimer.singleShot(0, confirm)
+                window.remove_games(window.selected_ids())
+                app.processEvents()
+                assert confirmed
+                assert all(library.get(key) is None for key in selected)
+                assert all(not path.exists() for path in paths[:3])
+                assert paths[3].exists()
+                assert set(window.rows) == {ids[3]}
+                assert window.games.count() == 1
+                if mode == 'list':
+                    assert window.table.rowCount() == 1
+                item = next(window.nav.item(i) for i in range(window.nav.count())
+                            if window.nav.item(i).data(Qt.UserRole) == 'all')
+                assert item.data(Qt.UserRole + 3) == 1
+                window.close()
+            trash = root / 'xdg' / 'Trash'
+            assert len(list((trash / 'files').iterdir())) == 6
+            assert len(list((trash / 'info').glob('*.trashinfo'))) == 6
+        ''')
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            (root / 'xdg').mkdir()
+            env = dict(os.environ, XDG_DATA_HOME=str(root / 'xdg'), QT_QPA_PLATFORM='offscreen')
+            project = Path(__file__).resolve().parents[1]
+            env['PYTHONPATH'] = os.pathsep.join((str(project), str(project / 'tests')))
+            result = subprocess.run([sys.executable, '-c', script, str(root)], env=env,
+                                    cwd=project, capture_output=True, text=True, timeout=30)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
 
 if __name__=='__main__': unittest.main()

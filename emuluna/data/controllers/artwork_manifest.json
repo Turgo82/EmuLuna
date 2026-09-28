@@ -71,9 +71,10 @@
       1100,
       566
     ],
-    "image_bytes": 210040,
-    "image_sha256": "20bd1ece114950de1fe66b1a7b1a32b75514d6a383ef6c50dc1e6cef7f8c53b5",
-    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved"
+    "image_bytes": 149382,
+    "image_sha256": "f62e3b24dfa29373714b75d41d8a638f9fa482740f98f889290b1bed6d70c642",
+    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved",
+    "local_edit": "Manufacturer logos removed from local controller artwork"
   },
   "saturn": {
     "artist": "Pinapple_Graphics",
@@ -89,9 +90,10 @@
       1100,
       616
     ],
-    "image_bytes": 184880,
-    "image_sha256": "89285def7c150d06ed4eb14d50d4b4f64edfa7caf31bcd41f4d98bd6a7ca0264",
-    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved"
+    "image_bytes": 126482,
+    "image_sha256": "e1e503358bcecfc8ba21d83e428670cfc21ca64511e89a893580ad8cf6b0b5b3",
+    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved",
+    "local_edit": "Manufacturer logos removed from local controller artwork"
   },
   "pce": {
     "artist": "Pinapple_Graphics",
@@ -107,9 +109,10 @@
       1100,
       523
     ],
-    "image_bytes": 202340,
-    "image_sha256": "c073a6adc26b0eb4e053432d64e8550487984fbe598f8fe942e5ad7e0a3accf3",
-    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved"
+    "image_bytes": 55684,
+    "image_sha256": "f095d09ca34034605877fa30e813ac6925ca5fb32706d2fa4e763a94dc1e822f",
+    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved",
+    "local_edit": "Manufacturer logos removed from local controller artwork"
   },
   "psx": {
     "artist": "Pinapple_Graphics",
@@ -125,9 +128,10 @@
       1100,
       655
     ],
-    "image_bytes": 337440,
-    "image_sha256": "bf59712673cc641d28cf73b3ec52078906b9225f95dbd8cc847b2f135be10cf1",
-    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved"
+    "image_bytes": 47862,
+    "image_sha256": "575ed3b819412106788189da4feb2f2d5922eb467d95d2610c23e5ef5d9d5fce",
+    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved",
+    "local_edit": "Manufacturer logos removed from local controller artwork"
   },
   "n64": {
     "artist": "Pinapple_Graphics",
@@ -143,9 +147,10 @@
       1100,
       1051
     ],
-    "image_bytes": 671496,
-    "image_sha256": "6e1f2210110df7a12f5ca98bd8e05c9e223e668c959869dca83cbee7fe740e11",
-    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved"
+    "image_bytes": 85640,
+    "image_sha256": "81be335fda7cb433507eeec1740e7b33c0c72dd242c0711b1e98731929e1b066",
+    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved",
+    "local_edit": "Manufacturer logos removed from local controller artwork"
   },
   "vb": {
     "artist": "Pinapple_Graphics",
@@ -161,9 +166,10 @@
       1100,
       928
     ],
-    "image_bytes": 328400,
-    "image_sha256": "93d1de66d97d87546e13c2f1f5fb8ee32156917b67e1caafb72abb77e6d63ad9",
-    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved"
+    "image_bytes": 69076,
+    "image_sha256": "07e16036c42797ed30ac5abaa658a77f2e3abcf7d7bdf706f8987c904b69d953",
+    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved",
+    "local_edit": "Manufacturer logos removed from local controller artwork"
   },
   "gb": {
     "artist": "Pinapple_Graphics",
@@ -179,9 +185,10 @@
       592,
       980
     ],
-    "image_bytes": 128684,
-    "image_sha256": "37fd2e7d5f61be5c2e978fe17ecb888a229bc13bd263f59b08ec95bd383a7ee9",
-    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved"
+    "image_bytes": 19142,
+    "image_sha256": "3a7f238353a6dff87a3b5d27cc5d2d90bd7ed89352d9a024cc3ae651169a215a",
+    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved",
+    "local_edit": "Manufacturer logos removed from local controller artwork"
   },
   "gbc": {
     "artist": "Pinapple_Graphics",
@@ -197,9 +204,10 @@
       598,
       970
     ],
-    "image_bytes": 163416,
-    "image_sha256": "59c1c8f9b5d5bb06a926cd8af40cfd4a47eb056ecc1cb4145254c3e1dfaba8c0",
-    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved"
+    "image_bytes": 16520,
+    "image_sha256": "db069dd6dd1a8462e31ed8d136fc3f886c33ea141d99ec7c753ca027db328f24",
+    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved",
+    "local_edit": "Manufacturer logos removed from local controller artwork"
   },
   "gba": {
     "artist": "Pinapple_Graphics",
@@ -215,9 +223,10 @@
       1100,
       624
     ],
-    "image_bytes": 401304,
-    "image_sha256": "881e204f60068cc76541c7460a3601008c85d88d18fc7ceff748fa9d8cb01789",
-    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved"
+    "image_bytes": 153698,
+    "image_sha256": "e993e794fe9cb0fedb875c5586562db65a3f4add52214e19f2bfa8fbc1569859",
+    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved",
+    "local_edit": "Manufacturer logos removed from local controller artwork"
   },
   "nds": {
     "artist": "Pinapple_Graphics",
@@ -251,9 +260,10 @@
       1100,
       460
     ],
-    "image_bytes": 65126,
-    "image_sha256": "0e01cfea427d592e7569b9f02fd9b94824a2276d241c51c3f330ddcb4e744e00",
-    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved"
+    "image_bytes": 25522,
+    "image_sha256": "41776716bfa9eb3c7e827627f1c5672b0604d080be0ca533f93b71758f321b3f",
+    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved",
+    "local_edit": "Manufacturer logos removed from local controller artwork"
   },
   "gg": {
     "artist": "Pinapple_Graphics",
@@ -269,9 +279,10 @@
       1100,
       588
     ],
-    "image_bytes": 319688,
-    "image_sha256": "90de22d54d2f82d82b581e76284c00a3b2295b5d9b35325094daa90cf39aa79f",
-    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved"
+    "image_bytes": 102236,
+    "image_sha256": "e2e89766aead108fed25782c3d8102a6dfe99dae684c6514faf8fda12cef93fc",
+    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved",
+    "local_edit": "Manufacturer logos removed from local controller artwork"
   },
   "lynx": {
     "artist": "Pinapple_Graphics",
@@ -287,9 +298,10 @@
       1100,
       437
     ],
-    "image_bytes": 254746,
-    "image_sha256": "9a713cc6b4aa5e318fd08a3a33eabc1944a05d327c870c5eafca897c87acc789",
-    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved"
+    "image_bytes": 77568,
+    "image_sha256": "0e6834c5f4f621efebd401253c5e3fe596785e8d7f54a3d42a220c8c99f589be",
+    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved",
+    "local_edit": "Manufacturer logos removed from local controller artwork"
   },
   "ngpc": {
     "artist": "Pinapple_Graphics",
@@ -305,9 +317,10 @@
       1100,
       676
     ],
-    "image_bytes": 787974,
-    "image_sha256": "79c274bed93487814895104368a5880d3a4980ec10505c8531091f5d9ecf4f9f",
-    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved"
+    "image_bytes": 127570,
+    "image_sha256": "2aa8daec79da0769ddd6367288cfa346ca35d0f9ab271cb066d618d09231b2f1",
+    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved",
+    "local_edit": "Manufacturer logos removed from local controller artwork"
   },
   "wsc": {
     "artist": "Pinapple_Graphics",
@@ -323,9 +336,10 @@
       1091,
       645
     ],
-    "image_bytes": 151182,
-    "image_sha256": "ff278a4c4763317eed44442ad53d4356f2c52569804c43f5f51cd7a1a7b268be",
-    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved"
+    "image_bytes": 54144,
+    "image_sha256": "88b72362a57717346fc81bd261ba3a7b7cc4418da2a1bfbe8c688c7ec0a48c00",
+    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved",
+    "local_edit": "Manufacturer logos removed from local controller artwork"
   },
   "sms": {
     "artist": "Pinapple_Graphics",
@@ -341,9 +355,10 @@
       1100,
       455
     ],
-    "image_bytes": 132970,
-    "image_sha256": "3cf44f1a987732d9ac8f31654a07d5a02c2963ea4859739627aab6e57a59135e",
-    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved"
+    "image_bytes": 25618,
+    "image_sha256": "38666dfb5dc62d0cbfcf5fa9ebd0b49e26849c816ab26b35a7d657a8de69e428",
+    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved",
+    "local_edit": "Manufacturer logos removed from local controller artwork"
   },
   "atari2600": {
     "artist": "Pinapple_Graphics",
@@ -377,9 +392,10 @@
       1038,
       512
     ],
-    "image_bytes": 193926,
-    "image_sha256": "16b42fdb80023366071bec07c4db0c16e6d539c19567913689c71849c2fd639f",
-    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved"
+    "image_bytes": 180710,
+    "image_sha256": "f3ed964509c2940e1a5da7a02ee917d38070047f9710ce2671637e0b9e6036c6",
+    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved",
+    "local_edit": "Manufacturer logos removed from local controller artwork"
   },
   "colecovision": {
     "artist": "Pinapple_Graphics",
@@ -395,9 +411,10 @@
       426,
       955
     ],
-    "image_bytes": 118064,
-    "image_sha256": "3c468006304e86d393f79f16282292e29ab55f579dc11511aa79386901bbe4c9",
-    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved"
+    "image_bytes": 31374,
+    "image_sha256": "f646745d370afbfd30969af1736154e0f0cc4cda91dbbc03557b15cdb6a5e5df",
+    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved",
+    "local_edit": "Manufacturer logos removed from local controller artwork"
   },
   "intellivision": {
     "artist": "Pinapple_Graphics",
@@ -431,8 +448,9 @@
       1075,
       390
     ],
-    "image_bytes": 100934,
-    "image_sha256": "33989a719bb5fa44f3a459cd546b8549a4d9b29ec5e2f7579b50c9147354fa41",
-    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved"
+    "image_bytes": 18478,
+    "image_sha256": "62f7db18e2c212b8dbc9e08713db72833df538671597092779e87039edb4e524",
+    "processing": "Fit within 1100 \u00d7 1100 with Lanczos; lossless WebP; transparency preserved",
+    "local_edit": "Manufacturer logos removed from local controller artwork"
   }
 }

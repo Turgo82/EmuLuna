@@ -164,7 +164,7 @@ class ControllerRedesign(unittest.TestCase):
                 QTest.qWait(10)
                 button=page.mapping_buttons['button:64']
                 self.assertEqual(button.grab().toImage().pixelColor(5,5),theme_palette().color(QPalette.Button))
-                dialog.show_page('general');QTest.qWait(10)
+                dialog.show_page('gameplay');QTest.qWait(10)
                 box=dialog.focus_pause
                 option=QStyleOptionButton();box.initStyleOption(option)
                 rect=box.style().subElementRect(QStyle.SE_CheckBoxIndicator,option,box)

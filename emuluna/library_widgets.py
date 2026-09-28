@@ -4,7 +4,8 @@ import unicodedata
 from datetime import datetime
 from pathlib import Path
 
-from PySide6.QtCore import Qt, QMimeData, Signal, QRect, QSize, QEvent, QPointF, QSignalBlocker, QTimer
+from PySide6.QtCore import (Qt, QMimeData, Signal, QRect, QSize, QEvent, QPointF,
+                            QItemSelectionModel, QSignalBlocker, QTimer)
 from PySide6.QtGui import QDrag, QColor, QPen, QPixmap, QPainter, QIcon, QPolygonF, QCursor, QPalette
 from PySide6.QtWidgets import (QApplication, QAbstractItemView, QCheckBox, QComboBox, QDialog,
     QDialogButtonBox, QFormLayout, QLabel, QLineEdit, QListWidget, QSpinBox,
@@ -171,6 +172,15 @@ class LibraryScrollBar(QScrollBar):
 
 
 class GameDragMixin:
+    def selectionCommand(self, index, event=None):
+        # Qt normally collapses an extended selection to the item under a
+        # right-click before customContextMenuRequested is emitted. Preserve
+        # the complete selection when the menu is opened on one of its rows.
+        if (event is not None and event.type() == QEvent.MouseButtonPress and
+                event.button() == Qt.RightButton and self.selectionModel().isSelected(index)):
+            return QItemSelectionModel.NoUpdate
+        return super().selectionCommand(index, event)
+
     def startDrag(self, supported_actions):
         mime = QMimeData()
         mime.setData(GAME_MIME, json.dumps(self.game_ids()).encode())

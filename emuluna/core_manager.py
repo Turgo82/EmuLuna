@@ -433,14 +433,18 @@ class DefaultCoreWorker(QThread):
             downloads = Downloads(self.isInterruptionRequested)
             index = manager.remote_index(downloads)
             failures, installed = [], 0
-            for core_id in ids:
+            for number, core_id in enumerate(ids, 1):
                 downloads.check()
                 # Recheck preferences after each download; a user may remove a
                 # core or disable automatic installation while this job runs.
                 if core_id not in manager.missing_defaults(library, self.systems):
                     continue
                 try:
-                    manager.download(core_id, downloads, self.progress.emit, index)
+                    manager.download(
+                        core_id, downloads,
+                        lambda message, number=number: self.progress.emit(
+                            f"{number}/{len(ids)} · {message}"),
+                        index)
                     installed += 1
                 except Cancelled:
                     raise
