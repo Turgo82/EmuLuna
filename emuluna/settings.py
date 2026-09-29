@@ -1,8 +1,8 @@
 """User settings and the Libretro core library."""
 from pathlib import Path
 
-from PySide6.QtCore import Qt, Signal, QTimer, QSize, QEvent, QByteArray
-from PySide6.QtGui import QIcon
+from PySide6.QtCore import Qt, Signal, QTimer, QSize, QEvent, QByteArray, QUrl
+from PySide6.QtGui import QDesktopServices
 from PySide6.QtMultimedia import QMediaDevices
 from PySide6.QtWidgets import (QApplication, QDialog, QVBoxLayout, QHBoxLayout, QTabWidget, QWidget, QFormLayout,
     QLabel, QSlider, QLineEdit, QPushButton, QFileDialog, QTableWidget,
@@ -115,21 +115,15 @@ class SettingsDialog(QDialog):
         binding.refresh([page, *page.findChildren(QWidget)])
 
     def core_tab(self):
-        self.core_pages = QTabWidget()
-        self.core_pages.setDocumentMode(True)
-        self.core_pages.tabBar().setDrawBase(False)
-        self.core_pages.tabBar().setFocusPolicy(Qt.NoFocus)
-        self.cores_tab()
-        self.downloads_tab()
+        page = self.downloads_tab()
         self.refresh_cores()
-        return self.core_pages
+        return page
 
     def refresh_navigation_icons(self):
         for index, key in enumerate(self.page_keys):
             # Keep the same legible foreground in selected and unselected tabs;
             # the tab background and underline already communicate selection.
-            base = navigation_icon(key).pixmap(23, 23, QIcon.Normal, QIcon.Off)
-            self.tabs.setTabIcon(index, QIcon(base))
+            self.tabs.setTabIcon(index, navigation_icon(key))
 
     def changeEvent(self, event):
         super().changeEvent(event)
@@ -183,6 +177,18 @@ class SettingsDialog(QDialog):
             self.set_setting("bios_directory", path)
             if 'bios' in self.loaded_pages:
                 self.refresh_bios()
+
+    def open_bios_folder(self):
+        folder = Path(self.bios_path.text()).expanduser()
+        try:
+            folder.mkdir(parents=True, exist_ok=True)
+        except OSError as error:
+            QMessageBox.warning(self, "System folder could not be opened", str(error))
+            return
+        if not QDesktopServices.openUrl(QUrl.fromLocalFile(str(folder.absolute()))):
+            QMessageBox.warning(
+                self, "System folder could not be opened",
+                "The desktop file manager could not open this location:\n" + str(folder))
 
     def controls_tab(self):
         self.controls_page = ControlsPage(self.library, self)
@@ -387,47 +393,26 @@ class SettingsDialog(QDialog):
         self.copy_games = self.checkbox(form, "Copy games into library when importing", "copy_games", "1")
         self.auto_metadata = self.checkbox(form, "Automatically look up game information", "metadata_auto", "1")
         self.auto_art = self.checkbox(form, "Automatically download box art", "artwork_auto", "1")
+        self.startup_art = self.checkbox(
+            form, "Check for missing box art when EmuLuna starts",
+            "artwork_check_at_startup", "1")
+        self.startup_art.setToolTip(
+            "Run one missing-cover check when the library opens. Imports are checked automatically either way.")
+        self.startup_art.setEnabled(self.auto_art.isChecked())
+        self.auto_art.toggled.connect(self.startup_art.setEnabled)
+        self.closest_art = self.checkbox(
+            form, "Use closest title match when exact box art is unavailable",
+            "artwork_closest_match", "0")
+        self.closest_art.setToolTip(
+            "Allow high-confidence matches such as ‘007 GoldenEye’ and ‘GoldenEye 007’. "
+            "Leave this off if you prefer to approve approximate matches with Find cover art.")
+        self.closest_art.setEnabled(self.auto_art.isChecked())
+        self.auto_art.toggled.connect(self.closest_art.setEnabled)
         self.backup_art = self.checkbox(form, "Use backup artwork source when needed", "artwork_backup", "1")
         note = QLabel("When enabled, copies are organized by system and keep their original filenames.\n\nWhen disabled, games stay in their current folders. Keep those files and drives available to play. ZIP imports always extract a managed copy.\n\nThis setting applies to new imports. To copy an existing external game, right-click it and choose Consolidate files into library. Originals are never moved or deleted.")
         note.setWordWrap(True)
         form.addRow(note)
         self.tabs.addTab(page, "Library")
-
-    def cores_tab(self):
-        page = QWidget()
-        layout = QVBoxLayout(page)
-        layout.setContentsMargins(20, 22, 20, 20)
-        form = QFormLayout()
-        form.setSpacing(18)
-        self.choices = {}
-        for key in SYSTEMS:
-            system = SYSTEMS[key]
-            label = QWidget()
-            row = QHBoxLayout(label)
-            row.setContentsMargins(0, 0, 12, 0)
-            icon = QLabel()
-            icon.setPixmap(QIcon(str(system.icon)).pixmap(24, 24))
-            row.addWidget(icon)
-            row.addWidget(QLabel(system.name))
-            combo = QComboBox()
-            combo.currentIndexChanged.connect(lambda _, s=key: self.select_core(s))
-            self.choices[key] = combo
-            form.addRow(label, combo)
-        contents = QWidget()
-        contents.setLayout(form)
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setWidget(contents)
-        layout.addWidget(scroll, 1)
-        description = QLabel("Download or import standard libretro cores in Core downloads. Automatic uses the recommended installed core, or another installed core for the system.\n\nBattery saves and save states are kept separately for each core. Save states also belong to the exact core build that created them. States from another emulator may not be compatible.")
-        description.setWordWrap(True)
-        description.setStyleSheet("color:palette(placeholder-text);padding-top:20px")
-        layout.addWidget(description)
-        self.core_pages.addTab(page, "Core selection")
-
-    def select_core(self, system):
-        if not self.refreshing:
-            self.set_setting("core." + system, self.choices[system].currentData())
 
     def downloads_tab(self):
         page = QWidget()
@@ -481,27 +466,12 @@ class SettingsDialog(QDialog):
         note.setStyleSheet("color:palette(placeholder-text);font-size:11px")
         note.setWordWrap(True)
         layout.addWidget(note)
-        self.core_pages.addTab(page, "Core downloads")
+        return page
 
     def refresh_cores(self):
         self.core_stamp = self.manager.manifest.stat().st_mtime_ns if self.manager.manifest.exists() else None
         self.refreshing = True
         records = self.manager.installed()
-        for system, combo in self.choices.items():
-            selected = self.library.setting("core." + system, "auto")
-            if selected == "builtin":
-                selected = "auto"
-            combo.clear()
-            compatible = [r for r in records.values() if system in r["systems"]]
-            combo.addItem("Automatic" if compatible else "No core installed — see Core downloads", "auto")
-            for core_id, record in records.items():
-                if system in record["systems"]:
-                    combo.addItem(f"{record['name']} — Libretro ({record['version']})", core_id)
-            index = combo.findData(selected)
-            if index < 0:
-                combo.addItem("Missing core — choose another", selected)
-                index = combo.count() - 1
-            combo.setCurrentIndex(index)
         selected_id = self.table.item(self.table.currentRow(), 0).data(Qt.UserRole) if self.table.currentRow() >= 0 else None
         all_cores = dict(CATALOG)
         all_cores.update({key: record for key, record in records.items() if key not in all_cores})
@@ -614,6 +584,10 @@ class SettingsDialog(QDialog):
             self.library.setting("bios_directory", str(self.library.root / "system")))
         self.bios_path.setReadOnly(True)
         folder_row.addWidget(self.bios_path, 1)
+        self.open_bios_button = QPushButton("Open folder")
+        self.open_bios_button.setIcon(navigation_icon('collection'))
+        self.open_bios_button.clicked.connect(self.open_bios_folder)
+        folder_row.addWidget(self.open_bios_button)
         browse = QPushButton("Choose…")
         browse.clicked.connect(self.choose_bios)
         folder_row.addWidget(browse)

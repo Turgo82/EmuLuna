@@ -201,9 +201,14 @@ class LibraryViews(unittest.TestCase):
         QTest.qWait(20)
         control = window.search_control
         self.assertTrue(window.search.isHidden())
+        self.assertEqual(control.width(), control.button.width())
         QTest.mouseClick(control.button, Qt.LeftButton)
+        QTest.qWait(10)
         self.assertTrue(window.search.isVisible())
         self.assertTrue(window.search.hasFocus())
+        gap = control.button.geometry().left() - window.search.geometry().right() - 1
+        self.assertEqual(gap, control.layout().spacing())
+        self.assertEqual(control.width(), window.search.width() + gap + control.button.width())
         QTest.keyClicks(window.search, 'Alpha')
         QTest.qWait(150)
         self.assertEqual(len(window.rows), 1)

@@ -293,11 +293,11 @@ class CoreManager:
             choices = [preferred] + [key for key in records if key != preferred]
             record = next((records[key] for key in choices if key in records and system in records[key]["systems"]), None)
             if record is None:
-                raise CoreError(f"No core is installed for {SYSTEMS[system].name}. Open Settings → Core downloads, select this system, and download a core.")
+                raise CoreError(f"No core is installed for {SYSTEMS[system].name}. Open Settings → Cores and download a compatible core.")
         else:
             record = records.get(choice)
             if not record or system not in record["systems"]:
-                raise CoreError("The selected core is unavailable. Select another core in Settings.")
+                raise CoreError("The selected core is unavailable. Right-click the console in the sidebar and choose another core.")
         return record
 
     def selection(self, library, system):
@@ -358,7 +358,7 @@ class CoreWorker(QThread):
             if self.local_file:
                 self.progress.emit("Checking the selected core…")
                 manager.import_file(self.local_file, self.system)
-                message = "Core imported. You can now select it for a system."
+                message = "Core imported. Right-click a console in the sidebar to select it."
             else:
                 index = manager.remote_index(downloads)
                 ids = list(CATALOG) if self.install_all else [key for key, value in manager.installed().items() if value["source"] == "buildbot"] if self.update_all else [self.core_id]
@@ -453,8 +453,8 @@ class DefaultCoreWorker(QThread):
             self.result.emit(f'{installed} default core(s) installed.' +
                 (' Retry failed downloads in Settings. ' + '; '.join(failures) if failures else ''), not failures)
         except Cancelled:
-            self.result.emit('Core downloads cancelled. Retry in Settings → Core downloads.', False)
+            self.result.emit('Core downloads cancelled. Retry in Settings → Cores.', False)
         except Exception as error:
-            self.result.emit('Default core download failed. Retry in Settings → Core downloads. ' + str(error), False)
+            self.result.emit('Default core download failed. Retry in Settings → Cores. ' + str(error), False)
         finally:
             library.close()

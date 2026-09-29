@@ -27,14 +27,18 @@ class ExpandableSearch(QWidget):
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(4)
+        # The toolbar column can be wider than this control. Keep that extra
+        # width outside the control so it cannot become a gap between the
+        # field and its search icon.
+        layout.setSizeConstraint(QHBoxLayout.SetFixedSize)
+        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.field = QLineEdit()
         self.field.setObjectName('librarySearch')
         self.field.setFixedHeight(34)
         self.field.setPlaceholderText('Search')
         self.field.setAccessibleName('Search library')
         self.field.setToolTip('Search games, systems, filenames and information · Escape to clear and close')
-        self.field.setMinimumWidth(100)
-        self.field.setMaximumWidth(180)
+        self.field.setFixedWidth(180)
         self.field.setClearButtonEnabled(True)
         self.field.installEventFilter(self)
         self.field.textChanged.connect(lambda text: self.field.show() if text else None)
@@ -52,12 +56,14 @@ class ExpandableSearch(QWidget):
 
     def expand(self):
         self.field.show()
+        self.adjustSize()
         self.field.setFocus(Qt.ShortcutFocusReason)
         self.field.selectAll()
 
     def toggle(self):
         if not self.field.isHidden() and not self.field.text():
             self.field.hide()
+            self.adjustSize()
             self.button.setFocus()
         else:
             self.expand()
@@ -65,12 +71,14 @@ class ExpandableSearch(QWidget):
     def collapse_if_idle(self):
         if not self.field.hasFocus() and not self.field.text():
             self.field.hide()
+            self.adjustSize()
 
     def eventFilter(self, watched, event):
         if watched is self.field:
             if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Escape:
                 self.field.clear()
                 self.field.hide()
+                self.adjustSize()
                 self.button.setFocus()
                 return True
             if event.type() == QEvent.FocusOut:

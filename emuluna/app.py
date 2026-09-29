@@ -214,6 +214,7 @@ class Window(QMainWindow):
         self.metadata_worker = None
         self.metadata_pending = []
         self.metadata_enabled = auto_artwork if auto_metadata is None else auto_metadata
+        self.startup_artwork_enabled = auto_artwork
         self.core_worker = None
         self.core_pending = set()
         self.auto_cores_enabled = auto_artwork
@@ -497,12 +498,8 @@ class Window(QMainWindow):
             launch.triggered.connect(self.play)
             widget.addAction(launch)
         self.refresh()
-        self.art_timer = QTimer(self)
-        self.art_timer.setInterval(5 * 60 * 1000)
-        self.art_timer.timeout.connect(self.start_background)
         if auto_artwork or self.metadata_enabled:
-            self.art_timer.start()
-            QTimer.singleShot(250, self.start_background)
+            QTimer.singleShot(250, self.startup_lookups)
         if self.library.needs_filename_restore():
             QTimer.singleShot(0, lambda: self.import_paths([], restore_names=True))
 
@@ -658,14 +655,16 @@ class Window(QMainWindow):
         if not self.core_worker:
             self.drain_lookups()
 
-    def open_settings(self, checked=False, *, system=None):
+    def open_settings(self, checked=False, *, system=None, page=None):
         from .settings import SettingsDialog
         dialog = SettingsDialog(
             self.library, self, advanced_unlocked=self.advanced_settings_unlocked)
         if system in SYSTEMS:
             dialog.show_page('controls')
-            page = dialog.controls_page
-            page.system.setCurrentIndex(page.system.findData(system))
+            controls_page = dialog.controls_page
+            controls_page.system.setCurrentIndex(controls_page.system.findData(system))
+        elif page in dialog.page_keys:
+            dialog.show_page(page)
         def sync():
             self.auto_art_action.setChecked(self.library.setting("artwork_auto", "1") == "1")
             self.backup_art_action.setChecked(self.library.setting("artwork_backup", "1") == "1")
@@ -710,6 +709,13 @@ class Window(QMainWindow):
     def start_background(self):
         self.start_metadata()
         self.start_artwork()
+
+    def startup_lookups(self):
+        """Run the one-time startup jobs selected in Library settings."""
+        self.start_metadata()
+        if (self.startup_artwork_enabled
+                and self.library.setting("artwork_check_at_startup", "1") == "1"):
+            self.start_artwork()
 
     def start_metadata(self, *, force=False, game_ids=None):
         if self.closing or (not force and (not self.metadata_enabled or self.library.setting("metadata_auto", "1") != "1")):
@@ -993,6 +999,7 @@ class Window(QMainWindow):
             system = item.data(Qt.UserRole)
             menu = QMenu(self)
             menu.addAction('Configure Controls…', lambda: self.open_settings(system=system))
+            self.add_console_core_menu(menu, system)
             menu.exec(self.nav.viewport().mapToGlobal(position))
             return
         if not item or not (item.data(Qt.UserRole) or "").startswith("collection:"):
@@ -1015,6 +1022,57 @@ class Window(QMainWindow):
         elif action == delete:
             self.library.delete_collection(record["id"])
         self.rebuild_sidebar()
+        self.refresh()
+
+    def add_console_core_menu(self, menu, system):
+        """Add the installed core choices for one sidebar console."""
+        core_menu = menu.addMenu('Core')
+        selected = self.library.setting('core.' + system, 'auto')
+        selected = 'auto' if selected in ('', 'builtin') else selected
+        automatic = core_menu.addAction('Automatic (recommended)')
+        automatic.setCheckable(True)
+        automatic.setChecked(selected == 'auto')
+        automatic.setData('auto')
+        automatic.triggered.connect(
+            lambda checked=False: self.set_console_core(system, 'auto'))
+
+        try:
+            installed = CoreManager(self.library.root).installed()
+        except (OSError, ValueError, CoreError):
+            installed = {}
+        compatible = sorted(
+            ((core_id, record) for core_id, record in installed.items()
+             if system in record.get('systems', ())),
+            key=lambda pair: pair[1].get('name', pair[0]).casefold())
+        if compatible:
+            core_menu.addSeparator()
+            for core_id, record in compatible:
+                version = record.get('version') or 'unknown version'
+                action = core_menu.addAction(f"{record.get('name', core_id)} ({version})")
+                action.setCheckable(True)
+                action.setChecked(selected == core_id)
+                action.setData(core_id)
+                action.triggered.connect(
+                    lambda checked=False, value=core_id: self.set_console_core(system, value))
+        else:
+            unavailable = core_menu.addAction('No compatible cores installed')
+            unavailable.setEnabled(False)
+        if selected not in ('auto', *installed):
+            missing = core_menu.addAction(f'Unavailable selection: {selected}')
+            missing.setCheckable(True)
+            missing.setChecked(True)
+            missing.setEnabled(False)
+        core_menu.addSeparator()
+        core_menu.addAction('Manage core downloads…',
+                            lambda: self.open_settings(page='cores'))
+        return core_menu
+
+    def set_console_core(self, system, core_id):
+        self.library.set_setting('core.' + system, core_id)
+        self.table_dirty = True
+        label = 'Automatic' if core_id == 'auto' else CoreManager(
+            self.library.root).installed().get(core_id, {}).get('name', core_id)
+        self.notifications.post(f'{SYSTEMS[system].name} core set to {label}.', 5000)
         self.refresh()
 
     def active_view(self):
@@ -1499,11 +1557,7 @@ class Window(QMainWindow):
         if single:
             menu.addAction("Rename game…", lambda: self.rename_game(game_id))
             menu.addAction("Add cover art from file…", lambda: self.choose_cover(game_id))
-        download_cover = menu.addAction("Download missing cover art", lambda: self.start_artwork(force=True, game_ids=set(game_ids)))
-        download_cover.setEnabled(not self.art_worker and any(not self.rows[key]["cover"] or
-            not (self.library.root / self.rows[key]["cover"]).is_file() for key in game_ids))
-        if any(self.rows[key]["cover"] for key in game_ids):
-            menu.addAction("Download replacement cover art…", lambda: self.download_replacement(game_ids))
+            menu.addAction("Find cover art…", lambda: self.find_cover(game_id))
         if single:
             menu.addAction("Open ROM folder", lambda: QDesktopServices.openUrl(QUrl.fromLocalFile(str((self.library.root / row["rom_path"]).parent))))
         external = [key for key in game_ids if Path(self.rows[key]["rom_path"]).is_absolute()]
@@ -1558,13 +1612,6 @@ class Window(QMainWindow):
         self.games.viewport().update()
         self.table.viewport().update()
 
-    def download_replacement(self, game_ids):
-        answer = QMessageBox.question(self, "Replace cover art?",
-            "Download new covers for the selected games? Their current covers will remain visible unless a replacement downloads successfully.",
-            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-        if answer == QMessageBox.Yes:
-            self.start_artwork(force=True, game_ids=set(game_ids), replace=True)
-
     def locate_rom(self, game_id):
         if game_id in self.processes:
             self.notifications.post("Close this game's window before changing its ROM location.", 7000)
@@ -1587,6 +1634,34 @@ class Window(QMainWindow):
         path, _ = QFileDialog.getOpenFileName(self, "Choose cover", "", "Images (*.png *.jpg *.jpeg *.webp)")
         if path:
             self.replace_cover(game_id, path)
+
+    def find_cover(self, game_id):
+        from .artwork import atomic_bytes
+        from .cover_picker import CoverPickerDialog
+        game = self.library.get(game_id)
+        if not game:
+            return
+        dialog = CoverPickerDialog(
+            self.library.root, game["system"], game["title"], self)
+        try:
+            if dialog.exec() and dialog.selection:
+                target = Path("covers") / f"{game_id}.chosen.png"
+                atomic_bytes(self.library.root / target, dialog.selection["image"])
+                self.library.set_manual_cover(game_id, target)
+                metadata = dialog.selection.get("metadata", {})
+                if metadata:
+                    self.library.metadata_result(
+                        game_id, "OpenVGDB", "matched", payload=metadata,
+                        source_url=dialog.selection.get("metadata_source") or None)
+                self.refresh()
+                message = f"Cover updated from {dialog.selection['title']}."
+                if metadata:
+                    message += " Matching game information was also updated."
+                else:
+                    message += " No matching game information was available."
+                self.notifications.post(message, 7000)
+        finally:
+            dialog.deleteLater()
 
     def replace_cover(self, game_id, path):
         image = QPixmap(path)
@@ -1617,7 +1692,6 @@ class Window(QMainWindow):
             event.ignore()
             return
         self.closing = True
-        self.art_timer.stop()
         self.search_timer.stop()
         if self.core_worker:
             self.core_pending.clear()

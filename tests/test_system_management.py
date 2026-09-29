@@ -52,8 +52,8 @@ class SystemManagementTests(unittest.TestCase):
                       dialog.table.item(row, 1).text().casefold())
                      for row in range(dialog.table.rowCount())]
         self.assertEqual(core_rows, sorted(core_rows))
-        self.assertEqual(list(dialog.choices), list(SYSTEMS))
-        self.assertTrue(all(combo.findData('builtin') == -1 for combo in dialog.choices.values()))
+        self.assertFalse(hasattr(dialog, 'choices'))
+        self.assertFalse(hasattr(dialog, 'core_pages'))
         dialog.show_page('bios')
         dialog.bios_system.setCurrentIndex(dialog.bios_system.findData('colecovision'))
         self.assertEqual(dialog.bios_table.rowCount(), 1)

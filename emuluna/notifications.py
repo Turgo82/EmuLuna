@@ -1,9 +1,11 @@
 """A quiet, bounded notification history with background-task controls."""
 from datetime import datetime
 from PySide6.QtCore import Qt, QPoint, QSize, QRect, QEvent
-from PySide6.QtGui import QPainter, QPainterPath, QPen, QColor, QIcon, QPixmap, QPalette
+from PySide6.QtGui import QPainter, QPen, QPalette
 from PySide6.QtWidgets import (QToolButton, QFrame, QVBoxLayout, QHBoxLayout,
     QLabel, QPushButton, QListWidget, QListWidgetItem, QAbstractItemView)
+
+from .branding import navigation_icon
 
 
 class NotificationBell(QToolButton):
@@ -12,6 +14,7 @@ class NotificationBell(QToolButton):
         self.setObjectName('notificationBell')
         self.setFixedSize(32, 32)
         self.setIconSize(QSize(24, 24))
+        self.setIcon(navigation_icon('bell'))
         self.setStyleSheet('QToolButton {border:0;border-radius:6px;background:transparent;} QToolButton:hover {background:palette(alternate-base);}')
         self.unread = 0
         self.active = {}
@@ -106,30 +109,23 @@ class NotificationBell(QToolButton):
         self.update_badge()
 
     def update_badge(self):
-        pixmap = QPixmap(24, 24)
-        pixmap.fill(Qt.transparent)
-        p = QPainter(pixmap)
-        p.setRenderHint(QPainter.Antialiasing)
-        p.setPen(QPen(self.palette().color(QPalette.WindowText), 1.6, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
-        path = QPainterPath()
-        path.moveTo(5, 17)
-        path.cubicTo(7, 15, 7, 13, 7, 10)
-        path.cubicTo(7, 3, 17, 3, 17, 10)
-        path.cubicTo(17, 13, 17, 15, 19, 17)
-        path.closeSubpath()
-        p.drawPath(path)
-        p.drawLine(12, 3, 12, 4)
-        p.drawArc(QRect(10, 18, 4, 3), 180 * 16, 180 * 16)
-        if self.unread:
-            p.setPen(QPen(self.palette().color(QPalette.Window), 1.5))
-            p.setBrush(self.palette().color(QPalette.Highlight))
-            p.drawEllipse(QPoint(19, 5), 4, 4)
-        p.end()
-        self.setIcon(QIcon(pixmap))
         label = 'Notifications' + (f' · {self.unread} unread' if self.unread else '')
         self.setToolTip(label)
         self.setAccessibleName(label)
         self.clear_button.setEnabled(self.history.count() > 0)
+        self.update()
+
+    def paintEvent(self, event):
+        super().paintEvent(event)
+        if not self.unread:
+            return
+        # Painting in widget coordinates lets Qt scale the badge cleanly with
+        # the vector bell on fractional and high-DPI displays.
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setPen(QPen(self.palette().color(QPalette.Window), 1.5))
+        painter.setBrush(self.palette().color(QPalette.Highlight))
+        painter.drawEllipse(QPoint(23, 9), 4, 4)
 
     def toggle_panel(self):
         if self.panel.isVisible():

@@ -8,13 +8,16 @@ from media_stub import isolate_audio
 isolate_audio()
 os.environ.setdefault('QT_QPA_PLATFORM','offscreen')
 from PySide6.QtWidgets import QApplication
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QImage
+from PySide6.QtCore import QSize, Qt
+from PySide6.QtGui import QIcon, QImage
 from PySide6.QtTest import QTest
 from emuluna.app import AboutDialog, Window
 from emuluna.library import Library, SYSTEMS, default_data_dir
 from emuluna.settings import SettingsDialog
-from emuluna.branding import ICON, LOGO, MASCOT, UNLOCK_SOUND, configure_application
+from emuluna.branding import (
+    ICON, LOGO, MASCOT, UI_ICON_DIR, UNLOCK_SOUND, PaletteSvgIconEngine,
+    configure_application, navigation_icon,
+)
 from snes_rom import snes
 
 
@@ -47,6 +50,33 @@ class Rebranding(unittest.TestCase):
             with patch.dict(os.environ, {'EMULUNA_DATA_DIR':str(base/'explicit')}):
                 explicit=Library(); self.assertEqual(explicit.root, base/'explicit');explicit.close()
 
+    def test_toolbar_and_settings_icons_are_packaged_scalable_svgs(self):
+        names = {
+            'menu', 'plus', 'search', 'general', 'gameplay', 'controls',
+            'cores', 'downloads', 'bios', 'advanced', 'library', 'states',
+            'screenshots', 'grid', 'list', 'bell', 'power', 'fullscreen',
+            'fullscreen-exit',
+        }
+        self.assertEqual({path.stem for path in UI_ICON_DIR.glob('*.svg')}, names)
+        for name in names:
+            source = (UI_ICON_DIR / f'{name}.svg').read_text(encoding='utf-8')
+            self.assertIn('<svg', source)
+            self.assertIn('viewBox="0 0 24 24"', source)
+            icon = navigation_icon(name)
+            self.assertFalse(icon.isNull())
+            for mode, state in (
+                    (QIcon.Normal, QIcon.Off),
+                    (QIcon.Selected, QIcon.On),
+                    (QIcon.Disabled, QIcon.Off)):
+                self.assertFalse(icon.pixmap(QSize(24, 24), mode, state).isNull())
+
+        # Qt asks icon engines for a physical-size image on a high-DPI display.
+        # Keep the logical size while retaining all 48 rendered pixels at 2x.
+        engine = PaletteSvgIconEngine(UI_ICON_DIR / 'grid.svg')
+        high_dpi = engine.scaledPixmap(QSize(24, 24), QIcon.Normal, QIcon.Off, 2.0)
+        self.assertEqual(high_dpi.size(), QSize(48, 48))
+        self.assertEqual(high_dpi.devicePixelRatio(), 2.0)
+
     def test_empty_console_toggle_import_search_and_removal(self):
         with tempfile.TemporaryDirectory() as folder:
             lib = Library(Path(folder)/'library')
@@ -61,7 +91,7 @@ class Rebranding(unittest.TestCase):
                 settings.hide_empty_consoles.setChecked(True)
                 self.assertEqual(consoles(), [])
                 settings.show_page('cores')
-                self.assertEqual(len(settings.choices), len(SYSTEMS))
+                self.assertGreater(settings.table.rowCount(), 0)
                 rom=Path(folder)/'My game.sfc';rom.write_bytes(snes())
                 game=lib.import_file(rom)[0];window.refresh()
                 self.assertEqual(consoles(), ['snes'])

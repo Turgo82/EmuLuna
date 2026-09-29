@@ -13,14 +13,59 @@ import zlib
 
 from PySide6.QtCore import QThread, Signal
 
-from .artwork import Catalog, Downloads, Cancelled, lookup, preferred_region
-from .library import Library, MAX_ROM
+from .artwork import (Catalog, Downloads, Cancelled, lookup, preferred_region,
+                      title_similarity)
+from .library import Library, MAX_ROM, SYSTEMS
 
 
 @dataclass(frozen=True)
 class MetadataMatch:
     fields: dict
     source_url: str = ""
+
+
+def title_catalog_rows(db, system):
+    """Load release information for reviewable cover-title matching."""
+    columns = {row[1] for row in db.execute("PRAGMA table_info(RELEASES)")}
+    optional = {
+        "releaseDeveloper": "developer", "releasePublisher": "publisher",
+        "releaseDate": "release_date", "releaseGenre": "genre",
+        "releaseDescription": "description", "releaseReferenceURL": "source_url",
+    }
+    extra = "".join(
+        f", {column} AS {alias}" for column, alias in optional.items()
+        if column in columns)
+    rows = db.execute("""SELECT DISTINCT releaseTitleName AS title,
+        regionName AS region""" + extra + """ FROM RELEASES
+        JOIN ROMs USING(romID) JOIN SYSTEMS USING(systemID)
+        LEFT JOIN REGIONS ON regionLocalizedID=REGIONS.regionID
+        WHERE systemOEID=? AND releaseTitleName IS NOT NULL""",
+        (SYSTEMS[system].openvgdb_id,)).fetchall()
+    return [dict(row) for row in rows]
+
+
+def metadata_for_cover(rows, cover_title, region):
+    """Find metadata matching the exact cover variant selected by the user."""
+    ranked = []
+    for row in rows:
+        score = title_similarity(cover_title, row.get("title") or "")
+        if score >= 0.90:
+            ranked.append((score, row))
+    if not ranked:
+        return None
+    ranked.sort(key=lambda item: (
+        -item[0], item[1].get("region") != region,
+        item[1].get("region") != preferred_region(), item[1].get("title") or ""))
+    row = ranked[0][1]
+    fields = {key: str(row[key]).strip() for key in
+              ("title", "region", "developer", "publisher", "release_date", "genre")
+              if row.get(key)}
+    if row.get("description"):
+        fields["description"] = plain_text(row["description"])
+    if fields.get("genre"):
+        fields["genre"] = ", ".join(
+            part.strip() for part in fields["genre"].split(",") if part.strip())
+    return MetadataMatch(fields, row.get("source_url") or "")
 
 
 class MetadataProvider(Protocol):

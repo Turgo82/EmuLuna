@@ -3,6 +3,7 @@
 Queries use local ROM hashes; game contents are never uploaded.
 """
 from contextlib import closing
+from difflib import SequenceMatcher
 import hashlib
 import io
 import json
@@ -215,6 +216,39 @@ def normalized_title(value):
     return " ".join(words)
 
 
+def title_similarity(query, candidate):
+    """Return a conservative title score while ignoring region tags and word order."""
+    query = normalized_title(query)
+    candidate = normalized_title(candidate)
+    if not query or not candidate:
+        return 0.0
+    if query == candidate:
+        return 1.0
+    query_words = query.split()
+    candidate_words = candidate.split()
+    if sorted(query_words) == sorted(candidate_words):
+        return 1.0
+    ordered = SequenceMatcher(None, query, candidate).ratio()
+    word_order = SequenceMatcher(
+        None, " ".join(sorted(query_words)), " ".join(sorted(candidate_words))).ratio()
+    overlap = len(set(query_words) & set(candidate_words))
+    overlap_score = (2 * overlap / (len(set(query_words)) + len(set(candidate_words))))
+    return max(ordered, word_order, overlap_score)
+
+
+def closest_cover_names(names, title, *, limit=12, minimum=0.0):
+    """Rank thumbnail filenames for a reviewable or high-confidence title match."""
+    scored = [(title_similarity(title, Path(name).stem), name) for name in names]
+    scored = [(score, name) for score, name in scored if score >= minimum]
+    scored.sort(key=lambda item: (-item[0], item[1].casefold()))
+    return [(name, score) for score, name in scored[:limit]]
+
+
+def thumbnail_url(system, name):
+    return (f"https://raw.githubusercontent.com/libretro-thumbnails/"
+            f"{REPOSITORIES[system]}/master/Named_Boxarts/{quote(name, safe='')}")
+
+
 class BackupArt:
     def __init__(self, root, downloads):
         self.root = Path(root) / "metadata"
@@ -249,7 +283,7 @@ class BackupArt:
         self.indexes[system] = names
         return names
 
-    def urls(self, game, matches, region):
+    def urls(self, game, matches, region, *, closest=False):
         names = self.index(game["system"])
         # Prefer OpenVGDB's verified ROM filename, then its release title. For
         # unknown ROMs only an exact normalized filename/title match is used.
@@ -262,9 +296,12 @@ class BackupArt:
             sanitized = re.sub(r'[&*/:`<>?\\|\"]', "_", title)
             exact = [n for n in names if Path(n).stem.casefold() == sanitized.casefold()]
             candidates = exact or [n for n in names if normalized_title(Path(n).stem) == normalized_title(title)]
+            if not candidates and closest:
+                candidates = [name for name, score in closest_cover_names(
+                    names, title, limit=3, minimum=0.92)]
             candidates.sort(key=lambda n: (f"({region}" not in n, "(World)" not in n, "(USA" not in n, n))
             for name in candidates:
-                url = f"https://raw.githubusercontent.com/libretro-thumbnails/{REPOSITORIES[game['system']]}/master/Named_Boxarts/{quote(name, safe='')}"
+                url = thumbnail_url(game['system'], name)
                 if url not in results:
                     results.append(url)
         return results[:3]
@@ -321,6 +358,7 @@ class ArtworkWorker(QThread):
                 catalog_error = error
                 path = None
             fallback = library.setting("artwork_backup", "1") == "1"
+            closest = library.setting("artwork_closest_match", "0") == "1"
             if path is None and not fallback:
                 raise catalog_error
             backup = BackupArt(self.root, downloads)
@@ -346,7 +384,7 @@ class ArtworkWorker(QThread):
                             if not primary:
                                 if not fallback:
                                     break
-                                urls = backup.urls(game, matches, preferred_region())
+                                urls = backup.urls(game, matches, preferred_region(), closest=closest)
                             for url in urls:
                                 downloads.check()
                                 host = urlsplit(url).hostname

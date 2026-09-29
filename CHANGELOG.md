@@ -2,6 +2,41 @@
 
 This file records user-facing changes to EmuLuna releases.
 
+## [0.15.0] - 2026-09-28
+
+### Changed
+
+- Replaced the five-minute background cover polling with event-based checks.
+  Missing covers are checked after imports and through the manual Artwork menu,
+  without starting scheduled downloads during gameplay.
+- Added **Check for missing box art when EmuLuna starts** to Library settings.
+  It is enabled by default and controls the single startup cover check.
+- Added an optional high-confidence closest-title match for automatic artwork,
+  including reordered titles such as `007 GoldenEye` and `GoldenEye 007`.
+- Removed the redundant **Download missing cover art** and **Download replacement
+  cover art…** commands from game context menus. Imports and the optional startup
+  check handle missing artwork, while **Find cover art…** handles reviewed
+  replacements.
+- Replaced runtime-generated toolbar, notification, and Settings icons with packaged,
+  palette-aware SVG assets that remain sharp under fractional and high-DPI scaling.
+- Kept the expandable library search icon attached to its field without an empty toolbar gap.
+- Added an Open folder button to System Files for opening the configured BIOS/system location.
+- Moved per-console core selection from Settings to each console's sidebar context menu; Settings now focuses on installing and maintaining cores.
+
+### Added
+
+- Added **Find cover art…** to each game’s context menu. It provides a visual,
+  searchable cover picker with likely matches ranked by title.
+- Selecting a cover now also applies matching OpenVGDB information for that
+  console and regional variant while preserving manually edited fields.
+- Added a complete Linux x86_64 Libretro buildbot checklist showing which
+  downloadable cores are included in EmuLuna’s curated catalog.
+
+### Fixed
+
+- Removed oversized gaps in the visual cover picker by using compact fixed-size
+  cards, bounded labels, and one entry for visually identical cover variants.
+
 ## [0.14.0] - 2026-09-27
 
 ### Added

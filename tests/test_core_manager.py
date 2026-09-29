@@ -14,7 +14,8 @@ import zlib
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QMenu
+from emuluna.app import Window
 from emuluna.artwork import Downloads
 from emuluna.core import CoreError
 from emuluna.core_manager import CoreManager, BUILDBOT
@@ -126,10 +127,18 @@ class ManagerTests(unittest.TestCase):
         dialog.show_page('gameplay')
         dialog.focus_pause.setChecked(False)
         dialog.integer.setChecked(True)
-        dialog.show_page('cores')
-        dialog.choices["snes"].setCurrentIndex(dialog.choices["snes"].findData("snes9x"))
         dialog.volume.setValue(37)
         dialog.accept()
+        window = Window(self.lib, auto_artwork=False)
+        try:
+            menu = QMenu(window)
+            core_menu = window.add_console_core_menu(menu, 'snes')
+            selected = next(action for action in core_menu.actions()
+                            if action.data() == 'snes9x')
+            selected.trigger()
+            self.assertTrue(selected.isCheckable())
+        finally:
+            window.close()
         reopened = Library(self.lib.root)
         try:
             self.assertEqual(reopened.setting("volume"), "37")
@@ -166,7 +175,15 @@ class ManagerTests(unittest.TestCase):
             dialog.show_page('bios')
             system_files = dialog.tabs.widget(dialog.page_keys.index('bios'))
             self.assertTrue(system_files.isAncestorOf(dialog.bios_path))
+            self.assertTrue(system_files.isAncestorOf(dialog.open_bios_button))
             self.assertFalse(general.isAncestorOf(dialog.bios_path))
+
+            target = Path(self.tmp.name) / 'custom-system-folder'
+            dialog.bios_path.setText(str(target))
+            with patch('emuluna.settings.QDesktopServices.openUrl', return_value=True) as opened:
+                dialog.open_bios_button.click()
+            self.assertTrue(target.is_dir())
+            self.assertEqual(Path(opened.call_args.args[0].toLocalFile()), target)
         finally:
             dialog.close()
 
@@ -185,7 +202,9 @@ class ManagerTests(unittest.TestCase):
             while dialog.worker and time.monotonic() < deadline:
                 QTest.qWait(10)
             self.assertIsNone(dialog.worker)
-        self.assertGreaterEqual(dialog.choices["snes"].findData("snes9x"), 0)
+        installed_rows = [dialog.table.item(row, 1).text()
+                          for row in range(dialog.table.rowCount())]
+        self.assertIn('Snes9x', installed_rows)
         self.assertTrue(dialog.update_button.isEnabled())
         self.assertIn("installed or updated", dialog.status.text())
         dialog.accept()

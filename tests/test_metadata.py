@@ -88,6 +88,21 @@ class MetadataTests(unittest.TestCase):
         self.assertEqual(len(self.lib.metadata_candidates(force=True)), 1)
         self.assertEqual(self.run_worker()["matched"], 0)
 
+    def test_selected_cover_title_and_region_choose_matching_release_information(self):
+        with closing(sqlite3.connect(self.catalog)) as db:
+            db.row_factory = sqlite3.Row
+            rows = meta.title_catalog_rows(db, "snes")
+        match = meta.metadata_for_cover(rows, "Test Game (Japan)", "Japan")
+        self.assertIsNotNone(match)
+        self.assertEqual(match.fields["title"], "Test Game")
+        self.assertEqual(match.fields["region"], "Japan")
+        self.assertEqual(match.fields["developer"], "Test Studio")
+        self.assertEqual(match.fields["publisher"], "Test Publisher")
+        self.assertEqual(match.fields["release_date"], "1993")
+        self.assertEqual(match.fields["genre"], "Action, Platformer")
+        self.assertIn("Jump & explore.", match.fields["description"])
+        self.assertEqual(match.source_url, "https://example.org/game")
+
     def test_manual_fields_and_cleared_values_win_a_background_result(self):
         self.lib.rename(self.game_id, "My custom title")
         self.lib.update_metadata(self.game_id, {"developer": "", "notes": "Keep my notes", "players": "2"})

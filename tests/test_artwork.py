@@ -15,12 +15,14 @@ from urllib.error import HTTPError
 import zipfile
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
-from PySide6.QtCore import QBuffer, QIODevice, Qt
+from PySide6.QtCore import QBuffer, QIODevice, QSize, Qt
 from PySide6.QtGui import QColor, QImage
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication
 from emuluna import artwork as art
 from emuluna.app import Window
+from emuluna.cover_picker import (CoverPickerDialog, CoverResultDelegate,
+                                  CoverSearchWorker, cover_label)
 from emuluna.library import Library, SYSTEMS
 from snes_rom import snes
 
@@ -35,7 +37,9 @@ def catalog_file(path, data):
         INSERT INTO SYSTEMS VALUES(26,'openemu.system.snes'),(19,'openemu.system.gb');
         INSERT INTO REGIONS VALUES(1,'USA'),(2,'Japan');
         INSERT INTO RELEASES VALUES(1,'Test Game','https://covers.example/usa.png',1),
-                                   (1,'Test Game','https://covers.example/japan.png',2);
+                                   (1,'Test Game','https://covers.example/japan.png',2),
+                                   (2,'GoldenEye 007','https://covers.example/goldeneye.png',1);
+        INSERT INTO ROMs VALUES(2,26,'00000000000000000000000000000000','GoldenEye 007 (USA).sfc');
     """)
     db.execute("INSERT INTO ROMs VALUES(1,26,?,?)",
                (hashlib.md5(data).hexdigest().upper(), "Test Game (USA).sfc"))
@@ -193,12 +197,112 @@ class ArtworkTests(unittest.TestCase):
 
     def test_backup_matching_is_exact_not_fuzzy(self):
         backup = art.BackupArt(self.lib.root, art.Downloads())
-        backup.indexes["snes"] = ["Test Game (USA).png", "Test Game (Japan).png", "Test Game 2 (USA).png"]
+        backup.indexes["snes"] = ["Test Game (USA).png", "Test Game (Japan).png", "Test Game 2 (USA).png",
+                                   "GoldenEye 007 (USA).png", "GoldenEye - Rogue Agent (USA).png"]
         urls = backup.urls({"system": "snes", "title": "Test Game"}, [], "USA")
         self.assertIn("USA", urls[0])
         self.assertFalse(any("Game%202" in url for url in urls))
         self.assertEqual(backup.urls({"system": "snes", "title": "Test Gamb"}, [], "USA"), [])
+        self.assertEqual(backup.urls({"system": "snes", "title": "007 - GoldenEye (USA)"}, [], "USA"), [])
+        closest = backup.urls(
+            {"system": "snes", "title": "007 - GoldenEye (USA)"}, [], "USA", closest=True)
+        self.assertIn("GoldenEye%20007%20%28USA%29.png", closest[0])
+        self.assertEqual(art.title_similarity("007 - GoldenEye (USA)", "GoldenEye 007 (USA)"), 1.0)
         self.assertEqual(art.normalized_title("Legend of Zelda, The (USA)"), art.normalized_title("The Legend of Zelda"))
+
+    def test_visual_cover_search_ranks_and_downloads_previews(self):
+        names = ["GoldenEye - Rogue Agent (USA).png", "GoldenEye 007 (USA).png"]
+        worker = CoverSearchWorker(self.lib.root, "snes", "007 - GoldenEye (USA)")
+        candidates, summaries = [], []
+        worker.candidate.connect(candidates.append)
+        worker.result.connect(summaries.append)
+        with patch.object(art.BackupArt, "index", return_value=names), \
+             patch.object(art.Catalog, "ensure", return_value=self.catalog), \
+             patch.object(art.Downloads, "get", return_value=self.png):
+            worker.run()
+        self.assertEqual(candidates[0]["title"], "GoldenEye 007 (USA)")
+        self.assertEqual(candidates[0]["score"], 1.0)
+        self.assertTrue(candidates[0]["image"].startswith(b"\x89PNG"))
+        self.assertEqual(candidates[0]["metadata"]["title"], "GoldenEye 007")
+        self.assertEqual(candidates[0]["metadata"]["region"], "USA")
+        # Identical downloaded images from dump-name variants appear once.
+        self.assertEqual(summaries[-1]["found"], 1)
+        self.assertEqual(summaries[-1]["metadata"], 1)
+
+    def test_cover_cards_are_compact_and_dump_tags_stay_out_of_labels(self):
+        candidate = {
+            "title": "Galaxian (1984-09-01)(Namco)(JP)[b2]",
+            "metadata": {},
+        }
+        self.assertEqual(cover_label(candidate), ("Galaxian", "Japan"))
+        self.assertEqual(CoverResultDelegate.card_size, QSize(178, 226))
+
+    def test_visual_picker_selects_an_explicit_preview(self):
+        with patch("emuluna.cover_picker.QTimer.singleShot"):
+            dialog = CoverPickerDialog(
+                self.lib.root, "snes", "007 - GoldenEye (USA)")
+        try:
+            dialog.add_candidate({
+                "title": "GoldenEye 007 (USA)",
+                "url": "https://covers.example/goldeneye.png",
+                "image": self.png, "score": 1.0,
+                "metadata": {"title": "GoldenEye 007", "region": "USA"},
+                "metadata_source": "https://example.org/goldeneye",
+            })
+            dialog.search_finished({"found": 1, "failed": 0, "metadata": 1,
+                                    "metadata_error": "", "error": "", "cancelled": False})
+            self.assertEqual(dialog.results.count(), 1)
+            self.assertTrue(dialog.use_button.isEnabled())
+            dialog.use_selected()
+            self.assertEqual(dialog.selection["title"], "GoldenEye 007 (USA)")
+            self.assertEqual(dialog.selection["image"], self.png)
+        finally:
+            dialog.close()
+
+    def test_selected_cover_applies_regional_metadata_and_preserves_edits(self):
+        selection = {
+            "title": "GoldenEye 007 (USA)",
+            "url": "https://covers.example/goldeneye.png",
+            "image": self.png,
+            "score": 1.0,
+            "metadata": {"title": "GoldenEye 007", "region": "USA",
+                         "publisher": "Nintendo"},
+            "metadata_source": "https://example.org/goldeneye",
+        }
+        self.lib.update_metadata(self.game_id, {"publisher": "My custom publisher"})
+
+        class Picker:
+            def __init__(self, *args, **kwargs): self.selection = selection
+            def exec(self): return True
+            def deleteLater(self): pass
+
+        window = Window(self.lib, auto_artwork=False)
+        try:
+            with patch("emuluna.cover_picker.CoverPickerDialog", Picker):
+                window.find_cover(self.game_id)
+            game = self.lib.get(self.game_id)
+            self.assertEqual(game["title"], "GoldenEye 007")
+            self.assertTrue((self.lib.root / game["cover"]).is_file())
+            metadata = self.lib.metadata(self.game_id)
+            self.assertEqual(metadata["region"], "USA")
+            self.assertEqual(metadata["publisher"], "My custom publisher")
+            self.assertEqual(self.lib.metadata_lookup(self.game_id)["provider"], "OpenVGDB")
+        finally:
+            window.close()
+        self.lib = Library(self.root / "library")
+
+    def test_game_menu_uses_visual_picker_instead_of_missing_cover_download(self):
+        window = Window(self.lib, auto_artwork=False)
+        try:
+            menu = window.game_menu([self.game_id])
+            labels = [action.text() for action in menu.actions()]
+            self.assertIn("Find cover art…", labels)
+            self.assertNotIn("Download missing cover art", labels)
+            self.assertNotIn("Download replacement cover art…", labels)
+            menu.deleteLater()
+        finally:
+            window.close()
+        self.lib = Library(self.root / "library")
 
     def test_qt_startup_download_and_system_icons(self):
         window = Window(self.lib)
@@ -223,6 +327,34 @@ class ArtworkTests(unittest.TestCase):
             self.assertIn("1 cover downloaded", window.notifications.last_message)
         window.close()
         # Window.close() owns the connection. tearDown must not close it twice.
+        self.lib = Library(self.root / "library")
+
+    def test_startup_cover_check_is_optional_and_never_repeats_on_a_timer(self):
+        self.lib.set_setting("core_auto_install", "0")
+        self.lib.set_setting("artwork_check_at_startup", "0")
+        with patch.object(Window, "start_metadata") as metadata, \
+             patch.object(Window, "start_artwork") as artwork:
+            window = Window(self.lib)
+            try:
+                QTest.qWait(300)
+                metadata.assert_called_once_with()
+                artwork.assert_not_called()
+                self.assertFalse(hasattr(window, "art_timer"))
+            finally:
+                window.close()
+
+        self.lib = Library(self.root / "library")
+        self.lib.set_setting("artwork_check_at_startup", "1")
+        with patch.object(Window, "start_metadata") as metadata, \
+             patch.object(Window, "start_artwork") as artwork:
+            window = Window(self.lib)
+            try:
+                QTest.qWait(300)
+                metadata.assert_called_once_with()
+                artwork.assert_called_once_with()
+                self.assertFalse(hasattr(window, "art_timer"))
+            finally:
+                window.close()
         self.lib = Library(self.root / "library")
 
     def test_import_starts_artwork_without_waiting_for_restart(self):
