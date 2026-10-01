@@ -11,7 +11,7 @@ from unittest.mock import patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 from PySide6.QtWidgets import QApplication
-from emuluna.core import Core, CoreError
+from emuluna.core import Core, CoreError, saved_state_renderer
 from emuluna.core_manager import CoreManager, CATALOG
 from emuluna.library import Library
 from emuluna.player import Player
@@ -57,9 +57,14 @@ class LibretroIntegration(unittest.TestCase):
                 self.assertEqual(released, baseline)
             state = self.root / "state"
             core.save_state(state)
+            self.assertEqual(saved_state_renderer(state), 'software')
             self.frames(core, 5, 1)
             core.load_state(state)
             self.assertEqual(self.frames(core, 5)[0], baseline)
+            core.state_renderer = 'opengl'
+            with self.assertRaisesRegex(CoreError, 'different video renderer'):
+                core.load_state(state)
+            core.state_renderer = 'software'
             core.flush()
             battery = self.root / "save/battery.srm"
             first = battery.read_bytes()[0]

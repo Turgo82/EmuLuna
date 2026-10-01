@@ -1,7 +1,247 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 360"><defs>
-          <linearGradient id="plastic" x2="0" y2="1"><stop stop-color="#ecece9"/><stop offset=".5" stop-color="#c5c7c9"/><stop offset="1" stop-color="#999da3"/></linearGradient>
-          <linearGradient id="black" x2="0" y2="1"><stop stop-color="#45474b"/><stop offset=".5" stop-color="#26282c"/><stop offset="1" stop-color="#131519"/></linearGradient>
-          <linearGradient id="purple" x2="0" y2="1"><stop stop-color="#7b77bf"/><stop offset="1" stop-color="#3f3b7b"/></linearGradient>
-          <linearGradient id="glass" x2="1" y2="1"><stop stop-color="#667c80"/><stop offset=".45" stop-color="#293d43"/><stop offset="1" stop-color="#17282f"/></linearGradient>
-          <linearGradient id="rubber" x2="0" y2="1"><stop stop-color="#51535a"/><stop offset="1" stop-color="#17191c"/></linearGradient>
-        </defs><path d="M 109 84 Q 300 61 491 84 C 551 90 573 129 568 190 C 564 256 532 281 480 278 Q 300 303 120 278 C 68 281 36 256 32 190 C 27 129 49 90 109 84 Z" fill="url(#plastic)" stroke="#6c707a" stroke-width="3" stroke-linejoin="round"/><rect x="213" y="101" width="174" height="166" rx="9" fill="#202328" stroke="#7c7f84" stroke-width="1"/><rect x="223" y="111" width="154" height="146" rx="1" fill="#8a9b60" stroke="#11161a" stroke-width="2"/><path d="M 225 113 H 375 L 225 198.6 Z" fill="#ffffff" opacity=".06" stroke="none" stroke-width="0" stroke-linejoin="round"/><circle cx="111" cy="167" r="43" fill="#5e6267" stroke="#111318" stroke-width="2"/><circle cx="111" cy="167" r="34" fill="url(#rubber)" stroke="#777b83" stroke-width="2"/><circle cx="111" cy="167" r="27" fill="none" stroke="#3d4149" stroke-width="2"/><circle cx="459" cy="199" r="24" fill="#101115" stroke="#111317" stroke-width="0"/><circle cx="459" cy="197" r="22" fill="#4e5157" stroke="#676970" stroke-width="1.5"/><path d="M 444.7 186.0 Q 459 170.6 473.3 186.0" fill="none" stroke="#ffffff" stroke-width="0.7" stroke-linejoin="round"/><text x="459" y="202" fill="#f4f4f4" font-family="sans-serif" font-size="15" font-weight="600" text-anchor="middle">B</text><circle cx="512" cy="166" r="24" fill="#101115" stroke="#111317" stroke-width="0"/><circle cx="512" cy="164" r="22" fill="#4e5157" stroke="#676970" stroke-width="1.5"/><path d="M 497.7 153.0 Q 512 137.6 526.3 153.0" fill="none" stroke="#ffffff" stroke-width="0.7" stroke-linejoin="round"/><text x="512" y="169" fill="#f4f4f4" font-family="sans-serif" font-size="15" font-weight="600" text-anchor="middle">A</text><rect x="460" y="107" width="69" height="18" rx="9.0" fill="url(#rubber)" stroke="#5f6267" stroke-width="1"/><text x="494.5" y="120.0" fill="#dddfe2" font-family="sans-serif" font-size="11" font-weight="600" text-anchor="middle">OPTION</text><text x="300" y="281" fill="#394450" font-family="sans-serif" font-size="12" font-weight="600" text-anchor="middle">NEO GEO POCKET</text></svg>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   viewBox="0 0 600 360"
+   version="1.1"
+   id="svg22"
+   sodipodi:docname="ngp.svg"
+   inkscape:version="1.4.4 (dcaf3e7d9e, 2026-05-05)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview22"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="2.4027778"
+     inkscape:cx="300.06936"
+     inkscape:cy="180"
+     inkscape:window-width="2048"
+     inkscape:window-height="1074"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg22" />
+  <defs
+     id="defs13">
+    <linearGradient
+       id="plastic"
+       x2="0"
+       y2="1">
+      <stop
+         stop-color="#ecece9"
+         id="stop1" />
+      <stop
+         offset=".5"
+         stop-color="#c5c7c9"
+         id="stop2" />
+      <stop
+         offset="1"
+         stop-color="#999da3"
+         id="stop3" />
+    </linearGradient>
+    <linearGradient
+       id="black"
+       x2="0"
+       y2="1">
+      <stop
+         stop-color="#45474b"
+         id="stop4" />
+      <stop
+         offset=".5"
+         stop-color="#26282c"
+         id="stop5" />
+      <stop
+         offset="1"
+         stop-color="#131519"
+         id="stop6" />
+    </linearGradient>
+    <linearGradient
+       id="purple"
+       x2="0"
+       y2="1">
+      <stop
+         stop-color="#7b77bf"
+         id="stop7" />
+      <stop
+         offset="1"
+         stop-color="#3f3b7b"
+         id="stop8" />
+    </linearGradient>
+    <linearGradient
+       id="glass"
+       x2="1"
+       y2="1">
+      <stop
+         stop-color="#667c80"
+         id="stop9" />
+      <stop
+         offset=".45"
+         stop-color="#293d43"
+         id="stop10" />
+      <stop
+         offset="1"
+         stop-color="#17282f"
+         id="stop11" />
+    </linearGradient>
+    <linearGradient
+       id="rubber"
+       x2="0"
+       y2="1">
+      <stop
+         stop-color="#51535a"
+         id="stop12" />
+      <stop
+         offset="1"
+         stop-color="#17191c"
+         id="stop13" />
+    </linearGradient>
+  </defs>
+  <path
+     d="M 109 84 Q 300 61 491 84 C 551 90 573 129 568 190 C 564 256 532 281 480 278 Q 300 303 120 278 C 68 281 36 256 32 190 C 27 129 49 90 109 84 Z"
+     fill="url(#plastic)"
+     stroke="#6c707a"
+     stroke-width="3"
+     stroke-linejoin="round"
+     id="path13" />
+  <rect
+     x="213"
+     y="101"
+     width="174"
+     height="166"
+     rx="9"
+     fill="#202328"
+     stroke="#7c7f84"
+     stroke-width="1"
+     id="rect13" />
+  <rect
+     x="223"
+     y="111"
+     width="154"
+     height="146"
+     rx="1"
+     fill="#8a9b60"
+     stroke="#11161a"
+     stroke-width="2"
+     id="rect14" />
+  <path
+     d="M 225 113 H 375 L 225 198.6 Z"
+     fill="#ffffff"
+     opacity=".06"
+     stroke="none"
+     stroke-width="0"
+     stroke-linejoin="round"
+     id="path14" />
+  <circle
+     cx="111"
+     cy="167"
+     r="43"
+     fill="#5e6267"
+     stroke="#111318"
+     stroke-width="2"
+     id="circle14" />
+  <circle
+     cx="111"
+     cy="167"
+     r="34"
+     fill="url(#rubber)"
+     stroke="#777b83"
+     stroke-width="2"
+     id="circle15" />
+  <circle
+     cx="111"
+     cy="167"
+     r="27"
+     fill="none"
+     stroke="#3d4149"
+     stroke-width="2"
+     id="circle16" />
+  <circle
+     cx="459"
+     cy="199"
+     r="24"
+     fill="#101115"
+     stroke="#111317"
+     stroke-width="0"
+     id="circle17" />
+  <circle
+     cx="459"
+     cy="197"
+     r="22"
+     fill="#4e5157"
+     stroke="#676970"
+     stroke-width="1.5"
+     id="circle18" />
+  <path
+     d="M 444.7 186.0 Q 459 170.6 473.3 186.0"
+     fill="none"
+     stroke="#ffffff"
+     stroke-width="0.7"
+     stroke-linejoin="round"
+     id="path18" />
+  <text
+     x="459"
+     y="202"
+     fill="#f4f4f4"
+     font-family="sans-serif"
+     font-size="15"
+     font-weight="600"
+     text-anchor="middle"
+     id="text18">B</text>
+  <circle
+     cx="512"
+     cy="166"
+     r="24"
+     fill="#101115"
+     stroke="#111317"
+     stroke-width="0"
+     id="circle19" />
+  <circle
+     cx="512"
+     cy="164"
+     r="22"
+     fill="#4e5157"
+     stroke="#676970"
+     stroke-width="1.5"
+     id="circle20" />
+  <path
+     d="M 497.7 153.0 Q 512 137.6 526.3 153.0"
+     fill="none"
+     stroke="#ffffff"
+     stroke-width="0.7"
+     stroke-linejoin="round"
+     id="path20" />
+  <text
+     x="512"
+     y="169"
+     fill="#f4f4f4"
+     font-family="sans-serif"
+     font-size="15"
+     font-weight="600"
+     text-anchor="middle"
+     id="text20">A</text>
+  <rect
+     x="460"
+     y="107"
+     width="69"
+     height="18"
+     rx="9.0"
+     fill="url(#rubber)"
+     stroke="#5f6267"
+     stroke-width="1"
+     id="rect20" />
+  <text
+     x="494.5"
+     y="120.0"
+     fill="#dddfe2"
+     font-family="sans-serif"
+     font-size="11"
+     font-weight="600"
+     text-anchor="middle"
+     id="text21">OPTION</text>
+</svg>

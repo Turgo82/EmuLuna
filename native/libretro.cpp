@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: MIT
- * Software-rendered Libretro frontend for the EmuLuna helper process.
+ * Libretro frontend for the EmuLuna helper process.
  * The official API header and its license are retained in vendor/libretro.h.
  */
 #include "core.h"
@@ -22,11 +22,16 @@
 struct Host {
     void *module = nullptr;
     bool initialized = false, loaded = false, shutdown = false;
+    bool hardware_allowed = false, hardware_active = false;
+    unsigned gl_major = 0, gl_minor = 0, core_major = 0, core_minor = 0;
+    bool hardware_reset = false, last_frame_hardware = false;
+    uintptr_t hardware_framebuffer = 0;
+    retro_hw_render_callback hardware{};
     int16_t axes[4][4] = {};
     unsigned keys[4] = {};
     bool input_ports[4] = {true, false, false, false};
     unsigned pixel_format = RETRO_PIXEL_FORMAT_0RGB1555;
-    unsigned width = 256, height = 224;
+    unsigned width = 256, height = 224, max_width = 256, max_height = 224;
     double fps = 60, rate = 48000, aspect = 0;
     double phase = 0;
     double accumulated = 0, sum_left = 0, sum_right = 0;
@@ -53,7 +58,30 @@ struct Host {
 };
 static Host *active = nullptr;
 static std::map<std::string, std::string> launch_options;
+static bool launch_hardware_allowed = false;
+static unsigned launch_gl_major = 0, launch_gl_minor = 0, launch_core_major = 0, launch_core_minor = 0;
 static std::string last_error;
+
+static uintptr_t current_framebuffer() {
+    return active ? active->hardware_framebuffer : 0;
+}
+
+static retro_proc_address_t hardware_proc_address(const char *name) {
+    if (!name || !*name) return nullptr;
+    void *symbol = dlsym(RTLD_DEFAULT, name);
+    if (symbol) return reinterpret_cast<retro_proc_address_t>(symbol);
+    // Qt may create either a GLX or EGL context. Load both dispatchers lazily;
+    // they resolve functions against whichever context is current.
+    using GLXGetProc = void *(*)(const unsigned char *);
+    using EGLGetProc = void *(*)(const char *);
+    static void *gl = dlopen("libGL.so.1", RTLD_LAZY | RTLD_GLOBAL);
+    static void *egl = dlopen("libEGL.so.1", RTLD_LAZY | RTLD_GLOBAL);
+    static auto glx = gl ? reinterpret_cast<GLXGetProc>(dlsym(gl, "glXGetProcAddressARB")) : nullptr;
+    static auto egl_get = egl ? reinterpret_cast<EGLGetProc>(dlsym(egl, "eglGetProcAddress")) : nullptr;
+    symbol = glx ? glx(reinterpret_cast<const unsigned char*>(name)) : nullptr;
+    if (!symbol && egl_get) symbol = egl_get(name);
+    return reinterpret_cast<retro_proc_address_t>(symbol);
+}
 static void log_message(enum retro_log_level, const char *format, ...) {
     va_list args; va_start(args, format); vfprintf(stderr, format, args); va_end(args);
 }
@@ -79,6 +107,38 @@ template<class T> static void defaults(const T *definitions) {
 static bool environment(unsigned command, void *data) {
     if (!active) return false;
     switch (command) {
+    case RETRO_ENVIRONMENT_GET_PREFERRED_HW_RENDER:
+        if (!active->hardware_allowed || !data) return false;
+        if (active->core_major) *static_cast<unsigned*>(data) = RETRO_HW_CONTEXT_OPENGL_CORE;
+        else if (active->gl_major) *static_cast<unsigned*>(data) = RETRO_HW_CONTEXT_OPENGL;
+        else return false;
+        return true;
+    case RETRO_ENVIRONMENT_SET_HW_RENDER: {
+        if (!data) return false;
+        auto requested = static_cast<retro_hw_render_callback*>(data);
+        const char *kind = requested->context_type == RETRO_HW_CONTEXT_OPENGL_CORE ? "OpenGL Core" :
+                           requested->context_type == RETRO_HW_CONTEXT_OPENGL ? "OpenGL" :
+                           requested->context_type == RETRO_HW_CONTEXT_VULKAN ? "Vulkan" : "unsupported type";
+        fprintf(stderr, "Core requested hardware context: %s\n", kind);
+        unsigned major = requested->context_type == RETRO_HW_CONTEXT_OPENGL_CORE ? active->core_major :
+                         requested->context_type == RETRO_HW_CONTEXT_OPENGL ? active->gl_major : 0;
+        unsigned minor = requested->context_type == RETRO_HW_CONTEXT_OPENGL_CORE ? active->core_minor : active->gl_minor;
+        if (!active->hardware_allowed || !major || !requested->context_reset ||
+                requested->version_major > major ||
+                (requested->version_major == major && requested->version_minor > minor)) {
+            fprintf(stderr, "Core hardware context unavailable: %s %u.%u\n", kind,
+                    requested->version_major, requested->version_minor);
+            return false;
+        }
+        fprintf(stderr, "Creating %s context for core\n", kind);
+        active->hardware = *requested;
+        active->hardware.get_current_framebuffer = current_framebuffer;
+        active->hardware.get_proc_address = hardware_proc_address;
+        requested->get_current_framebuffer = current_framebuffer;
+        requested->get_proc_address = hardware_proc_address;
+        active->hardware_active = true;
+        return true;
+    }
     case RETRO_ENVIRONMENT_GET_VFS_INTERFACE:
         return emuluna_vfs::interface(static_cast<retro_vfs_interface_info*>(data));
     case RETRO_ENVIRONMENT_GET_CAN_DUPE: *static_cast<bool*>(data) = true; return true;
@@ -159,7 +219,18 @@ static bool environment(unsigned command, void *data) {
 }
 static void video(const void *data, unsigned width, unsigned height, size_t pitch) {
     if (!active || !data) return; // NULL duplicates the previous frame.
-    if (data == RETRO_HW_FRAME_BUFFER_VALID || !width || !height || width > 1024 || height > 1024) {
+    if (data == RETRO_HW_FRAME_BUFFER_VALID) {
+        if (!active->hardware_active || !active->hardware_reset || !width || !height ||
+                width > active->max_width || height > active->max_height) {
+            active->error = "The core returned an invalid hardware-rendered frame.";
+            return;
+        }
+        active->width = width;
+        active->height = height;
+        active->last_frame_hardware = true;
+        return;
+    }
+    if (!width || !height || width > 1024 || height > 1024) {
         active->error = "This core requires unsupported video output."; return;
     }
     unsigned bytes = active->pixel_format == RETRO_PIXEL_FORMAT_XRGB8888 ? 4 : 2;
@@ -242,6 +313,53 @@ void el_set_runtime_option(void *instance, const char *key, const char *value) {
     h->options[key] = value;
     h->variables_updated.store(true, std::memory_order_relaxed);
 }
+void el_set_hardware_allowed(int allowed) {
+    if (!active) launch_hardware_allowed = allowed != 0;
+}
+void el_set_hardware_capabilities(unsigned gl_major, unsigned gl_minor,
+                                  unsigned core_major, unsigned core_minor) {
+    if (active) return;
+    launch_gl_major = gl_major; launch_gl_minor = gl_minor;
+    launch_core_major = core_major; launch_core_minor = core_minor;
+}
+int el_hardware_active(void *instance) {
+    auto h = static_cast<Host*>(instance); return h && h->hardware_active;
+}
+unsigned el_hardware_context_type(void *instance) {
+    auto h = static_cast<Host*>(instance); return h ? h->hardware.context_type : RETRO_HW_CONTEXT_NONE;
+}
+unsigned el_hardware_version_major(void *instance) {
+    auto h = static_cast<Host*>(instance); return h ? h->hardware.version_major : 0;
+}
+unsigned el_hardware_version_minor(void *instance) {
+    auto h = static_cast<Host*>(instance); return h ? h->hardware.version_minor : 0;
+}
+unsigned el_hardware_max_width(void *instance) {
+    auto h = static_cast<Host*>(instance); return h ? h->max_width : 0;
+}
+unsigned el_hardware_max_height(void *instance) {
+    auto h = static_cast<Host*>(instance); return h ? h->max_height : 0;
+}
+int el_hardware_bottom_left(void *instance) {
+    auto h = static_cast<Host*>(instance); return h && h->hardware.bottom_left_origin;
+}
+void el_set_hardware_framebuffer(void *instance, uintptr_t framebuffer) {
+    auto h = static_cast<Host*>(instance); if (h) h->hardware_framebuffer = framebuffer;
+}
+int el_hardware_context_reset(void *instance) {
+    auto h = static_cast<Host*>(instance);
+    if (!h || !h->hardware_active || !h->hardware_framebuffer || !h->hardware.context_reset) return 0;
+    h->hardware.context_reset(); h->hardware_reset = true; return 1;
+}
+void el_hardware_context_destroy(void *instance) {
+    auto h = static_cast<Host*>(instance);
+    if (!h || !h->hardware_reset) return;
+    if (h->hardware.context_destroy) h->hardware.context_destroy();
+    h->hardware_reset = false;
+}
+int el_last_frame_hardware(void *instance) {
+    auto h = static_cast<Host*>(instance); return h && h->last_frame_hardware;
+}
 void el_clear_options() { if (!active) launch_options.clear(); }
 void el_set_option(const char *key, const char *value) {
     if (!active && key && value) launch_options[key] = value;
@@ -275,7 +393,12 @@ void el_destroy(void *instance) {
 }
 void *el_libretro_create(const char *core, const char *rom, const char *save, const char *system) {
     if (active) { last_error = "A Libretro core is already running in this process."; return nullptr; }
-    auto h = new Host(); h->options = launch_options; launch_options.clear(); active = h; last_error.clear();
+    auto h = new Host(); h->options = launch_options; launch_options.clear();
+    h->hardware_allowed = launch_hardware_allowed; launch_hardware_allowed = false;
+    h->gl_major = launch_gl_major; h->gl_minor = launch_gl_minor;
+    h->core_major = launch_core_major; h->core_minor = launch_core_minor;
+    launch_gl_major = launch_gl_minor = launch_core_major = launch_core_minor = 0;
+    active = h; last_error.clear();
     h->core = core; h->rom = rom; h->save = save; h->system = system;
     h->module = dlopen(core, RTLD_NOW | RTLD_LOCAL);
     if (!h->module) { last_error = dlerror(); el_destroy(h); return nullptr; }
@@ -306,6 +429,11 @@ void *el_libretro_create(const char *core, const char *rom, const char *save, co
         el_destroy(h); return nullptr;
     }
     h->width = av.geometry.base_width; h->height = av.geometry.base_height;
+    h->max_width = std::max(av.geometry.base_width, av.geometry.max_width);
+    h->max_height = std::max(av.geometry.base_height, av.geometry.max_height);
+    if (!h->max_width || !h->max_height || h->max_width > 4096 || h->max_height > 4096) {
+        last_error = "Unsupported hardware render target size."; el_destroy(h); return nullptr;
+    }
     h->aspect = av.geometry.aspect_ratio;
     h->fps = av.timing.fps; h->rate = av.timing.sample_rate; h->pixels.resize(h->width * h->height, 0xff000000);
     memory_file(h, RETRO_MEMORY_SAVE_RAM, "battery.srm", false); memory_file(h, RETRO_MEMORY_RTC, "clock.rtc", false);
@@ -318,7 +446,8 @@ void el_reset(void *instance) {
     h->reset();
 }
 int el_frame(void *instance, unsigned keys) {
-    auto h = static_cast<Host*>(instance); h->keys[0] = keys; h->audio.clear(); h->run();
+    auto h = static_cast<Host*>(instance); h->keys[0] = keys; h->audio.clear();
+    h->last_frame_hardware = false; h->run();
     if (!h->error.empty() || h->shutdown) return -1;
     // Convert each core's native rate (including SameBoy's MHz-rate audio) to the
     // desktop's 48 kHz stream, preserving fractional position between frames.

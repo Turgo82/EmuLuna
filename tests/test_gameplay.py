@@ -1,5 +1,6 @@
 """Gameplay HUD, hidden-menu shortcuts, saved settings and audio transitions."""
 import os
+import json
 from pathlib import Path
 import tempfile
 import unittest
@@ -15,7 +16,7 @@ from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication
 from emuluna.library import Library
 from emuluna.player import Player
-from emuluna.core import CoreError
+from emuluna.core import CoreError, saved_state_renderer
 from emuluna.settings import SettingsDialog
 from emuluna.video_screen import Screen
 from snes_rom import snes
@@ -52,6 +53,15 @@ class GameplayTests(unittest.TestCase):
         QTest.qWait(20)
         self.player.focus_paused = False
         return self.player
+
+    def test_state_renderer_metadata_keeps_older_states_on_software(self):
+        state = self.root / 'old.oesavestate'
+        state.write_bytes(b'OELINUX1\n' + json.dumps({'format': 1}).encode() + b'\npayload')
+        self.assertEqual(saved_state_renderer(state), 'software')
+        tagged = self.root / 'opengl.oesavestate'
+        tagged.write_bytes(b'OELINUX1\n' + json.dumps(
+            {'format': 1, 'renderer': 'opengl'}).encode() + b'\npayload')
+        self.assertEqual(saved_state_renderer(tagged), 'opengl')
 
     def test_integer_scaling_respects_non_square_n64_pixels(self):
         screen = Screen()
@@ -223,10 +233,18 @@ class GameplayTests(unittest.TestCase):
         self.assertTrue(settings.game_mode_keep_awake.isChecked())
         settings.unlock_advanced()
         self.assertFalse(settings.minimize_library.isChecked())
+        self.assertEqual(settings.frontend_renderer.currentData(), "auto")
+        self.assertTrue(settings.experimental_hardware.isChecked())
+        self.assertFalse(settings.show_fps.isChecked())
+        self.assertFalse(settings.show_renderer_debug.isChecked())
         settings.fullscreen_default.setChecked(True)
         settings.hide_cursor.setChecked(False)
         settings.game_mode_keep_awake.setChecked(False)
         settings.minimize_library.setChecked(True)
+        settings.frontend_renderer.setCurrentIndex(settings.frontend_renderer.findData("vulkan"))
+        settings.experimental_hardware.setChecked(True)
+        settings.show_fps.setChecked(True)
+        settings.show_renderer_debug.setChecked(True)
         settings.fast_speed.setValue(7)
         settings.latency.setValue(120)
         settings.aspect.setCurrentIndex(settings.aspect.findData("square"))
@@ -239,6 +257,20 @@ class GameplayTests(unittest.TestCase):
         self.assertEqual(self.library.setting("audio_latency"), "120")
         self.assertEqual(self.library.setting("game_mode.keep_awake"), "0")
         self.assertEqual(self.library.setting("experimental.minimize_library_during_game"), "1")
+        self.assertEqual(self.library.setting("experimental.frontend_renderer"), "vulkan")
+        self.assertEqual(self.library.setting("experimental.hardware_rendering"), "1")
+        self.assertEqual(self.library.setting("experimental.show_fps"), "1")
+        self.assertEqual(self.library.setting("experimental.show_renderer_debug"), "1")
+        self.assertTrue(player.diagnostics.isVisible())
+        self.assertIn("Core: Software", player.diagnostics.text())
+        player.diagnostics.set_fps(59.94)
+        player.screen.backend_changed.emit("Hardware acceleration · Example GPU (test driver)")
+        player.resize(420, 400)
+        QTest.qWait(20)
+        self.assertIn("59.9 FPS", player.diagnostics.text())
+        self.assertIn("Display: Example GPU", player.diagnostics.text())
+        self.assertNotIn("test driver", player.diagnostics.text())
+        self.assertLessEqual(player.diagnostics.geometry().right(), player.screen.width())
 
     def test_audio_output_selection_and_disconnect_fallback_keep_pause_state(self):
         class Device:

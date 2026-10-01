@@ -13,18 +13,19 @@ from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox, QComboBox,
 
 from .branding import configure_application
 from .theme import follow_system_theme, theme_palette
-from .core import Core, CoreError
+from .core import Core, CoreError, saved_state_renderer
 from .video_filters import ALL_FILTERS, valid_filter
 from .shaders import PRESETS, parameter_values
 from .shader_controls import ShaderControls
 from .core_manager import CoreManager
-from .systems import CATALOG, core_launch_options
+from .systems import CATALOG, core_launch_options, core_render_options
 from .gamepad import Gamepad
 from .library import Library
-from .gameplay import GameplayHUD, GameplayNotice, set_hud_icon
+from .gameplay import GameplayHUD, GameplayNotice, GameplayDiagnostics, set_hud_icon
 from .controls import LAYOUTS, layout_for, keyboard_buttons, keyboard_axes, combined_axes
 from .controller_profiles import SPECS, load_profile, keyboard_layout
 from .game_mode import GameMode
+from .hardware_render import HardwareCoreDisplay, probe_hardware_contexts
 
 KEYS = keyboard_buttons(LAYOUTS["default"])
 
@@ -114,7 +115,51 @@ class Player(QMainWindow):
                 raise CoreError("This save state is missing or needs a different core build.")
             self.state_restore_failed = False
             library.prepare_save_filenames(self.game, save_directory)
-            self.core = Core(rom_path, self.game["system"], save_directory, **options)
+            compatible_hardware = (self.game["system"] == "n64" and
+                                   (selected.get("catalog_id") or selected["id"]) == "parallel_n64")
+            saved_renderer = saved_state_renderer(state_file) if state_file else None
+            hardware_enabled = library.setting("experimental.hardware_rendering", "1") == "1"
+            catalog_id = selected.get("catalog_id") or selected["id"]
+            adaptive = bool(CATALOG.get(catalog_id, {}).get("hardware_options"))
+            capabilities = probe_hardware_contexts() if adaptive or compatible_hardware else (0, 0, 0, 0)
+            n64_gpu_available = bool(capabilities[0] or capabilities[2])
+            hardware_candidate = compatible_hardware and n64_gpu_available and (
+                saved_renderer == "opengl" if state_file else hardware_enabled
+            )
+            render_options, hardware_available, using_hardware = core_render_options(
+                catalog_id, capabilities, resuming=bool(state_file), saved_renderer=saved_renderer)
+            if compatible_hardware and state_file and saved_renderer == "opengl" and not n64_gpu_available:
+                raise CoreError("This save state needs an OpenGL core context that is unavailable on this computer.")
+            if adaptive and state_file and saved_renderer == "opengl" and not hardware_available:
+                raise CoreError("This save state needs an OpenGL core context that is unavailable on this computer.")
+            self.hardware_state_compatibility = bool(
+                (compatible_hardware and hardware_enabled and n64_gpu_available and state_file
+                 and saved_renderer != "opengl")
+                or (adaptive and hardware_available and state_file and not using_hardware)
+            )
+            core_options = dict(options)
+            # A core may request a hardware context regardless of which API
+            # presents frames to the window. The libretro callback negotiates
+            # only contexts this machine can actually create.
+            core_options["allow_hardware"] = True
+            if hardware_candidate or render_options:
+                accelerated = dict(options.get("options", {}))
+                accelerated.update(render_options)
+            if hardware_candidate:
+                accelerated.update({
+                    "parallel-n64-gfxplugin": "gliden64",
+                    "parallel-n64-rspplugin": "auto",
+                })
+            if hardware_candidate or render_options:
+                core_options["options"] = accelerated
+            print("Core: " + selected["id"], flush=True)
+            self.core = Core(rom_path, self.game["system"], save_directory, **core_options)
+            if self.core.hardware_requested:
+                print("Core requested hardware context: " +
+                      ("OpenGL Core" if self.core.hardware_context_type == 3 else "OpenGL"), flush=True)
+                HardwareCoreDisplay(self.core)
+            if self.hardware_state_compatibility:
+                self.core.renderer = "Software (save-state compatibility)"
             # The old Snes9x adapter wrote raw SRAM. Import only into the matching
             # standard Snes9x core, with the native layer checking exact size.
             # Other core formats and all old save states remain untouched.
@@ -160,14 +205,18 @@ class Player(QMainWindow):
         self.fast = False
         self.fast_speed = self.preference_int("fast_forward_speed", 3, 2, 10)
         self.frames = 0
+        self.fps_sample_frames = 0
+        self.fps_sample_started = time.perf_counter()
         self.frame_limit, self.capture_path = frame_limit, screenshot
         self.refresh_game_mode()
         self.audio = self.audio_device = None
         self.audio_latency_ms = self.preference_int("audio_latency", 80, 20, 250)
         self.audio_underruns = 0
         self.audio_pending = bytearray()
-        self.screen = Screen()
-        self.screen.video_filter = valid_filter(library.setting("video_filter." + self.game["system"], library.setting("video_filter", "nearest")))
+        chosen_filter = valid_filter(library.setting("video_filter." + self.game["system"],
+                                                   library.setting("video_filter", "nearest")))
+        self.screen = Screen(renderer_mode=library.setting("experimental.frontend_renderer", "auto"),
+                             video_filter=chosen_filter)
         self.screen.filter_resolution = self.preference_int("filter_resolution." + self.game["system"], 0, 0, 2160)
         self.shader_dialog = None
         self.load_shader_parameters()
@@ -276,6 +325,17 @@ class Player(QMainWindow):
         set_hud_icon(self.mute_action, self.hud, QStyle.SP_MediaVolumeMuted if self.muted else QStyle.SP_MediaVolume)
         bar.hide()
         self.notice = GameplayNotice(self.screen)
+        self.diagnostics = GameplayDiagnostics(
+            self.screen,
+            show_fps=library.setting("experimental.show_fps", "0") == "1",
+            show_renderer=library.setting("experimental.show_renderer_debug", "0") == "1",
+        )
+        self.diagnostics.set_core_renderer(getattr(self.core, 'renderer', 'Software'))
+        if self.hardware_state_compatibility:
+            self.diagnostics.setToolTip(
+                "This state was created by the software renderer. Restart the game to begin an OpenGL session."
+            )
+            self.notice.show_message("Resumed with the save state's software renderer")
         self.statusBar().showMessage(self.control_layout["hint"])
         self.setup_audio()
         self.audio_devices = QMediaDevices(self)
@@ -480,6 +540,8 @@ class Player(QMainWindow):
     def tick(self):
         if self.paused or self.focus_paused:
             self.next_frame = time.perf_counter()
+            self.fps_sample_started = self.next_frame
+            self.fps_sample_frames = 0
             return
         now = time.perf_counter()
         if now < self.next_frame:
@@ -522,8 +584,9 @@ class Player(QMainWindow):
                 self.audio = self.audio_device = None
                 self.audio_pending.clear()
                 self.setup_audio()
-            self.screen.frame = QImage(pixels, self.core.width, self.core.height,
-                                       self.core.width * 4, QImage.Format_RGB32).copy()
+            self.screen.frame = (pixels if isinstance(pixels, QImage) else
+                QImage(pixels, self.core.width, self.core.height,
+                       self.core.width * 4, QImage.Format_RGB32).copy())
             if self.use_system_aspect:
                 self.screen.display_aspect = self.core.aspect
             self.screen.update()
@@ -539,6 +602,13 @@ class Player(QMainWindow):
                     if written > 0:
                         del self.audio_pending[:written]
             self.frames += 1
+            self.fps_sample_frames += 1
+            sample_now = time.perf_counter()
+            elapsed = sample_now - self.fps_sample_started
+            if elapsed >= 0.5:
+                self.diagnostics.set_fps(self.fps_sample_frames / elapsed)
+                self.fps_sample_frames = 0
+                self.fps_sample_started = sample_now
             if self.frame_limit and self.frames >= self.frame_limit:
                 if self.capture_path:
                     self.grab().save(str(self.capture_path))
@@ -867,12 +937,12 @@ class Player(QMainWindow):
         self.filter_timer.stop()
         if self.shader_dialog:
             self.shader_dialog.close()
-        self.screen.close_renderer()
         self.hud.stop()
         self.notice.timer.stop()
         self.game_mode.stop()
         self.save_auto()
         self.core.close()
+        self.screen.close_renderer()
         for pad in self.pads:
             pad.close()
         if self.audio:

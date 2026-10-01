@@ -12,12 +12,49 @@ from PySide6.QtWidgets import QApplication
 from PySide6.QtTest import QTest
 from emuluna.app import Window
 from emuluna.library import Library
+from emuluna.thumbnails import ThumbnailCache
 
 
 class LibraryPerformance(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.app = QApplication.instance() or QApplication([])
+
+    def test_persistent_cover_preview_and_explicit_rebuild(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            (root / 'covers').mkdir()
+            source = root / 'covers' / 'fixture.png'
+            image = QImage(700, 1000, QImage.Format_RGB32)
+            image.fill(QColor('red'))
+            image.save(str(source))
+            game = {'id': 'preview-test', 'system': 'snes', 'cover': 'covers/fixture.png',
+                    'cover_revision': 0}
+            cache = ThumbnailCache(root)
+            try:
+                cache.warm_previews([game])
+                cache.warm_pool.waitForDone()
+                self.assertTrue(cache.preview_path(game).is_file())
+            finally:
+                cache.close()
+            reopened = ThumbnailCache(root)
+            try:
+                preview = reopened.icon(game)
+                self.assertIsNotNone(preview)
+                self.assertFalse(preview.isNull())
+                self.assertEqual(preview.pixmap(200, 200).size().height(), 200)
+                image.fill(QColor('blue'))
+                image.save(str(source))
+                reopened.rebuild()
+                self.assertFalse(reopened.preview_path(game).exists())
+                reopened.warm_previews([game])
+                reopened.warm_pool.waitForDone()
+                self.assertTrue(reopened.preview_path(game).is_file())
+                rebuilt = reopened.icon(game)
+                self.assertEqual(rebuilt.pixmap(200, 200).toImage().pixelColor(50, 50).name(),
+                                 '#0000ff')
+            finally:
+                reopened.close()
 
     def test_visible_thumbnails_cache_replacement_and_lazy_table(self):
         with tempfile.TemporaryDirectory() as folder:

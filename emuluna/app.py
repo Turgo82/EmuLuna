@@ -28,6 +28,7 @@ from .branding import ICON, LOGO, UNLOCK_SOUND, configure_application, navigatio
 from .core import ROOT, CoreError
 from .core_manager import CoreManager, DefaultCoreWorker
 from .library import Library, SYSTEMS, EXTENSIONS
+from .systems import CATALOG
 from .importing import Importer, ImportIssuesDialog
 from .metadata import MetadataWorker
 from .media_library import MediaBrowser
@@ -97,7 +98,7 @@ class AboutDialog(QDialog):
         information = QLabel(
             'An independent game library and emulator frontend.\n'
             'Runs standard libretro cores directly.\n\n'
-            '32 systems and 27 downloadable cores.\n'
+            f'{len(SYSTEMS)} systems and {len(CATALOG)} downloadable cores.\n'
             'Artwork: OpenVGDB and Libretro thumbnails.\n\n'
             'See README.md and THIRD_PARTY_NOTICES.md for capabilities and credits.')
         information.setAlignment(Qt.AlignCenter)
@@ -655,7 +656,7 @@ class Window(QMainWindow):
         if not self.core_worker:
             self.drain_lookups()
 
-    def open_settings(self, checked=False, *, system=None, page=None):
+    def open_settings(self, checked=False, *, system=None, page=None, core_id=None):
         from .settings import SettingsDialog
         dialog = SettingsDialog(
             self.library, self, advanced_unlocked=self.advanced_settings_unlocked)
@@ -665,6 +666,12 @@ class Window(QMainWindow):
             controls_page.system.setCurrentIndex(controls_page.system.findData(system))
         elif page in dialog.page_keys:
             dialog.show_page(page)
+            if page == 'cores' and core_id and hasattr(dialog, 'table'):
+                for row in range(dialog.table.rowCount()):
+                    if dialog.table.item(row, 0).data(Qt.UserRole) == core_id:
+                        dialog.table.selectRow(row)
+                        break
+        dialog.rebuild_cover_cache_requested.connect(self.rebuild_cover_cache)
         def sync():
             self.auto_art_action.setChecked(self.library.setting("artwork_auto", "1") == "1")
             self.backup_art_action.setChecked(self.library.setting("artwork_backup", "1") == "1")
@@ -678,6 +685,12 @@ class Window(QMainWindow):
             # and its widgets, timers and signal connections for the app's life.
             dialog.deleteLater()
         self.refresh()
+
+    def rebuild_cover_cache(self):
+        self.thumbnails.rebuild()
+        self.placeholder_cache.clear()
+        self.refresh()
+        self.notifications.post("Rebuilding cover previews in the background…", 5000)
 
 
     def toggle_auto_artwork(self, enabled):
@@ -1049,6 +1062,7 @@ class Window(QMainWindow):
             for core_id, record in compatible:
                 version = record.get('version') or 'unknown version'
                 action = core_menu.addAction(f"{record.get('name', core_id)} ({version})")
+                action.setToolTip(CATALOG.get(record.get('catalog_id') or core_id, {}).get('notice', ''))
                 action.setCheckable(True)
                 action.setChecked(selected == core_id)
                 action.setData(core_id)
@@ -1062,6 +1076,17 @@ class Window(QMainWindow):
             missing.setCheckable(True)
             missing.setChecked(True)
             missing.setEnabled(False)
+        downloadable = sorted(
+            ((key, info) for key, info in CATALOG.items()
+             if system in info['systems'] and key not in installed),
+            key=lambda pair: pair[1]['name'].casefold())
+        if downloadable:
+            downloads = core_menu.addMenu('Available to download')
+            for key, info in downloadable:
+                action = downloads.addAction(
+                    info['name'] + '…',
+                    lambda checked=False, value=key: self.open_settings(page='cores', core_id=value))
+                action.setToolTip(info.get('notice', ''))
         core_menu.addSeparator()
         core_menu.addAction('Manage core downloads…',
                             lambda: self.open_settings(page='cores'))
@@ -1202,6 +1227,7 @@ class Window(QMainWindow):
                                   favorites=key == "favorites", recent=key == "recent", added=key == "added",
                                   never=key == "never", collection=self.current_collection())
         self.rows = {r["id"]: r for r in rows}
+        self.thumbnails.warm_previews(rows)
         self.letter_targets = {}
         for row in rows:
             self.letter_targets.setdefault(title_initial(row["title"]), row["id"])

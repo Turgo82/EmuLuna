@@ -170,6 +170,9 @@ class ManagerTests(unittest.TestCase):
             dialog.unlock_advanced()
             advanced = dialog.tabs.widget(dialog.page_keys.index('advanced'))
             self.assertTrue(advanced.isAncestorOf(dialog.minimize_library))
+            self.assertTrue(advanced.isAncestorOf(dialog.experimental_hardware))
+            self.assertTrue(advanced.isAncestorOf(dialog.show_fps))
+            self.assertTrue(advanced.isAncestorOf(dialog.show_renderer_debug))
             self.assertFalse(gameplay.isAncestorOf(dialog.minimize_library))
 
             dialog.show_page('bios')

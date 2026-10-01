@@ -15,6 +15,21 @@ def core_launch_options(core_id, system):
     return options
 
 
+def core_render_options(core_id, gl_capabilities, *, resuming=False, saved_renderer=None):
+    """Choose a core's GPU or software options without changing its display API."""
+    record = CATALOG.get(core_id, {})
+    if not record.get("hardware_options"):
+        return {}, False, False
+    compatibility_gl, _, core_gl, _ = gl_capabilities
+    profile = record.get("hardware_profile", "either")
+    available = (bool(core_gl) if profile == "core" else
+                 bool(compatibility_gl) if profile == "compat" else
+                 bool(compatibility_gl or core_gl))
+    use_hardware = available and (not resuming or saved_renderer == "opengl")
+    key = "hardware_options" if use_hardware else "software_options"
+    return dict(record.get(key, {})), available, use_hardware
+
+
 @dataclass(frozen=True)
 class System:
     key: str

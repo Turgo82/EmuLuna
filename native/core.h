@@ -30,6 +30,20 @@ unsigned el_sample_rate(void* instance);
 int el_save_state(void* instance, const char* path);
 int el_load_state(void* instance, const char* path);
 void el_flush(void* instance);
+void el_set_hardware_allowed(int allowed);
+void el_set_hardware_capabilities(unsigned gl_major, unsigned gl_minor,
+                                  unsigned core_major, unsigned core_minor);
+int el_hardware_active(void* instance);
+unsigned el_hardware_context_type(void* instance);
+unsigned el_hardware_version_major(void* instance);
+unsigned el_hardware_version_minor(void* instance);
+unsigned el_hardware_max_width(void* instance);
+unsigned el_hardware_max_height(void* instance);
+int el_hardware_bottom_left(void* instance);
+void el_set_hardware_framebuffer(void* instance, uintptr_t framebuffer);
+int el_hardware_context_reset(void* instance);
+void el_hardware_context_destroy(void* instance);
+int el_last_frame_hardware(void* instance);
 #ifdef __cplusplus
 }
 #endif

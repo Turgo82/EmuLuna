@@ -171,3 +171,63 @@ class GameplayNotice(QLabel):
         if event.type() == QEvent.Resize:
             self.position()
         return super().eventFilter(watched, event)
+
+
+class GameplayDiagnostics(QLabel):
+    """Optional, non-interactive performance details for the hidden settings page."""
+    def __init__(self, screen, *, show_fps=False, show_renderer=False):
+        super().__init__(screen)
+        self.screen = screen
+        self.show_fps = show_fps
+        self.show_renderer = show_renderer
+        self.fps = 0.0
+        self.core_renderer = "Software"
+        self.display_renderer = screen.backend
+        self.setObjectName('gameplayDiagnostics')
+        self.setAttribute(Qt.WA_TransparentForMouseEvents)
+        self.setFocusPolicy(Qt.NoFocus)
+        self.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        self.setStyleSheet(
+            'QLabel#gameplayDiagnostics {'
+            'background:rgba(12,13,16,210);color:#f4f4f5;'
+            'border:1px solid rgba(255,255,255,70);border-radius:6px;'
+            'padding:5px 8px;font-family:monospace;font-size:12px;}'
+        )
+        screen.installEventFilter(self)
+        screen.backend_changed.connect(self.set_display_renderer)
+        self.refresh()
+
+    def set_display_renderer(self, renderer):
+        self.display_renderer = renderer
+        self.refresh()
+
+    def set_core_renderer(self, renderer):
+        self.core_renderer = renderer
+        self.refresh()
+
+    def set_fps(self, fps):
+        self.fps = max(0.0, float(fps))
+        self.refresh()
+
+    def refresh(self):
+        details = []
+        if self.show_fps:
+            details.append(f'{self.fps:0.1f} FPS')
+        if self.show_renderer:
+            display = self.display_renderer.replace('Hardware acceleration · ', '')
+            display = display.split(' (', 1)[0]
+            details.extend((f'Core: {self.core_renderer}', f'Display: {display}'))
+        self.setText('\n'.join(details))
+        self.setVisible(bool(details))
+        self.position()
+
+    def position(self):
+        self.setMaximumWidth(max(120, self.screen.width() - 24))
+        self.adjustSize()
+        self.move(max(8, self.screen.width() - self.width() - 12), 12)
+        self.raise_()
+
+    def eventFilter(self, watched, event):
+        if event.type() == QEvent.Resize:
+            self.position()
+        return super().eventFilter(watched, event)

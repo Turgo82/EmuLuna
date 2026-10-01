@@ -16,12 +16,32 @@ class CoreError(RuntimeError):
     pass
 
 
+def saved_state_renderer(path):
+    """Return the renderer recorded in a state without reading its large payload."""
+    try:
+        with Path(path).open('rb') as file:
+            magic = file.readline(32).rstrip(b'\n')
+            meta = json.loads(file.readline(16384))
+        if magic != b"OELINUX1" or meta.get("format") != 1:
+            return None
+        # States written before renderer tagging used the software plugin.
+        return meta.get("renderer", "software")
+    except (OSError, ValueError, TypeError):
+        return None
+
+
 class Core:
-    def __init__(self, rom, system, save_dir, *, libretro_path=None, core_id=None, system_dir=None, options=None, content_digest=None):
+    def __init__(self, rom, system, save_dir, *, libretro_path=None, core_id=None, system_dir=None,
+                 options=None, content_digest=None, allow_hardware=False):
         self.rom = Path(rom).resolve()
         if libretro_path is None:
             raise CoreError("A standard libretro core is required. Download a core for this system in Settings.")
         self.is_libretro = True
+        # The core's rendering path is independent of the frontend display API.
+        # Switch this label only after a hardware context is actually attached.
+        self.renderer = "Software"
+        self.state_renderer = "software"
+        self.hardware = None
         self.path = Path(os.environ.get("EMULUNA_CORE_DIR", ROOT / "build/cores")) / "libemuluna_host.so"
         binary_digest = hashlib.sha256(Path(libretro_path).read_bytes()).hexdigest()
         self.name = f"libretro:{core_id}:{binary_digest}"
@@ -44,6 +64,17 @@ class Core:
             "save_state": (C.c_int, [C.c_void_p, C.c_char_p]),
             "load_state": (C.c_int, [C.c_void_p, C.c_char_p]),
             "flush": (None, [C.c_void_p]),
+            "hardware_active": (C.c_int, [C.c_void_p]),
+            "hardware_context_type": (C.c_uint, [C.c_void_p]),
+            "hardware_version_major": (C.c_uint, [C.c_void_p]),
+            "hardware_version_minor": (C.c_uint, [C.c_void_p]),
+            "hardware_max_width": (C.c_uint, [C.c_void_p]),
+            "hardware_max_height": (C.c_uint, [C.c_void_p]),
+            "hardware_bottom_left": (C.c_int, [C.c_void_p]),
+            "set_hardware_framebuffer": (None, [C.c_void_p, C.c_size_t]),
+            "hardware_context_reset": (C.c_int, [C.c_void_p]),
+            "hardware_context_destroy": (None, [C.c_void_p]),
+            "last_frame_hardware": (C.c_int, [C.c_void_p]),
         }
         for name, (result, args) in signatures.items():
             fn = getattr(self.lib, "el_" + name)
@@ -59,7 +90,16 @@ class Core:
         system_dir.mkdir(parents=True, exist_ok=True)
         self.lib.el_clear_options.argtypes, self.lib.el_clear_options.restype = [], None
         self.lib.el_set_option.argtypes, self.lib.el_set_option.restype = [C.c_char_p, C.c_char_p], None
+        self.lib.el_set_hardware_allowed.argtypes, self.lib.el_set_hardware_allowed.restype = [C.c_int], None
+        self.lib.el_set_hardware_capabilities.argtypes = [C.c_uint] * 4
+        self.lib.el_set_hardware_capabilities.restype = None
         self.lib.el_clear_options()
+        capabilities = (0, 0, 0, 0)
+        if allow_hardware:
+            from .hardware_render import probe_hardware_contexts
+            capabilities = probe_hardware_contexts()
+        self.lib.el_set_hardware_allowed(int(bool(allow_hardware and any(capabilities))))
+        self.lib.el_set_hardware_capabilities(*capabilities)
         launch_options = core_launch_options(core_id, system)
         launch_options.update(options or {})
         for key, value in launch_options.items():
@@ -73,6 +113,25 @@ class Core:
         self.fps = self.lib.el_fps(self.handle)
         self.aspect = self.lib.el_aspect_ratio(self.handle)
         self.sample_rate = self.lib.el_sample_rate(self.handle)
+        self.hardware_requested = bool(self.lib.el_hardware_active(self.handle))
+        self.hardware_context_type = self.lib.el_hardware_context_type(self.handle)
+        self.hardware_version = (self.lib.el_hardware_version_major(self.handle),
+                                 self.lib.el_hardware_version_minor(self.handle))
+        self.hardware_max_width = self.lib.el_hardware_max_width(self.handle)
+        self.hardware_max_height = self.lib.el_hardware_max_height(self.handle)
+        self.hardware_bottom_left = bool(self.lib.el_hardware_bottom_left(self.handle))
+
+    def attach_hardware(self, hardware):
+        """Finish the context handshake after the core has declared its needs."""
+        if not self.hardware_requested:
+            raise CoreError("This core did not request a supported hardware renderer.")
+        self.hardware = hardware
+        self.lib.el_set_hardware_framebuffer(self.handle, hardware.fbo.handle())
+        if not self.lib.el_hardware_context_reset(self.handle):
+            self.hardware = None
+            raise CoreError("The core could not initialize its OpenGL renderer.")
+        self.renderer = hardware.description
+        self.state_renderer = "opengl"
 
     def frame(self, keys=0, axes=(0, 0, 0, 0), players=()):
         if not self.handle:
@@ -88,18 +147,29 @@ class Core:
             self.lib.el_set_port_input(self.handle, port, buttons,
                 *[max(-32768, min(32767, int(value))) for value in stick_axes])
         self.lib.el_set_analog(self.handle, *values)
-        n = self.lib.el_frame(self.handle, keys)
-        if n < 0 or n > 8192:
-            raise CoreError(self.error_message("The emulator did not complete a frame."))
-        self.width = self.lib.el_width(self.handle)
-        self.height = self.lib.el_height(self.handle)
-        self.fps = self.lib.el_fps(self.handle)
-        self.aspect = self.lib.el_aspect_ratio(self.handle)
-        self.sample_rate = self.lib.el_sample_rate(self.handle)
-        if not (0 < self.width <= 1024 and 0 < self.height <= 1024):
-            raise CoreError("The emulator returned invalid frame dimensions.")
-        return (C.string_at(self.lib.el_pixels(self.handle), self.width * self.height * 4),
-                C.string_at(self.lib.el_audio(self.handle), n * 4))
+        if self.hardware:
+            self.hardware.begin()
+        try:
+            n = self.lib.el_frame(self.handle, keys)
+            if n < 0 or n > 8192:
+                raise CoreError(self.error_message("The emulator did not complete a frame."))
+            self.width = self.lib.el_width(self.handle)
+            self.height = self.lib.el_height(self.handle)
+            self.fps = self.lib.el_fps(self.handle)
+            self.aspect = self.lib.el_aspect_ratio(self.handle)
+            self.sample_rate = self.lib.el_sample_rate(self.handle)
+            limit = 4096 if self.hardware else 1024
+            if not (0 < self.width <= limit and 0 < self.height <= limit):
+                raise CoreError("The emulator returned invalid frame dimensions.")
+            if self.hardware and self.lib.el_last_frame_hardware(self.handle):
+                pixels = self.hardware.capture(self.width, self.height, self.hardware_bottom_left)
+            else:
+                pixels = C.string_at(self.lib.el_pixels(self.handle), self.width * self.height * 4)
+            audio = C.string_at(self.lib.el_audio(self.handle), n * 4)
+            return pixels, audio
+        finally:
+            if self.hardware:
+                self.hardware.end()
 
     def error_message(self, default):
         if self.is_libretro:
@@ -107,7 +177,7 @@ class Core:
         return default
 
     def flush(self):
-        self.lib.el_flush(self.handle)
+        self._with_context(self.lib.el_flush, self.handle)
 
     def rumble(self, port=0):
         """Return the core's requested strong and weak motor intensity."""
@@ -131,10 +201,11 @@ class Core:
         path.parent.mkdir(parents=True, exist_ok=True)
         with tempfile.TemporaryDirectory(dir=path.parent) as tmp:
             raw = Path(tmp) / "raw.state"
-            if not self.lib.el_save_state(self.handle, os.fsencode(raw)):
+            if not self._with_context(self.lib.el_save_state, self.handle, os.fsencode(raw)):
                 raise CoreError("Could not save the game state.")
             data = raw.read_bytes()
             header = json.dumps({"format": 1, "core": self.name, "rom": self.digest,
+                                 "renderer": self.state_renderer,
                                  "sha256": hashlib.sha256(data).hexdigest()}).encode()
             output = Path(tmp) / "state"
             with output.open("wb") as f:
@@ -152,25 +223,61 @@ class Core:
         try:
             magic, header, raw = path.read_bytes().split(b"\n", 2)
             meta = json.loads(header)
+            renderer = meta.get("renderer", "software")
             valid = (magic == b"OELINUX1" and meta["format"] == 1 and meta["core"] == self.name
                      and meta["rom"] == self.digest and meta["sha256"] == hashlib.sha256(raw).hexdigest())
         except (ValueError, KeyError, TypeError):
             valid = False
         if not valid:
             raise CoreError("This state is damaged or belongs to a different game or core.")
+        if renderer != self.state_renderer:
+            raise CoreError(
+                "This state uses a different video renderer. Resume it with the renderer that created it."
+            )
         with tempfile.TemporaryDirectory() as tmp:
             state = Path(tmp) / "state"
             state.write_bytes(raw)
-            if not self.lib.el_load_state(self.handle, os.fsencode(state)):
+            if not self._with_context(self.lib.el_load_state, self.handle, os.fsencode(state)):
                 raise CoreError("The emulator could not restore this state.")
-
     def reset(self):
-        self.lib.el_reset(self.handle)
+        self._with_context(self.lib.el_reset, self.handle)
+
+    def _with_context(self, function, *args):
+        if self.hardware:
+            self.hardware.begin()
+        try:
+            return function(*args)
+        finally:
+            if self.hardware:
+                self.hardware.end()
 
     def close(self):
         if self.handle:
-            self.lib.el_destroy(self.handle)
-            self.handle = None
+            hardware = self.hardware
+            hardware_current = False
+            if hardware:
+                try:
+                    hardware.begin()
+                    hardware_current = True
+                except RuntimeError as error:
+                    print(f"OpenGL core context unavailable during unload: {error}", flush=True)
+            try:
+                if hardware_current:
+                    try:
+                        self.lib.el_hardware_context_destroy(self.handle)
+                    finally:
+                        self.lib.el_destroy(self.handle)
+                else:
+                    self.lib.el_destroy(self.handle)
+            finally:
+                self.handle = None
+                self.hardware = None
+                if hardware:
+                    try:
+                        if hardware_current:
+                            hardware.end()
+                    finally:
+                        hardware.close()
 
     def __enter__(self):
         return self

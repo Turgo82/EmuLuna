@@ -148,6 +148,9 @@ class Rebranding(unittest.TestCase):
                 self.assertEqual(settings.tabs.count(), 7)
                 advanced = settings.tabs.widget(settings.page_keys.index('advanced'))
                 self.assertTrue(advanced.isAncestorOf(settings.minimize_library))
+                self.assertTrue(advanced.isAncestorOf(settings.experimental_hardware))
+                self.assertTrue(advanced.isAncestorOf(settings.show_fps))
+                self.assertTrue(advanced.isAncestorOf(settings.show_renderer_debug))
             finally:
                 if settings:
                     settings.close()

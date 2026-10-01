@@ -22,6 +22,7 @@ from .settings_style import (SETTINGS_STYLE, SettingsCheckBox as QCheckBox,
 
 class SettingsDialog(QDialog):
     changed = Signal()
+    rebuild_cover_cache_requested = Signal()
 
     def __init__(self, library, parent=None, *, advanced_unlocked=False):
         super().__init__(parent)
@@ -308,6 +309,54 @@ class SettingsDialog(QDialog):
         self.minimize_library.setToolTip(
             "Minimize the library after the game window opens, then restore it when the game closes."
         )
+        self.frontend_renderer = QComboBox()
+        for label, value in (("Auto (recommended)", "auto"), ("Vulkan", "vulkan"),
+                             ("OpenGL", "opengl"), ("Software", "software")):
+            self.frontend_renderer.addItem(label, value)
+        renderer = self.library.setting("experimental.frontend_renderer", "auto")
+        self.frontend_renderer.setCurrentIndex(max(0, self.frontend_renderer.findData(renderer)))
+        self.frontend_renderer.currentIndexChanged.connect(
+            lambda index: self.set_setting("experimental.frontend_renderer",
+                                           self.frontend_renderer.itemData(index)))
+        self.frontend_renderer.setToolTip(
+            "Select how EmuLuna displays game frames. Auto tries Vulkan, then OpenGL, then software. "
+            "A core's own hardware context is negotiated separately. Changes apply to new game windows."
+        )
+        form.addRow("Frontend renderer", self.frontend_renderer)
+        self.experimental_hardware = self.checkbox(
+            form,
+            "Use experimental GPU plugin for ParaLLEl N64",
+            "experimental.hardware_rendering",
+            "1",
+        )
+        self.experimental_hardware.setToolTip(
+            "Ask ParaLLEl N64 to use GLideN64 on a new game session. This is separate from the frontend renderer. "
+            "Existing save states resume with their original core renderer; use Restart game to begin a new session."
+        )
+        self.show_fps = self.checkbox(
+            form,
+            "Show FPS while playing",
+            "experimental.show_fps",
+            "0",
+        )
+        self.show_renderer_debug = self.checkbox(
+            form,
+            "Show renderer debug overlay",
+            "experimental.show_renderer_debug",
+            "0",
+        )
+        self.show_renderer_debug.setToolTip(
+            "Show the core renderer and EmuLuna display renderer while a game is running."
+        )
+        cache_label = QLabel("Cover previews")
+        cache_label.setObjectName("controlGroup")
+        form.addRow(cache_label)
+        self.rebuild_cover_cache_button = QPushButton("Rebuild cover cache")
+        self.rebuild_cover_cache_button.setToolTip(
+            "Delete generated cover previews and prepare fresh ones in the background. Original artwork is kept."
+        )
+        self.rebuild_cover_cache_button.clicked.connect(self.rebuild_cover_cache_requested.emit)
+        form.addRow(self.rebuild_cover_cache_button)
         note = QLabel(
             "Advanced options are experimental and may change as EmuLuna evolves."
         )

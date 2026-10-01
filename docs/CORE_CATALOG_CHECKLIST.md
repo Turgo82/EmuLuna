@@ -1,11 +1,11 @@
 # EmuLuna and Libretro core checklist
 
-Snapshot: 2026-09-28 · Linux x86_64 · [official Libretro buildbot](https://buildbot.libretro.com/nightly/linux/x86_64/latest/)
+Snapshot: buildbot availability checked 2026-09-28; curated catalog updated 2026-09-30 · Linux x86_64 · [official Libretro buildbot](https://buildbot.libretro.com/nightly/linux/x86_64/latest/)
 
 - **241** downloadable Libretro core packages in the current buildbot index
-- **27** cores in EmuLuna’s curated download catalog
+- **29** cores in EmuLuna’s curated download catalog
 - **13** curated cores installed in the active library
-- **214** downloadable packages outside EmuLuna’s catalog
+- **212** downloadable packages outside EmuLuna’s catalog at the snapshot date
 
 Checklist meaning: checked items are included in EmuLuna’s curated downloader. Unchecked items exist on the official buildbot but are not currently offered by EmuLuna. “Installed” reflects the active library at the time this report was generated.
 
@@ -132,8 +132,8 @@ The buildbot includes more than console emulators. It also contains arcade varia
 - [ ] **Atari - Lynx (Beetle Lynx)** (`mednafen_lynx`) — Lynx — build 2026-09-28
 - [ ] **NEC - PC Engine / SuperGrafx / CD (Beetle PCE)** (`mednafen_pce`) — PC Engine/SuperGrafx/CD — build 2026-09-28
 - [ ] **NEC - PC-FX (Beetle PC-FX)** (`mednafen_pcfx`) — PC-FX — build 2026-09-28
-- [ ] **Sony - PlayStation (Beetle PSX)** (`mednafen_psx`) — PlayStation — build 2026-09-28
-- [ ] **Sony - PlayStation (Beetle PSX HW)** (`mednafen_psx_hw`) — PlayStation — build 2026-09-28
+- [x] **Sony - PlayStation (Beetle PSX)** (`mednafen_psx`) — PlayStation — available to download
+- [x] **Sony - PlayStation (Beetle PSX HW)** (`mednafen_psx_hw`) — PlayStation — available to download
 - [ ] **Nintendo - SNES / SFC (Beetle bsnes)** (`mednafen_snes`) — Super Nintendo Entertainment System — build 2026-09-28
 - [ ] **Nintendo - SNES / SFC (Beetle Supafaust)** (`mednafen_supafaust`) — Super Nintendo Entertainment System — build 2026-09-28
 - [ ] **NEC - PC Engine SuperGrafx (Beetle SuperGrafx)** (`mednafen_supergrafx`) — PC Engine SuperGrafx — build 2026-09-28

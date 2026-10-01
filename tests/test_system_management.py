@@ -9,6 +9,7 @@ from media_stub import isolate_audio
 isolate_audio()
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QMenu
 from emuluna.bios import bios_status, import_bios, validate_bios
 from emuluna.content import inventory
 from emuluna.core import Core, CoreError
@@ -17,7 +18,7 @@ from emuluna.importing import Importer
 from emuluna.library import Library, ImportProblem
 from emuluna.settings import SettingsDialog
 from emuluna.app import Window
-from emuluna.systems import SYSTEMS, CATALOG, EXTENSIONS, core_launch_options
+from emuluna.systems import SYSTEMS, CATALOG, EXTENSIONS, core_launch_options, core_render_options
 from test_core_manager import binary
 
 
@@ -84,14 +85,51 @@ class SystemManagementTests(unittest.TestCase):
         blocked = {key: info['launch_block'] for key, info in CATALOG.items()
                    if info.get('launch_block')}
         self.assertEqual(blocked, {})
-        self.assertEqual(CATALOG['ppsspp']['options'], {
-            'ppsspp_backend': 'none',
-            'ppsspp_software_rendering': 'enabled',
-            'ppsspp_internal_resolution': '480x272',
-        })
+        self.assertEqual(CATALOG['ppsspp']['options'], {'ppsspp_internal_resolution': '480x272'})
         with patch('emuluna.bios.validate_bios'):
             self.manager.validate_launch({'id':'ppsspp', 'catalog_id':'ppsspp'}, 'psp',
                                          self.root / 'game.iso', self.root / 'system')
+
+    def test_playstation_beetle_variants_are_selectable_without_changing_default(self):
+        self.assertEqual(SYSTEMS['psx'].default_core, 'pcsx_rearmed')
+        for core_id in ('mednafen_psx', 'mednafen_psx_hw'):
+            self.assertIn('psx', CATALOG[core_id]['systems'])
+            self.assertIn('cue', CATALOG[core_id]['extensions'])
+        with patch('emuluna.core_manager.probe', return_value={
+            'name': 'Beetle PSX HW', 'version': 'test', 'extensions': 'cue|chd|pbp'}):
+            installed = self.manager.install_bytes(binary(), 'mednafen_psx_hw')
+        self.library.set_setting('core.psx', 'mednafen_psx_hw')
+        self.assertEqual(self.manager.choice(self.library, 'psx')['sha256'], installed['sha256'])
+        window = Window(self.library, auto_artwork=False)
+        try:
+            choices = window.add_console_core_menu(QMenu(window), 'psx')
+            self.assertTrue(next(action for action in choices.actions()
+                                 if action.data() == 'mednafen_psx_hw').isChecked())
+            downloads = next(action.menu() for action in choices.actions()
+                             if action.text() == 'Available to download')
+            self.assertEqual({action.text() for action in downloads.actions()},
+                             {'Beetle PSX…', 'PCSX ReARMed…'})
+        finally:
+            window.close()
+
+    def test_3d_core_rendering_uses_available_gl_and_preserves_software_states(self):
+        full_gl = (4, 6, 4, 6)
+        no_gl = (0, 0, 0, 0)
+        for core_id, key, hardware_value, software_value in (
+                ('mednafen_psx_hw', 'beetle_psx_hw_renderer', 'hardware_gl', 'software'),
+                ('ppsspp', 'ppsspp_backend', 'opengl', 'none'),
+                ('desmume', 'desmume_opengl_mode', 'enabled', 'disabled')):
+            options, available, using = core_render_options(core_id, full_gl)
+            self.assertTrue(available and using)
+            self.assertEqual(options[key], hardware_value)
+            options, available, using = core_render_options(
+                core_id, full_gl, resuming=True, saved_renderer='software')
+            self.assertTrue(available and not using)
+            self.assertEqual(options[key], software_value)
+            options, available, using = core_render_options(core_id, no_gl)
+            self.assertFalse(available or using)
+            self.assertEqual(options[key], software_value)
+        self.assertFalse(core_render_options('mednafen_psx_hw', (4, 6, 0, 0))[1])
 
     def test_default_download_only_missing_cores_and_removal_keeps_games_saves(self):
         self.assertEqual(self.manager.missing_defaults(self.library, ['gb','gbc','nes']), ['gambatte','nestopia'])

@@ -2,6 +2,39 @@
 
 This file records user-facing changes to EmuLuna releases.
 
+## [0.16.0] - 2026-09-30
+
+### Changed
+
+- Added persistent tiny cover previews for large libraries. Fast scrolling can
+  show a cached preview immediately while the full thumbnail loads, and the
+  Advanced settings now offer **Rebuild cover cache**.
+- Added Beetle PSX and Beetle PSX HW to the PlayStation core download catalog
+  and showed uninstalled alternatives in each console's Core menu. Choosing one
+  opens its download row. Existing PlayStation core choices and saves are unchanged.
+- Let Beetle PSX HW, PPSSPP, and DeSmuME use their OpenGL renderers when the
+  required context is available. Software sessions continue to resume with
+  software rendering; unavailable OpenGL contexts use the software option.
+- Marked Beetle PSX HW's OpenGL path as experimental in core download details.
+  Vulkan display presentation remains separate from libretro Vulkan contexts.
+- Enabled ParaLLEl N64's GPU plugin by default for new sessions when OpenGL is
+  available. The Advanced switch can still disable it, and existing software
+  save states continue with the renderer that created them.
+- Added an Auto frontend renderer that checks Vulkan initialization, then
+  OpenGL, then falls back to software presentation. Advanced settings can
+  force a renderer for compatibility testing.
+- Separated a core's hardware-context request from the frontend display API.
+  Software cores can use Vulkan or OpenGL presentation; supported OpenGL core
+  contexts are negotiated explicitly, with unavailable requests declined.
+- Corrected the OpenGL core framebuffer readback used by Parallel N64 so
+  frames remain upright and are not doubled after loading a state.
+- Kept video filters available with Vulkan presentation through a bounded
+  offscreen filter pass, and added renderer initialization/fallback diagnostics.
+- Simplified the README and refreshed third-party notices for bundled
+  dependencies, controller art, branding, the unlock sound, and website assets.
+- Removed unused legacy SVG console-icon copies and refined the fallback Neo
+  Geo Pocket controller illustration.
+
 ## [0.15.0] - 2026-09-28
 
 ### Changed
