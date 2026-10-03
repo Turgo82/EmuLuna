@@ -802,12 +802,13 @@
       {"path": "psxonpsp660.bin", "description": "psxonpsp660.bin (PSP PS1 BIOS)", "optional": true, "md5": "c53ca5908936d412331790f4426c6c33", "requirement": "Optional"},
       {"path": "ps1_rom.bin", "description": "ps1_rom.bin (PS3 PS1 BIOS)", "optional": true, "md5": "81bbe60ba7a3d1cea1d48c14cbcc647b", "requirement": "Optional"}
     ],
-    "notes": "OpenGL preview; graphical glitches are possible. EmuLuna does not yet provide a libretro Vulkan core context. A region-matched PlayStation BIOS is recommended.",
+    "notes": "Uses Vulkan hardware rendering when available, then OpenGL, then software. A region-matched PlayStation BIOS is recommended.",
     "source": "https://raw.githubusercontent.com/libretro/libretro-core-info/master/mednafen_psx_hw_libretro.info",
     "hardware_profile": "core",
     "hardware_options": {"beetle_psx_hw_renderer": "hardware_gl"},
+    "vulkan_options": {"beetle_psx_hw_renderer": "hardware_vk"},
     "software_options": {"beetle_psx_hw_renderer": "software"},
-    "notice": "Experimental OpenGL graphics can show visual glitches. Beetle PSX HW's Vulkan renderer requires a libretro Vulkan core context, which EmuLuna does not yet provide."
+    "notice": "Vulkan and OpenGL rendering require compatible graphics drivers. Existing save states resume with the renderer that created them."
   },
   "ppsspp": {
     "name": "PPSSPP",

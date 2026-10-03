@@ -1,6 +1,8 @@
 """Isolated OpenGL context for libretro cores that request hardware rendering."""
 import ctypes as C
 from functools import lru_cache
+import os
+from pathlib import Path
 
 from PySide6.QtCore import QSize
 from PySide6.QtGui import QImage, QOffscreenSurface, QOpenGLContext, QSurfaceFormat
@@ -9,6 +11,47 @@ from PySide6.QtOpenGL import QOpenGLFramebufferObject, QOpenGLFramebufferObjectF
 
 class HardwareRenderError(RuntimeError):
     pass
+
+
+@lru_cache(maxsize=1)
+def probe_vulkan_context():
+    """Try creating an actual headless Vulkan device, not just loading its library."""
+    from .core import ROOT
+    host = Path(os.environ.get("EMULUNA_CORE_DIR", ROOT / "build/cores")) / "libemuluna_host.so"
+    if not host.is_file():
+        return False
+    try:
+        library = C.CDLL(str(host))
+        library.el_vulkan_available.restype = C.c_int
+        return bool(library.el_vulkan_available())
+    except (OSError, AttributeError):
+        return False
+
+
+class VulkanCoreDisplay:
+    """Use the libretro Vulkan interface; the native host reads back each frame."""
+    description = "Vulkan (experimental)"
+    framebuffer = 0
+
+    def __init__(self, core):
+        if core.hardware_context_type != 6:
+            raise HardwareRenderError("The core did not request a Vulkan context.")
+        self.core = core
+        if not core.lib.el_vulkan_initialize(core.handle):
+            raise HardwareRenderError(core.error_message("Could not initialize the core's Vulkan context."))
+        core.attach_hardware(self)
+
+    def begin(self):
+        pass
+
+    def end(self):
+        pass
+
+    def capture(self, width, height, _bottom_left):
+        return C.string_at(self.core.lib.el_pixels(self.core.handle), width * height * 4)
+
+    def close(self):
+        pass
 
 
 @lru_cache(maxsize=1)

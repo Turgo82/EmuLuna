@@ -25,8 +25,11 @@ dependencies or artwork.
 | Component | Use and upstream terms |
 | --- | --- |
 | native/vendor/libretro.h | Bundled libretro API header; its upstream MIT notice remains at the top of the file. [Libretro](https://github.com/libretro/libretro-common). |
+| native/vendor/libretro_vulkan.h | Bundled libretro Vulkan interface header; its upstream permissive notice remains in the file. [RetroArch](https://github.com/libretro/RetroArch/blob/master/libretro-common/include/libretro_vulkan.h). |
+| native/vendor/vulkan/ and native/vendor/vk_video/ | Vulkan API headers from Khronos, licensed under Apache-2.0 OR MIT as marked in the files. The MIT license text is included in emuluna/data/licenses/vulkan-headers-MIT.txt. The native host loads the system Vulkan loader at runtime; no GPU driver is bundled. [Vulkan-Headers](https://github.com/KhronosGroup/Vulkan-Headers). |
 | Python | The AppImage bundles a Python runtime. Python is distributed under the [Python Software Foundation License](https://docs.python.org/3/license.html), with additional licenses for some incorporated software. Source installs use the system's Python. |
 | Qt for Python / PySide6, Shiboken and Qt libraries | Used by the interface and bundled in the AppImage. Community Qt for Python is offered under [LGPLv3/GPLv3](https://doc.qt.io/qtforpython-6/) and commercial terms; individual Qt modules and incorporated components can have additional notices. See [Qt for Python's license inventory](https://doc.qt.io/qtforpython-6/licenses.html) and the licenses for the exact packaged version. |
+| Wayland client library | Used for native Wayland windows and KDE decoration palette requests. MIT license; the upstream copyright and license text is included in emuluna/data/licenses/wayland-client-COPYING.txt. |
 | certifi | Certificate-authority bundle used for verified downloads; included with the AppImage. [MPL-2.0](https://github.com/certifi/python-certifi/blob/master/LICENSE). |
 | SDL2 | Controller input and rumble. The current AppImage includes libSDL2-2.0.so.0; source installs load the system library. SDL2 uses the [zlib license](https://github.com/libsdl-org/SDL/blob/SDL2/LICENSE.txt). |
 | PyInstaller | Build tool and bootloader used for the AppImage; its [license and bootloader exception](https://pyinstaller.org/en/stable/license.html) are separate from EmuLuna's license. |

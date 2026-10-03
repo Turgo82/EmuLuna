@@ -2,6 +2,39 @@
 
 This file records user-facing changes to EmuLuna releases.
 
+## [0.17.0] - 2026-10-02
+
+### Changed
+
+- Remember library and per-console game window sizes and maximized state.
+  Fullscreen play does not overwrite the saved normal window size.
+- Native KDE Wayland title bars now receive EmuLuna's matching color scheme,
+  including game and settings windows, without replacing the desktop controls.
+- Beetle PSX HW now uses its Vulkan renderer when a Vulkan device is available,
+  with OpenGL and software fallbacks for new sessions. Existing save states keep
+  the renderer that created them.
+
+### Fixed
+
+- Pause-on-window-switch now follows application focus and minimized windows,
+  and changes to this setting take effect in games that are already running.
+- The experimental library-minimize option now applies when any game window
+  opens, stays off by default, and restores the library when disabled or when
+  the last game closes.
+- Quitting the last game also restores a manually minimized library, preserving
+  its previous maximized or windowed state.
+- Restore the library's native Wayland surface after the last game exits, even
+  when Qt no longer reports that it is minimized. On Wayland desktops, both
+  library and game windows now prefer Wayland with X11 as a fallback.
+- Improved Beetle PSX HW Vulkan speed by reading frames through CPU-cached
+  staging memory when the GPU supports it.
+- F-Zero X now uses the N64 core's accurate RSP with OpenGL, restoring tracks
+  that were black with the core's automatic RSP choice.
+- Read Beetle PSX HW's 15-bit Vulkan frames correctly instead of stopping games
+  with an unsupported image format error.
+- Removed seams between 2D image tiles in N64 OpenGL rendering, including
+  Mischief Makers' save-selection screen.
+
 ## [0.16.0] - 2026-09-30
 
 ### Changed

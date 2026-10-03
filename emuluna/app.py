@@ -27,6 +27,7 @@ from .artwork import ArtworkWorker
 from .branding import ICON, LOGO, UNLOCK_SOUND, configure_application, navigation_icon
 from .core import ROOT, CoreError
 from .core_manager import CoreManager, DefaultCoreWorker
+from .desktop import prefer_native_desktop, restore_window_size, save_window_size
 from .library import Library, SYSTEMS, EXTENSIONS
 from .systems import CATALOG
 from .importing import Importer, ImportIssuesDialog
@@ -235,6 +236,7 @@ class Window(QMainWindow):
         if self.view_mode not in ("grid", "list"):
             self.view_mode = "grid"
         self.setWindowTitle("EmuLuna")
+        self.setProperty('emuluna.library_window', True)
         self.resize(1140, 750)
         self.setMinimumSize(850, 560)
         self.setAcceptDrops(True)
@@ -503,6 +505,7 @@ class Window(QMainWindow):
             QTimer.singleShot(250, self.startup_lookups)
         if self.library.needs_filename_restore():
             QTimer.singleShot(0, lambda: self.import_paths([], restore_names=True))
+        restore_window_size(self, library, 'window.library.size')
 
     def setup_menu(self):
         self.application_menu = QMenu(self)
@@ -658,6 +661,7 @@ class Window(QMainWindow):
 
     def open_settings(self, checked=False, *, system=None, page=None, core_id=None):
         from .settings import SettingsDialog
+        minimize_before = self.library.setting("experimental.minimize_library_during_game", "0")
         dialog = SettingsDialog(
             self.library, self, advanced_unlocked=self.advanced_settings_unlocked)
         if system in SYSTEMS:
@@ -685,6 +689,9 @@ class Window(QMainWindow):
             # and its widgets, timers and signal connections for the app's life.
             dialog.deleteLater()
         self.refresh()
+        if self.library.setting("experimental.minimize_library_during_game", "0") != minimize_before:
+            # Apply after closing the modal settings window so it remains usable.
+            self.sync_library_game_visibility()
 
     def rebuild_cover_cache(self):
         self.thumbnails.rebuild()
@@ -1515,14 +1522,40 @@ class Window(QMainWindow):
         if not process.ready_notified and b"EMULUNA_GAME_READY" in process.log:
             process.ready_notified = True
             self.notifications.post("Game opened in its own window.", 5000)
+            self.sync_library_game_visibility()
         if not process.focus_notified and b"EMULUNA_GAME_NEEDS_FOCUS" in process.log:
             process.focus_notified = True
-            minimize_library = self.library.setting(
-                "experimental.minimize_library_during_game", "0") == "1"
-            if (minimize_library and self.game_restore_state is None
-                    and self.isVisible() and not self.isMinimized()):
+
+    def sync_library_game_visibility(self, *, game_finished=False):
+        if self.closing:
+            return
+        minimize_library = self.library.setting(
+            "experimental.minimize_library_during_game", "0") == "1"
+        game_ready = any(process.ready_notified for process in self.processes.values())
+        if minimize_library and game_ready:
+            if (self.game_restore_state is None and self.isVisible()
+                    and not self.isMinimized()):
                 self.game_restore_state = self.windowState()
                 self.showMinimized()
+        elif (self.game_restore_state is not None
+              or (game_finished and not self.processes)):
+            state = (self.game_restore_state if self.game_restore_state is not None
+                     else self.windowState() & ~Qt.WindowMinimized)
+            self.game_restore_state = None
+            self.restore_library_window(state)
+
+    def restore_library_window(self, state):
+        # Wayland does not reliably report minimization, and clearing Qt's flag
+        # need not unminimize the compositor's surface. Remap it when returning.
+        if QApplication.platformName().lower().startswith("wayland"):
+            self.hide()
+        self.setWindowState(state & ~(Qt.WindowMinimized | Qt.WindowActive))
+        self.show()
+        self.raise_()
+        self.activateWindow()
+        handle = self.windowHandle()
+        if handle:
+            handle.requestActivate()
 
     def game_closed(self, game_id, code):
         process = self.processes.pop(game_id)
@@ -1531,12 +1564,7 @@ class Window(QMainWindow):
             self.notifications.post("The game stopped: " + (process.log.decode(errors="replace")[-2000:] or "The emulator process exited unexpectedly."))
         process.deleteLater()
         self.refresh()
-        if not self.processes and self.game_restore_state is not None and not self.closing:
-            state, self.game_restore_state = self.game_restore_state, None
-            self.setWindowState(state)
-            self.show()
-            self.raise_()
-            self.activateWindow()
+        self.sync_library_game_visibility(game_finished=True)
 
     def context_menu(self, position, view=None):
         view = view or self.games
@@ -1736,6 +1764,7 @@ class Window(QMainWindow):
         self.notifications.panel.close()
         self.prefetch_timer.stop()
         self.thumbnails.close()
+        save_window_size(self, self.library, 'window.library.size')
         self.library.close()
         event.accept()
 
@@ -1746,7 +1775,9 @@ def main():
     parser.add_argument("--data-dir")
     parser.add_argument("--screenshot", help=argparse.SUPPRESS)
     args = parser.parse_args()
+    prefer_native_desktop()
     app = QApplication(sys.argv[:1])
+    print("Desktop platform: " + app.platformName(), flush=True)
     configure_application(app)
     window = Window(Library(args.data_dir), auto_artwork=not args.screenshot)
     window.show()

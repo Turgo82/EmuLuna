@@ -13,7 +13,7 @@ from PySide6.QtCore import Qt, QPoint, QByteArray, QSize
 from PySide6.QtGui import QImage
 from PySide6.QtMultimedia import QAudio
 from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QMainWindow
 from emuluna.library import Library
 from emuluna.player import Player
 from emuluna.core import CoreError, saved_state_renderer
@@ -62,6 +62,95 @@ class GameplayTests(unittest.TestCase):
         tagged.write_bytes(b'OELINUX1\n' + json.dumps(
             {'format': 1, 'renderer': 'opengl'}).encode() + b'\npayload')
         self.assertEqual(saved_state_renderer(tagged), 'opengl')
+
+    def test_focus_pause_picks_up_live_settings_and_preserves_manual_pause(self):
+        player = self.make_player(frame_limit=0)
+        player.audio = Mock()
+        settings_library = Library(self.library.root)
+        try:
+            with patch.object(player, 'isActiveWindow', return_value=False):
+                player.keys = 1
+                player.refresh_controls()
+                self.assertTrue(player.focus_paused)
+                self.assertEqual(player.keys, 0)
+                player.audio.suspend.assert_called()
+                with patch.object(player.core, 'frame') as frame:
+                    player.tick()
+                    frame.assert_not_called()
+                settings_library.set_setting('pause_unfocused', '0')
+                player.refresh_controls()
+                self.assertFalse(player.focus_paused)
+                player.audio.resume.assert_called()
+                player.paused = True
+                settings_library.set_setting('pause_unfocused', '1')
+                player.refresh_controls()
+                self.assertTrue(player.focus_paused)
+            with (patch.object(player, 'isActiveWindow', return_value=True),
+                  patch.object(self.app, 'applicationState', return_value=Qt.ApplicationActive)):
+                player.refresh_focus_pause()
+                self.assertFalse(player.focus_paused)
+                self.assertTrue(player.paused)
+                player.audio.suspend.assert_called()
+        finally:
+            settings_library.close()
+
+    def test_application_deactivation_and_minimize_pause_game(self):
+        player = self.make_player(frame_limit=0)
+        with (patch.object(player, 'isActiveWindow', return_value=True),
+              patch.object(self.app, 'applicationState', return_value=Qt.ApplicationInactive)):
+            player.application_focus_changed(Qt.ApplicationInactive)
+            QTest.qWait(10)
+            self.assertTrue(player.focus_paused)
+        with patch.object(self.app, 'applicationState', return_value=Qt.ApplicationActive):
+            player.showMinimized()
+            QTest.qWait(10)
+            self.assertTrue(player.focus_paused)
+            player.showNormal()
+            player.activateWindow()
+            QTest.qWait(10)
+            self.assertFalse(player.focus_paused)
+
+    def test_switching_windows_pauses_and_returning_resumes(self):
+        player = self.make_player(frame_limit=0)
+        other = QMainWindow()
+        try:
+            other.show()
+            other.activateWindow()
+            QTest.qWait(150)
+            self.assertFalse(player.isActiveWindow())
+            self.assertTrue(player.focus_paused)
+            player.activateWindow()
+            QTest.qWait(150)
+            self.assertTrue(player.isActiveWindow())
+            self.assertFalse(player.focus_paused)
+        finally:
+            other.close()
+
+    def test_game_size_survives_fullscreen_close_for_its_console(self):
+        player = self.make_player()
+        QTest.qWait(250)
+        player.resize(710, 520)
+        QTest.qWait(250)
+        player.showMaximized()
+        QTest.qWait(250)
+        player.fullscreen()
+        QTest.qWait(250)
+        player.close()
+        saved = json.loads(self.library.setting('window.game.snes.size'))
+        self.assertEqual((saved['width'], saved['height']), (710, 520))
+        self.assertTrue(saved['maximized'])
+        self.assertEqual(self.library.setting('window.game.psx.size'), '')
+        reopened = self.make_player()
+        QTest.qWait(250)
+        self.assertTrue(reopened.isMaximized())
+        reopened.fullscreen()
+        QTest.qWait(250)
+        reopened.fullscreen()
+        QTest.qWait(250)
+        self.assertTrue(reopened.isMaximized())
+        reopened.showNormal()
+        QTest.qWait(250)
+        self.assertEqual(reopened.size(), QSize(710, 520))
 
     def test_integer_scaling_respects_non_square_n64_pixels(self):
         screen = Screen()
@@ -242,6 +331,7 @@ class GameplayTests(unittest.TestCase):
         settings.game_mode_keep_awake.setChecked(False)
         settings.minimize_library.setChecked(True)
         settings.frontend_renderer.setCurrentIndex(settings.frontend_renderer.findData("vulkan"))
+        settings.experimental_hardware.setChecked(False)
         settings.experimental_hardware.setChecked(True)
         settings.show_fps.setChecked(True)
         settings.show_renderer_debug.setChecked(True)

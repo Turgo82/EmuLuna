@@ -74,7 +74,7 @@ class DesktopIntegration(unittest.TestCase):
                 window.close()
             self.assertTrue(p.state_path("auto.oesavestate").exists())
 
-    def test_hidden_wayland_player_exposes_window_and_restores_library(self):
+    def test_ready_game_minimizes_library_without_a_focus_failure(self):
         with tempfile.TemporaryDirectory() as tmp:
             library = Library(Path(tmp) / "library")
             library.set_setting("experimental.minimize_library_during_game", "1")
@@ -85,7 +85,7 @@ class DesktopIntegration(unittest.TestCase):
             process.ready_notified = False
             process.focus_notified = False
             process.readAllStandardOutput.side_effect = [
-                QByteArray(b"EMULUNA_GAME_READY\nEMULUNA_GAME_NEEDS_FOCUS\n"),
+                QByteArray(b"EMULUNA_GAME_READY\n"),
                 QByteArray(),
             ]
             game_id = "focus-diagnostic"
@@ -95,7 +95,7 @@ class DesktopIntegration(unittest.TestCase):
                     window.process_output(process)
                     minimize.assert_called_once_with()
                 self.assertTrue(process.ready_notified)
-                self.assertTrue(process.focus_notified)
+                self.assertFalse(process.focus_notified)
                 self.assertIsNotNone(window.game_restore_state)
                 window.game_closed(game_id, 0)
                 self.assertIsNone(window.game_restore_state)
@@ -115,6 +115,7 @@ class DesktopIntegration(unittest.TestCase):
             process.focus_notified = False
             process.readAllStandardOutput.return_value = QByteArray(
                 b"EMULUNA_GAME_READY\nEMULUNA_GAME_NEEDS_FOCUS\n")
+            window.processes['default-diagnostic'] = process
             try:
                 with patch.object(window, "showMinimized") as minimize:
                     window.process_output(process)
@@ -122,6 +123,120 @@ class DesktopIntegration(unittest.TestCase):
                 self.assertTrue(process.ready_notified)
                 self.assertTrue(process.focus_notified)
                 self.assertIsNone(window.game_restore_state)
+            finally:
+                window.processes.clear()
+                window.close()
+                library.close()
+
+    def test_minimize_waits_for_ready_game_and_restores_after_last_game(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            library = Library(Path(tmp) / "library")
+            library.set_setting("experimental.minimize_library_during_game", "1")
+            window = Window(library, auto_artwork=False)
+            window.showMaximized()
+            original_state = window.windowState()
+            first, second = Mock(), Mock()
+            for process in (first, second):
+                process.ready_notified = False
+                process.focus_notified = False
+                process.log = bytearray()
+                process.readAllStandardOutput.return_value = QByteArray()
+            window.processes.update(first=first, second=second)
+            try:
+                window.sync_library_game_visibility()
+                self.assertFalse(window.isMinimized())
+                first.readAllStandardOutput.return_value = QByteArray(b"EMULUNA_GAME_READY\n")
+                window.process_output(first)
+                self.assertTrue(window.isMinimized())
+                second.readAllStandardOutput.return_value = QByteArray(b"EMULUNA_GAME_READY\n")
+                window.process_output(second)
+                window.game_closed('first', 0)
+                self.assertTrue(window.isMinimized())
+                window.game_closed('second', 0)
+                self.assertFalse(window.isMinimized())
+                self.assertEqual(window.windowState(), original_state)
+            finally:
+                window.processes.clear()
+                window.close()
+                library.close()
+
+    def test_disabling_minimize_restores_only_an_automatically_minimized_library(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            library = Library(Path(tmp) / "library")
+            window = Window(library, auto_artwork=False)
+            window.show()
+            process = Mock(ready_notified=True)
+            window.processes['running'] = process
+            try:
+                library.set_setting("experimental.minimize_library_during_game", "1")
+                window.sync_library_game_visibility()
+                self.assertTrue(window.isMinimized())
+                library.set_setting("experimental.minimize_library_during_game", "0")
+                window.sync_library_game_visibility()
+                self.assertFalse(window.isMinimized())
+                self.assertIsNone(window.game_restore_state)
+                window.showMinimized()
+                window.sync_library_game_visibility()
+                self.assertTrue(window.isMinimized())
+            finally:
+                window.processes.clear()
+                window.close()
+                library.close()
+
+    def test_last_game_restores_a_manually_minimized_library(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            library = Library(Path(tmp) / "library")
+            window = Window(library, auto_artwork=False)
+            window.showMaximized()
+            original_state = window.windowState()
+            process = Mock(ready_notified=True, focus_notified=False, log=bytearray())
+            process.readAllStandardOutput.return_value = QByteArray()
+            window.processes['running'] = process
+            try:
+                window.showMinimized()
+                self.assertIsNone(window.game_restore_state)
+                window.game_closed('running', 0)
+                self.assertTrue(window.isVisible())
+                self.assertFalse(window.isMinimized())
+                self.assertEqual(window.windowState(), original_state)
+            finally:
+                window.processes.clear()
+                window.close()
+                library.close()
+
+    def test_last_game_restores_library_when_desktop_loses_minimized_flag(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            library = Library(Path(tmp) / "library")
+            window = Window(library, auto_artwork=False)
+            window.show()
+            process = Mock(ready_notified=True, focus_notified=False, log=bytearray())
+            process.readAllStandardOutput.return_value = QByteArray()
+            window.processes['running'] = process
+            try:
+                with (patch.object(window, 'isMinimized', return_value=False),
+                      patch.object(window, 'restore_library_window') as restore):
+                    window.game_closed('running', 0)
+                    restore.assert_called_once()
+            finally:
+                window.processes.clear()
+                window.close()
+                library.close()
+
+    def test_wayland_restore_remaps_surface_and_requests_activation(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            library = Library(Path(tmp) / "library")
+            window = Window(library, auto_artwork=False)
+            window.show()
+            try:
+                with (patch.object(QApplication, 'platformName', return_value='wayland'),
+                      patch.object(window, 'hide', wraps=window.hide) as hide,
+                      patch.object(window, 'windowHandle') as handle):
+                    window.restore_library_window(Qt.WindowMaximized | Qt.WindowMinimized)
+                    hide.assert_called_once()
+                    handle.return_value.requestActivate.assert_called_once()
+                self.assertTrue(window.isVisible())
+                self.assertFalse(window.isMinimized())
+                self.assertTrue(window.isMaximized())
             finally:
                 window.close()
                 library.close()

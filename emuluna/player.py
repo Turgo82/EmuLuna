@@ -18,6 +18,7 @@ from .video_filters import ALL_FILTERS, valid_filter
 from .shaders import PRESETS, parameter_values
 from .shader_controls import ShaderControls
 from .core_manager import CoreManager
+from .desktop import prefer_native_desktop, restore_window_size, save_window_size
 from .systems import CATALOG, core_launch_options, core_render_options
 from .gamepad import Gamepad
 from .library import Library
@@ -25,7 +26,8 @@ from .gameplay import GameplayHUD, GameplayNotice, GameplayDiagnostics, set_hud_
 from .controls import LAYOUTS, layout_for, keyboard_buttons, keyboard_axes, combined_axes
 from .controller_profiles import SPECS, load_profile, keyboard_layout
 from .game_mode import GameMode
-from .hardware_render import HardwareCoreDisplay, probe_hardware_contexts
+from .hardware_render import (HardwareCoreDisplay, HardwareRenderError, VulkanCoreDisplay,
+                              probe_hardware_contexts, probe_vulkan_context)
 
 KEYS = keyboard_buttons(LAYOUTS["default"])
 
@@ -122,16 +124,21 @@ class Player(QMainWindow):
             catalog_id = selected.get("catalog_id") or selected["id"]
             adaptive = bool(CATALOG.get(catalog_id, {}).get("hardware_options"))
             capabilities = probe_hardware_contexts() if adaptive or compatible_hardware else (0, 0, 0, 0)
+            vulkan_available = bool(adaptive and CATALOG.get(catalog_id, {}).get("vulkan_options")
+                                    and probe_vulkan_context())
             n64_gpu_available = bool(capabilities[0] or capabilities[2])
             hardware_candidate = compatible_hardware and n64_gpu_available and (
                 saved_renderer == "opengl" if state_file else hardware_enabled
             )
             render_options, hardware_available, using_hardware = core_render_options(
-                catalog_id, capabilities, resuming=bool(state_file), saved_renderer=saved_renderer)
+                catalog_id, capabilities, vulkan_available=vulkan_available,
+                resuming=bool(state_file), saved_renderer=saved_renderer)
             if compatible_hardware and state_file and saved_renderer == "opengl" and not n64_gpu_available:
                 raise CoreError("This save state needs an OpenGL core context that is unavailable on this computer.")
-            if adaptive and state_file and saved_renderer == "opengl" and not hardware_available:
+            if adaptive and state_file and saved_renderer == "opengl" and not using_hardware:
                 raise CoreError("This save state needs an OpenGL core context that is unavailable on this computer.")
+            if adaptive and state_file and saved_renderer == "vulkan" and not vulkan_available:
+                raise CoreError("This save state needs a Vulkan core context that is unavailable on this computer.")
             self.hardware_state_compatibility = bool(
                 (compatible_hardware and hardware_enabled and n64_gpu_available and state_file
                  and saved_renderer != "opengl")
@@ -142,22 +149,56 @@ class Player(QMainWindow):
             # presents frames to the window. The libretro callback negotiates
             # only contexts this machine can actually create.
             core_options["allow_hardware"] = True
+            core_options["allow_vulkan"] = vulkan_available
             if hardware_candidate or render_options:
                 accelerated = dict(options.get("options", {}))
                 accelerated.update(render_options)
             if hardware_candidate:
                 accelerated.update({
                     "parallel-n64-gfxplugin": "gliden64",
-                    "parallel-n64-rspplugin": "auto",
+                    # GLideN64's automatic RSP leaves F-Zero X's road black;
+                    # the core's cxd4 RSP renders the same saved scene correctly.
+                    "parallel-n64-rspplugin": (
+                        "cxd4" if self.game["title"].casefold().startswith("f-zero x") else "auto"
+                    ),
+                    # Keep adjacent 2D texture rectangles aligned in scenes
+                    # such as Mischief Makers' save-selection screen.
+                    "parallel-n64-gliden64-EnableNativeResTexrects": "Optimized",
                 })
             if hardware_candidate or render_options:
                 core_options["options"] = accelerated
             print("Core: " + selected["id"], flush=True)
-            self.core = Core(rom_path, self.game["system"], save_directory, **core_options)
-            if self.core.hardware_requested:
-                print("Core requested hardware context: " +
-                      ("OpenGL Core" if self.core.hardware_context_type == 3 else "OpenGL"), flush=True)
-                HardwareCoreDisplay(self.core)
+            attempts = [render_options]
+            if catalog_id == "mednafen_psx_hw" and not state_file:
+                if render_options == CATALOG[catalog_id].get("vulkan_options"):
+                    gl_options, _, gl_usable = core_render_options(catalog_id, capabilities)
+                    if gl_usable:
+                        attempts.append(gl_options)
+                if render_options != CATALOG[catalog_id].get("software_options"):
+                    attempts.append(CATALOG[catalog_id]["software_options"])
+            for index, candidate in enumerate(attempts):
+                attempt_options = dict(core_options)
+                if candidate != render_options:
+                    attempt_options["options"] = {**options.get("options", {}), **candidate}
+                    attempt_options["allow_vulkan"] = False
+                try:
+                    self.core = Core(rom_path, self.game["system"], save_directory, **attempt_options)
+                    if self.core.hardware_requested:
+                        kind = ("Vulkan" if self.core.hardware_context_type == 6 else
+                                "OpenGL Core" if self.core.hardware_context_type == 3 else "OpenGL")
+                        print("Core requested hardware context: " + kind, flush=True)
+                        (VulkanCoreDisplay if self.core.hardware_context_type == 6 else
+                         HardwareCoreDisplay)(self.core)
+                    elif candidate != CATALOG.get(catalog_id, {}).get("software_options") and len(attempts) > 1:
+                        raise CoreError("The core declined the requested hardware renderer.")
+                    break
+                except (CoreError, HardwareRenderError) as error:
+                    if hasattr(self, "core"):
+                        self.core.close()
+                        del self.core
+                    if index + 1 == len(attempts):
+                        raise
+                    print(f"Core renderer failed: {error}; trying the next available renderer.", flush=True)
             if self.hardware_state_compatibility:
                 self.core.renderer = "Software (save-state compatibility)"
             # The old Snes9x adapter wrote raw SRAM. Import only into the matching
@@ -231,6 +272,7 @@ class Player(QMainWindow):
         self.setCentralWidget(self.screen)
         self.setWindowTitle(f"{self.game['title']} — {selected['name'] + ' (Libretro)' if selected else 'EmuLuna'}")
         self.resize(850, 630)
+        self.window_size_key = f"window.game.{self.game['system']}.size"
         self.setStyleSheet("""
             QMainWindow,QToolBar,QStatusBar,QMenuBar,QMenu {background:palette(window);color:palette(window-text)}
             QToolBar {spacing:12px;padding:8px}
@@ -353,6 +395,9 @@ class Player(QMainWindow):
         self.controls_timer = QTimer(self)
         self.controls_timer.timeout.connect(self.refresh_controls)
         self.controls_timer.start(1000)
+        QApplication.instance().applicationStateChanged.connect(self.application_focus_changed)
+        restore_window_size(self, library, self.window_size_key)
+        self.windowed_state = self.windowState()
         if library.setting("fullscreen_default", "0") == "1" and not frame_limit:
             QTimer.singleShot(0, self.initial_fullscreen)
 
@@ -419,6 +464,7 @@ class Player(QMainWindow):
         """Pick up settings from the library process without restarting a core."""
         if self.closed:
             return
+        self.refresh_focus_pause()
         self.refresh_game_mode()
         system = self.game['system']
         self.rumble_enabled = self.library.setting("controller_rumble", "1") == "1"
@@ -847,7 +893,15 @@ class Player(QMainWindow):
 
     def fullscreen(self):
         leaving = self.isFullScreen()
-        self.showNormal() if leaving else self.showFullScreen()
+        if leaving:
+            size = self._emuluna_windowed_size
+            self.showNormal()
+            self.resize(size)
+            if self.windowed_state & Qt.WindowMaximized:
+                self.showMaximized()
+        else:
+            self.windowed_state = self.windowState()
+            self.showFullScreen()
         self.menuBar().hide()
         self.statusBar().setVisible(leaving)
         self.fullscreen_action.setText("Full screen" if leaving else "Exit full screen")
@@ -867,14 +921,30 @@ class Player(QMainWindow):
         for pad in self.pads:
             pad.stop_rumble()
 
-    def changeEvent(self, event):
-        from PySide6.QtCore import QEvent
-        if event.type() == QEvent.ActivationChange and hasattr(self, "keys") and not self.closed:
-            if self.isActiveWindow() and hasattr(self, 'controls_timer'):
-                self.refresh_controls()
-            self.focus_paused = self.pause_unfocused and not self.isActiveWindow() and not self.frame_limit
+    def refresh_focus_pause(self):
+        if self.closed or not hasattr(self, 'controls_timer'):
+            return
+        self.pause_unfocused = self.library.setting("pause_unfocused", "1") == "1"
+        active = (self.isActiveWindow() and not self.isMinimized()
+                  and QApplication.instance().applicationState() == Qt.ApplicationActive)
+        paused = self.pause_unfocused and not active and not self.frame_limit
+        if paused != self.focus_paused:
+            self.focus_paused = paused
             self.clear_input()
             self.sync_audio_pause()
+            self.next_frame = time.perf_counter()
+
+    def application_focus_changed(self, state):
+        # Qt updates the native window's activation after application state.
+        QTimer.singleShot(0, self.refresh_focus_pause)
+
+    def changeEvent(self, event):
+        from PySide6.QtCore import QEvent
+        if (event.type() in (QEvent.ActivationChange, QEvent.WindowStateChange)
+                and hasattr(self, 'controls_timer') and not self.closed):
+            self.clear_input()
+            self.refresh_focus_pause()
+            QTimer.singleShot(0, self.refresh_focus_pause)
         super().changeEvent(event)
 
     def keyPressEvent(self, event):
@@ -929,9 +999,12 @@ class Player(QMainWindow):
             event.accept()
             return
         self.closed = True
+        save_window_size(self, self.library, self.window_size_key,
+                         state=self.windowed_state if self.isFullScreen() else None)
         self.timer.stop()
         self.battery_timer.stop()
         self.controls_timer.stop()
+        QApplication.instance().applicationStateChanged.disconnect(self.application_focus_changed)
         if self.filter_timer.isActive():
             self.persist_shader_parameters()
         self.filter_timer.stop()
@@ -964,7 +1037,9 @@ def main():
     parser.add_argument("--core-id")
     parser.add_argument("--core-sha256")
     args = parser.parse_args()
+    prefer_native_desktop()
     app = QApplication(sys.argv[:1])
+    print("Desktop platform: " + app.platformName(), flush=True)
     configure_application(app)
     library = Library(args.data_dir)
     try:

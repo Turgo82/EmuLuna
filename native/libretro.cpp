@@ -5,6 +5,7 @@
 #include "core.h"
 #include "vendor/libretro.h"
 #include "vfs.h"
+#include "vulkan_host.h"
 #include <dlfcn.h>
 #include <algorithm>
 #include <atomic>
@@ -22,11 +23,12 @@
 struct Host {
     void *module = nullptr;
     bool initialized = false, loaded = false, shutdown = false;
-    bool hardware_allowed = false, hardware_active = false;
+    bool hardware_allowed = false, vulkan_allowed = false, hardware_active = false;
     unsigned gl_major = 0, gl_minor = 0, core_major = 0, core_minor = 0;
     bool hardware_reset = false, last_frame_hardware = false;
     uintptr_t hardware_framebuffer = 0;
     retro_hw_render_callback hardware{};
+    std::unique_ptr<VulkanHost> vulkan;
     int16_t axes[4][4] = {};
     unsigned keys[4] = {};
     bool input_ports[4] = {true, false, false, false};
@@ -59,6 +61,7 @@ struct Host {
 static Host *active = nullptr;
 static std::map<std::string, std::string> launch_options;
 static bool launch_hardware_allowed = false;
+static bool launch_vulkan_allowed = false;
 static unsigned launch_gl_major = 0, launch_gl_minor = 0, launch_core_major = 0, launch_core_minor = 0;
 static std::string last_error;
 
@@ -109,7 +112,8 @@ static bool environment(unsigned command, void *data) {
     switch (command) {
     case RETRO_ENVIRONMENT_GET_PREFERRED_HW_RENDER:
         if (!active->hardware_allowed || !data) return false;
-        if (active->core_major) *static_cast<unsigned*>(data) = RETRO_HW_CONTEXT_OPENGL_CORE;
+        if (active->vulkan_allowed) *static_cast<unsigned*>(data) = RETRO_HW_CONTEXT_VULKAN;
+        else if (active->core_major) *static_cast<unsigned*>(data) = RETRO_HW_CONTEXT_OPENGL_CORE;
         else if (active->gl_major) *static_cast<unsigned*>(data) = RETRO_HW_CONTEXT_OPENGL;
         else return false;
         return true;
@@ -120,6 +124,17 @@ static bool environment(unsigned command, void *data) {
                            requested->context_type == RETRO_HW_CONTEXT_OPENGL ? "OpenGL" :
                            requested->context_type == RETRO_HW_CONTEXT_VULKAN ? "Vulkan" : "unsupported type";
         fprintf(stderr, "Core requested hardware context: %s\n", kind);
+        if (requested->context_type == RETRO_HW_CONTEXT_VULKAN) {
+            if (!active->hardware_allowed || !active->vulkan_allowed || !requested->context_reset) {
+                fprintf(stderr, "Core Vulkan context unavailable.\n");
+                return false;
+            }
+            active->vulkan.reset(new VulkanHost());
+            active->hardware = *requested;
+            active->hardware_active = true;
+            fprintf(stderr, "Creating Vulkan context for core\n");
+            return true;
+        }
         unsigned major = requested->context_type == RETRO_HW_CONTEXT_OPENGL_CORE ? active->core_major :
                          requested->context_type == RETRO_HW_CONTEXT_OPENGL ? active->gl_major : 0;
         unsigned minor = requested->context_type == RETRO_HW_CONTEXT_OPENGL_CORE ? active->core_minor : active->gl_minor;
@@ -139,6 +154,21 @@ static bool environment(unsigned command, void *data) {
         active->hardware_active = true;
         return true;
     }
+    case RETRO_ENVIRONMENT_GET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_SUPPORT: {
+        if (!data) return false;
+        auto *requested = static_cast<retro_hw_render_context_negotiation_interface*>(data);
+        requested->interface_version = requested->interface_type ==
+            RETRO_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_VULKAN && active->vulkan ? 1 : 0;
+        return true;
+    }
+    case RETRO_ENVIRONMENT_SET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE:
+        return active->vulkan && active->vulkan->set_negotiation(
+            static_cast<const retro_hw_render_context_negotiation_interface*>(data));
+    case RETRO_ENVIRONMENT_GET_HW_RENDER_INTERFACE:
+        if (!data || !active->vulkan || !active->vulkan->interface()->device) return false;
+        *static_cast<const retro_hw_render_interface**>(data) =
+            reinterpret_cast<const retro_hw_render_interface*>(active->vulkan->interface());
+        return true;
     case RETRO_ENVIRONMENT_GET_VFS_INTERFACE:
         return emuluna_vfs::interface(static_cast<retro_vfs_interface_info*>(data));
     case RETRO_ENVIRONMENT_GET_CAN_DUPE: *static_cast<bool*>(data) = true; return true;
@@ -194,12 +224,17 @@ static bool environment(unsigned command, void *data) {
     case RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO: {
         auto info = static_cast<retro_system_av_info*>(data);
         if (!valid_av(*info)) return false;
+        const unsigned maximum_width = std::max(info->geometry.base_width, info->geometry.max_width);
+        const unsigned maximum_height = std::max(info->geometry.base_height, info->geometry.max_height);
+        if (maximum_width > 4096 || maximum_height > 4096) return false;
         if (active->rate != info->timing.sample_rate) {
             active->phase = active->sum_left = active->sum_right = active->accumulated = 0;
             active->have_previous = false;
         }
         active->fps = info->timing.fps; active->rate = info->timing.sample_rate;
         active->aspect = info->geometry.aspect_ratio;
+        active->max_width = maximum_width;
+        active->max_height = maximum_height;
         return true;
     }
     case RETRO_ENVIRONMENT_SET_GEOMETRY: {
@@ -227,6 +262,9 @@ static void video(const void *data, unsigned width, unsigned height, size_t pitc
         }
         active->width = width;
         active->height = height;
+        if (active->hardware.context_type == RETRO_HW_CONTEXT_VULKAN &&
+            (!active->vulkan || !active->vulkan->capture(width, height, active->pixels, active->error)))
+            return;
         active->last_frame_hardware = true;
         return;
     }
@@ -316,6 +354,16 @@ void el_set_runtime_option(void *instance, const char *key, const char *value) {
 void el_set_hardware_allowed(int allowed) {
     if (!active) launch_hardware_allowed = allowed != 0;
 }
+void el_set_vulkan_allowed(int allowed) {
+    if (!active) launch_vulkan_allowed = allowed != 0;
+}
+int el_vulkan_available() { return VulkanHost::available(); }
+int el_vulkan_initialize(void *instance) {
+    auto *h = static_cast<Host*>(instance);
+    if (!h || !h->vulkan || h->hardware.context_type != RETRO_HW_CONTEXT_VULKAN) return 0;
+    if (!h->vulkan->initialize(h->error)) return 0;
+    return 1;
+}
 void el_set_hardware_capabilities(unsigned gl_major, unsigned gl_minor,
                                   unsigned core_major, unsigned core_minor) {
     if (active) return;
@@ -348,7 +396,8 @@ void el_set_hardware_framebuffer(void *instance, uintptr_t framebuffer) {
 }
 int el_hardware_context_reset(void *instance) {
     auto h = static_cast<Host*>(instance);
-    if (!h || !h->hardware_active || !h->hardware_framebuffer || !h->hardware.context_reset) return 0;
+    if (!h || !h->hardware_active || !h->hardware.context_reset ||
+        (h->hardware.context_type != RETRO_HW_CONTEXT_VULKAN && !h->hardware_framebuffer)) return 0;
     h->hardware.context_reset(); h->hardware_reset = true; return 1;
 }
 void el_hardware_context_destroy(void *instance) {
@@ -395,6 +444,7 @@ void *el_libretro_create(const char *core, const char *rom, const char *save, co
     if (active) { last_error = "A Libretro core is already running in this process."; return nullptr; }
     auto h = new Host(); h->options = launch_options; launch_options.clear();
     h->hardware_allowed = launch_hardware_allowed; launch_hardware_allowed = false;
+    h->vulkan_allowed = launch_vulkan_allowed; launch_vulkan_allowed = false;
     h->gl_major = launch_gl_major; h->gl_minor = launch_gl_minor;
     h->core_major = launch_core_major; h->core_minor = launch_core_minor;
     launch_gl_major = launch_gl_minor = launch_core_major = launch_core_minor = 0;

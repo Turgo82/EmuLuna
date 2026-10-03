@@ -31,6 +31,9 @@ int el_save_state(void* instance, const char* path);
 int el_load_state(void* instance, const char* path);
 void el_flush(void* instance);
 void el_set_hardware_allowed(int allowed);
+void el_set_vulkan_allowed(int allowed);
+int el_vulkan_available(void);
+int el_vulkan_initialize(void* instance);
 void el_set_hardware_capabilities(unsigned gl_major, unsigned gl_minor,
                                   unsigned core_major, unsigned core_minor);
 int el_hardware_active(void* instance);

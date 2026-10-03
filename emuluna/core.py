@@ -32,7 +32,7 @@ def saved_state_renderer(path):
 
 class Core:
     def __init__(self, rom, system, save_dir, *, libretro_path=None, core_id=None, system_dir=None,
-                 options=None, content_digest=None, allow_hardware=False):
+                 options=None, content_digest=None, allow_hardware=False, allow_vulkan=False):
         self.rom = Path(rom).resolve()
         if libretro_path is None:
             raise CoreError("A standard libretro core is required. Download a core for this system in Settings.")
@@ -93,12 +93,18 @@ class Core:
         self.lib.el_set_hardware_allowed.argtypes, self.lib.el_set_hardware_allowed.restype = [C.c_int], None
         self.lib.el_set_hardware_capabilities.argtypes = [C.c_uint] * 4
         self.lib.el_set_hardware_capabilities.restype = None
+        self.lib.el_set_vulkan_allowed.argtypes = [C.c_int]
+        self.lib.el_set_vulkan_allowed.restype = None
+        self.lib.el_vulkan_initialize.argtypes = [C.c_void_p]
+        self.lib.el_vulkan_initialize.restype = C.c_int
         self.lib.el_clear_options()
         capabilities = (0, 0, 0, 0)
         if allow_hardware:
             from .hardware_render import probe_hardware_contexts
             capabilities = probe_hardware_contexts()
-        self.lib.el_set_hardware_allowed(int(bool(allow_hardware and any(capabilities))))
+        self.lib.el_set_hardware_allowed(int(bool(allow_hardware and
+                                                  (any(capabilities) or allow_vulkan))))
+        self.lib.el_set_vulkan_allowed(int(bool(allow_hardware and allow_vulkan)))
         self.lib.el_set_hardware_capabilities(*capabilities)
         launch_options = core_launch_options(core_id, system)
         launch_options.update(options or {})
@@ -126,12 +132,13 @@ class Core:
         if not self.hardware_requested:
             raise CoreError("This core did not request a supported hardware renderer.")
         self.hardware = hardware
-        self.lib.el_set_hardware_framebuffer(self.handle, hardware.fbo.handle())
+        framebuffer = hardware.fbo.handle() if self.hardware_context_type != 6 else 0
+        self.lib.el_set_hardware_framebuffer(self.handle, framebuffer)
         if not self.lib.el_hardware_context_reset(self.handle):
             self.hardware = None
-            raise CoreError("The core could not initialize its OpenGL renderer.")
+            raise CoreError("The core could not initialize its hardware renderer.")
         self.renderer = hardware.description
-        self.state_renderer = "opengl"
+        self.state_renderer = "vulkan" if self.hardware_context_type == 6 else "opengl"
 
     def frame(self, keys=0, axes=(0, 0, 0, 0), players=()):
         if not self.handle:
@@ -260,7 +267,7 @@ class Core:
                     hardware.begin()
                     hardware_current = True
                 except RuntimeError as error:
-                    print(f"OpenGL core context unavailable during unload: {error}", flush=True)
+                    print(f"Core hardware context unavailable during unload: {error}", flush=True)
             try:
                 if hardware_current:
                     try:

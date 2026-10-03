@@ -51,6 +51,9 @@ fullscreen, and F12 takes a screenshot. Closing a game creates an automatic
 state; starting it again can resume that state. Manual states and in-game
 saves are separate.
 
+Library and game windows remember their size and maximized state. On Wayland
+desktops, EmuLuna uses native Wayland windows; KDE title bars match its theme.
+
 EmuLuna keeps your library in `~/.local/share/emuluna` by default (or under
 `$XDG_DATA_HOME` when set).
 If an older `openemu-linux` library exists, EmuLuna opens it in place. It
@@ -67,10 +70,10 @@ library folder, outside the AppImage.
 **Auto** display mode tries Vulkan, then OpenGL, then software presentation.
 Software-rendered cores can still be displayed through Vulkan or OpenGL.
 Hardware-rendered cores must receive the context they request; EmuLuna
-currently supports libretro OpenGL contexts but **not libretro Vulkan
-contexts**. Thus a Vulkan display does not enable Beetle PSX HW's Vulkan
-renderer. Its OpenGL mode is experimental and may show glitches. If a game or
-save state has trouble, try another installed core or its software mode.
+supports libretro OpenGL contexts and Beetle PSX HW's Vulkan context. Beetle
+PSX HW tries Vulkan, then OpenGL, then software for new games. Save states
+resume with the renderer that created them. Beetle PSX HW also needs a
+region-matched PlayStation BIOS supplied by the user.
 
 The video-filter menu includes CRT, LCD, smoothing, and other bundled
 community shaders. Some effects require a capable GPU. See the

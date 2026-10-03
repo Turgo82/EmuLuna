@@ -131,6 +131,21 @@ class SystemManagementTests(unittest.TestCase):
             self.assertEqual(options[key], software_value)
         self.assertFalse(core_render_options('mednafen_psx_hw', (4, 6, 0, 0))[1])
 
+    def test_beetle_hw_prefers_vulkan_but_resumes_with_the_saved_renderer(self):
+        core_id = 'mednafen_psx_hw'
+        full_gl = (4, 6, 4, 6)
+        no_gl = (0, 0, 0, 0)
+        def renderer(gl, **kwargs):
+            return core_render_options(core_id, gl, vulkan_available=True, **kwargs)[0][
+                'beetle_psx_hw_renderer']
+        self.assertEqual(renderer(full_gl), 'hardware_vk')
+        self.assertEqual(renderer(no_gl), 'hardware_vk')
+        self.assertEqual(renderer(full_gl, resuming=True, saved_renderer='vulkan'), 'hardware_vk')
+        self.assertEqual(renderer(full_gl, resuming=True, saved_renderer='opengl'), 'hardware_gl')
+        self.assertEqual(renderer(full_gl, resuming=True, saved_renderer='software'), 'software')
+        self.assertEqual(core_render_options(core_id, no_gl, resuming=True,
+                         saved_renderer='vulkan')[0]['beetle_psx_hw_renderer'], 'software')
+
     def test_default_download_only_missing_cores_and_removal_keeps_games_saves(self):
         self.assertEqual(self.manager.missing_defaults(self.library, ['gb','gbc','nes']), ['gambatte','nestopia'])
         with patch('emuluna.core_manager.probe', return_value={'name':'Gambatte','version':'test','extensions':'gb|gbc'}):

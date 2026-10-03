@@ -15,19 +15,25 @@ def core_launch_options(core_id, system):
     return options
 
 
-def core_render_options(core_id, gl_capabilities, *, resuming=False, saved_renderer=None):
+def core_render_options(core_id, gl_capabilities, *, vulkan_available=False,
+                        resuming=False, saved_renderer=None):
     """Choose a core's GPU or software options without changing its display API."""
     record = CATALOG.get(core_id, {})
-    if not record.get("hardware_options"):
+    if not record.get("hardware_options") and not record.get("vulkan_options"):
         return {}, False, False
     compatibility_gl, _, core_gl, _ = gl_capabilities
     profile = record.get("hardware_profile", "either")
-    available = (bool(core_gl) if profile == "core" else
-                 bool(compatibility_gl) if profile == "compat" else
-                 bool(compatibility_gl or core_gl))
-    use_hardware = available and (not resuming or saved_renderer == "opengl")
-    key = "hardware_options" if use_hardware else "software_options"
-    return dict(record.get(key, {})), available, use_hardware
+    gl_available = bool(record.get("hardware_options")) and (bool(core_gl) if profile == "core" else
+                    bool(compatibility_gl) if profile == "compat" else
+                    bool(compatibility_gl or core_gl))
+    vk_available = bool(record.get("vulkan_options") and vulkan_available)
+    if resuming:
+        key = ("vulkan_options" if saved_renderer == "vulkan" and vk_available else
+               "hardware_options" if saved_renderer == "opengl" and gl_available else
+               "software_options")
+    else:
+        key = "vulkan_options" if vk_available else "hardware_options" if gl_available else "software_options"
+    return dict(record.get(key, {})), gl_available or vk_available, key != "software_options"
 
 
 @dataclass(frozen=True)

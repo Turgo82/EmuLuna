@@ -8,6 +8,7 @@ from PySide6.QtGui import QPalette, QPen, QColor
 from PySide6.QtWidgets import QStyle, QApplication, QWidget
 
 EMULUNA_COLOR_SCHEME = Path(__file__).with_name('data') / 'EmuLuna.colors'
+EMULUNA_WINDOW_COLOR_SCHEME = Path(__file__).with_name('data') / 'EmuLuna-Window.colors'
 
 LIBRARY_STYLE = """
 QMainWindow {background:palette(window); color:palette(window-text);}
@@ -89,6 +90,8 @@ class SystemThemeBinding(QObject):
         super().__init__(app)
         self.app = app
         self.use_system = True
+        from .native_decoration import native_decoration_binding
+        self.decoration = native_decoration_binding(app)
         self.timer = QTimer(self)
         self.timer.setSingleShot(True)
         self.timer.timeout.connect(self.refresh)
@@ -100,6 +103,9 @@ class SystemThemeBinding(QObject):
         app.installEventFilter(self)
 
     def eventFilter(self, watched, event):
+        if (event.type() == QEvent.Hide and isinstance(watched, QWidget)
+                and watched.isWindow() and self.decoration):
+            self.decoration.release(watched.windowHandle())
         # Menus and dialogs created after a theme switch otherwise start with
         # the application's OS palette (which we deliberately keep intact).
         if event.type() == QEvent.Show and isinstance(watched, QWidget) and watched.isWindow():
@@ -135,6 +141,10 @@ class SystemThemeBinding(QObject):
         # Update them too, especially when starting directly in the dark theme.
         for widget in widgets:
             widget.setPalette(palette)
+            if self.decoration and widget.isWindow():
+                scheme = (EMULUNA_COLOR_SCHEME if widget.property('emuluna.library_window')
+                          else EMULUNA_WINDOW_COLOR_SCHEME)
+                self.decoration.apply(widget, '' if self.use_system else str(scheme))
         # QSS resolves palette() through the application palette on some Qt
         # styles. Resolve explicitly for the optional local dark theme, without
         # replacing the application's native palette or losing OS updates.
