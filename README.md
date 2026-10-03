@@ -15,7 +15,8 @@ still in development. EmuLuna is independent of RetroArch and OpenEmu.
 
 [Website](https://emuluna-retro-library.turgo82.chatgpt.site/) ·
 [GitHub releases](https://github.com/Turgo82/EmuLuna/releases) ·
-[Support EmuLuna](https://buymeacoffee.com/turgo)
+<br>
+<a href="https://www.buymeacoffee.com/turgo" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me a Coffee" style="height: 60px !important;width: 217px !important;" ></a>
 
 ## Get started
 
