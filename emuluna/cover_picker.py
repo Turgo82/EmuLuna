@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (QDialog, QDialogButtonBox, QHBoxLayout, QLabel,
     QStyle, QVBoxLayout)
 
 from .artwork import (BackupArt, Cancelled, Catalog, Downloads, MIB,
-                      closest_cover_names, image_png, preferred_region,
+                      closest_cover_names, image_webp, preferred_region,
                       thumbnail_url)
 from .library import SYSTEMS
 from .metadata import metadata_for_cover, title_catalog_rows
@@ -130,7 +130,9 @@ class CoverSearchWorker(QThread):
                 downloads.check()
                 url = thumbnail_url(self.system, name)
                 try:
-                    image = image_png(downloads.get(url, 12 * MIB))
+                    # Keep an untouched preview; apply the user's compression
+                    # quality once, only when saving the selected cover.
+                    image = image_webp(downloads.get(url, 12 * MIB), quality=100)
                 except Cancelled:
                     raise
                 except Exception:

@@ -55,13 +55,14 @@ class Rebranding(unittest.TestCase):
             'menu', 'plus', 'search', 'general', 'gameplay', 'controls',
             'cores', 'downloads', 'bios', 'advanced', 'library', 'states',
             'screenshots', 'grid', 'list', 'bell', 'power', 'fullscreen',
-            'fullscreen-exit',
+            'fullscreen-exit', 'file-verified', 'file-unverified',
         }
         self.assertEqual({path.stem for path in UI_ICON_DIR.glob('*.svg')}, names)
         for name in names:
             source = (UI_ICON_DIR / f'{name}.svg').read_text(encoding='utf-8')
             self.assertIn('<svg', source)
-            self.assertIn('viewBox="0 0 24 24"', source)
+            size = 20 if name in ('file-verified', 'file-unverified') else 24
+            self.assertIn(f'viewBox="0 0 {size} {size}"', source)
             icon = navigation_icon(name)
             self.assertFalse(icon.isNull())
             for mode, state in (
@@ -136,7 +137,7 @@ class Rebranding(unittest.TestCase):
                     chime.assert_called_once_with()
                     spin.assert_called_once_with()
 
-                    # Once unlocked, extra clicks cannot retrigger the effect.
+                    # A single extra click does not toggle or retrigger it.
                     QTest.mouseClick(dialog.logo_button, Qt.LeftButton)
                     chime.assert_called_once_with()
                     spin.assert_called_once_with()
@@ -155,6 +156,53 @@ class Rebranding(unittest.TestCase):
                 if settings:
                     settings.close()
                 window.close()
+
+    def test_advanced_unlock_persists_toggles_off_and_notice_opens_settings(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder) / 'library'
+            lib = Library(root)
+            window = Window(lib, auto_artwork=False)
+            try:
+                window.show_about()
+                for _ in range(4):
+                    QTest.mouseClick(window.about_dialog.logo_button, Qt.LeftButton)
+                self.assertEqual(lib.setting('advanced.unlocked'), '1')
+                window.about_dialog.close()
+            finally:
+                window.close()
+
+            lib = Library(root)
+            window = Window(lib, auto_artwork=False)
+            try:
+                self.assertTrue(window.advanced_settings_unlocked)
+                settings = SettingsDialog(lib)
+                self.assertIn('advanced', settings.page_keys)
+                settings.close()
+                window.show_about()
+                self.assertTrue(window.about_dialog.unlock_notice.isVisible())
+                with patch.object(window, 'open_settings') as open_settings:
+                    QTest.mouseClick(window.about_dialog.unlock_notice, Qt.LeftButton)
+                    QTest.qWait(20)
+                    open_settings.assert_called_once_with(page='advanced')
+                window.show_about()
+                for _ in range(3):
+                    QTest.mouseClick(window.about_dialog.logo_button, Qt.LeftButton)
+                self.assertTrue(window.advanced_settings_unlocked)
+                QTest.mouseClick(window.about_dialog.logo_button, Qt.LeftButton)
+                self.assertFalse(window.advanced_settings_unlocked)
+                self.assertFalse(window.about_dialog.unlock_notice.isVisible())
+                self.assertEqual(lib.setting('advanced.unlocked'), '0')
+                settings = SettingsDialog(lib)
+                self.assertNotIn('advanced', settings.page_keys)
+                settings.close()
+                window.about_dialog.close()
+            finally:
+                window.close()
+            lib = Library(root)
+            try:
+                self.assertEqual(lib.setting('advanced.unlocked'), '0')
+            finally:
+                lib.close()
 
     def test_about_unlock_falls_back_when_multimedia_is_unavailable(self):
         with patch('emuluna.app.QSoundEffect', None), \

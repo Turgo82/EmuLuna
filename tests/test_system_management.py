@@ -40,7 +40,7 @@ class SystemManagementTests(unittest.TestCase):
     def test_all_systems_sorted_icons_defaults_and_flat_catalog(self):
         names = [system.name for system in SYSTEMS.values()]
         self.assertEqual(names, sorted(names, key=str.casefold))
-        self.assertEqual(len(SYSTEMS), 32)
+        self.assertEqual(len(SYSTEMS), 33)
         for key, system in SYSTEMS.items():
             self.assertTrue(system.icon.is_file(), key)
             self.assertIn(key, CATALOG[system.default_core]['systems'])

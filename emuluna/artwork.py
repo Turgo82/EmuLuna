@@ -307,7 +307,15 @@ class BackupArt:
         return results[:3]
 
 
-def image_png(data):
+def webp_quality(library):
+    try:
+        quality = int(library.setting('artwork.webp_quality', '85'))
+    except (ValueError, TypeError):
+        return 85
+    return quality if quality in (75, 85, 95, 100) else 85
+
+
+def image_webp(data, *, resize=True, quality=85):
     """Validate downloaded bytes and bound decoded image memory before saving."""
     buffer = QBuffer()
     buffer.setData(QByteArray(data))
@@ -317,16 +325,86 @@ def image_png(data):
     size = reader.size()
     if not size.isValid() or size.width() * size.height() > 20_000_000:
         raise ValueError("Invalid or oversized cover image")
-    if size.width() > 1000 or size.height() > 1000:
+    if resize and (size.width() > 1000 or size.height() > 1000):
         reader.setScaledSize(size.scaled(QSize(1000, 1000), Qt.KeepAspectRatio))
     image = reader.read()
     if image.isNull():
         raise ValueError("The artwork server did not return an image")
     output = QBuffer()
     output.open(QIODevice.WriteOnly)
-    if not image.save(output, "PNG"):
+    # Quality 85 balances size/detail; Qt uses lossless encoding at 100.
+    if not image.save(output, "WEBP", quality):
         raise ValueError("Could not save cover image")
     return bytes(output.data())
+
+
+class CoverConversionWorker(QThread):
+    """Convert existing box art off-thread without changing metadata or selection."""
+    progress = Signal(str)
+    changed = Signal(str)
+    result = Signal(dict)
+
+    def __init__(self, root):
+        super().__init__()
+        self.root = root
+
+    @staticmethod
+    def remove_unused(library, path):
+        # Only dispose of EmuLuna's managed artwork, never an external source.
+        if (path.is_symlink() or not path.absolute().is_relative_to(library.root / 'covers')
+                or not path.resolve().is_relative_to((library.root / 'covers').resolve())):
+            return
+        references = library.db.execute('SELECT cover FROM games WHERE instr(cover, ?) > 0', (path.name,))
+        if any((library.root / row['cover']).resolve() == path.resolve() for row in references):
+            return
+        path.unlink(missing_ok=True)
+
+    def run(self):
+        library = None
+        summary = {'converted': 0, 'skipped': 0, 'failed': 0, 'cancelled': False, 'error': ''}
+        try:
+            library = Library(self.root)
+            quality = webp_quality(library)
+            games = library.db.execute('SELECT * FROM games WHERE cover IS NOT NULL').fetchall()
+            for number, game in enumerate(games, 1):
+                if self.isInterruptionRequested():
+                    summary['cancelled'] = True
+                    break
+                self.progress.emit(f"Converting covers… {number} of {len(games)} · {game['title']}")
+                source = library.root / game['cover']
+                target = None
+                try:
+                    if source.name.endswith(f'.q{quality}.webp'):
+                        summary['skipped'] += 1
+                        continue
+                    before = source.stat()
+                    if before.st_size > 32 * MIB:
+                        raise ValueError('Cover file is too large')
+                    image = image_webp(source.read_bytes(), resize=False, quality=quality)
+                    if self.isInterruptionRequested():
+                        summary['cancelled'] = True
+                        break
+                    after = source.stat()
+                    if (before.st_mtime_ns, before.st_size) != (after.st_mtime_ns, after.st_size):
+                        raise ValueError('Cover changed during conversion; retry it')
+                    target = Path('covers') / f"{game['id']}.{hashlib.sha256(image).hexdigest()[:16]}.converted.q{quality}.webp"
+                    atomic_bytes(library.root / target, image)
+                    if library.set_downloaded_cover(game['id'], target, game['cover'], game['cover_revision']):
+                        summary['converted'] += 1
+                        self.changed.emit(game['id'])
+                        self.remove_unused(library, source)
+                    else:
+                        summary['skipped'] += 1
+                        self.remove_unused(library, library.root / target)
+                except Exception as error:
+                    summary['failed'] += 1
+                    summary['error'] = f"{game['title']}: {error}"
+        except Exception as error:
+            summary['error'] = str(error)
+        finally:
+            if library:
+                library.close()
+            self.result.emit(summary)
 
 
 class ArtworkWorker(QThread):
@@ -345,6 +423,7 @@ class ArtworkWorker(QThread):
         try:
             library = Library(self.root)
             games = library.artwork_candidates(self.force, self.game_ids, replace=self.replace)
+            quality = webp_quality(library)
             if not games:
                 return
             downloads = Downloads(self.isInterruptionRequested)
@@ -392,7 +471,7 @@ class ArtworkWorker(QThread):
                                     errors.append("The artwork host is temporarily refusing downloads")
                                     continue
                                 try:
-                                    image = image_png(downloads.get(url, 12 * MIB))
+                                    image = image_webp(downloads.get(url, 12 * MIB), quality=quality)
                                     source = https_url(url)
                                     break
                                 except Cancelled:
@@ -409,7 +488,7 @@ class ArtworkWorker(QThread):
                         if image is not None:
                             # Immutable image paths keep a cancelled/racing
                             # replacement from overwriting a visible old cover.
-                            target = Path("covers") / f"{game['id']}.{hashlib.sha256(image).hexdigest()[:16]}.download.png"
+                            target = Path("covers") / f"{game['id']}.{hashlib.sha256(image).hexdigest()[:16]}.download.q{quality}.webp"
                             atomic_bytes(library.root / target, image)
                             if library.set_downloaded_cover(game["id"], target, game["cover"], game["cover_revision"]):
                                 library.artwork_result(game["id"], "downloaded", url=source)

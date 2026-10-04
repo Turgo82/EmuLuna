@@ -4010,5 +4010,196 @@
         "ellipse": false
       }
     ]
+  },
+  "dreamcast": {
+    "title": "Dreamcast controller",
+    "size": [
+      1100,
+      1005
+    ],
+    "image": "dreamcast.png",
+    "note": "",
+    "controls": [
+      {
+        "action": "button:64",
+        "label": "\u2191",
+        "rect": [
+          210,
+          445,
+          54,
+          54
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:128",
+        "label": "\u2193",
+        "rect": [
+          210,
+          563,
+          54,
+          54
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:32",
+        "label": "\u2190",
+        "rect": [
+          152,
+          504,
+          54,
+          54
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "button:16",
+        "label": "\u2192",
+        "rect": [
+          268,
+          504,
+          54,
+          54
+        ],
+        "group": "Directional pad",
+        "ellipse": false
+      },
+      {
+        "action": "axis:0:-1",
+        "label": "\u2190",
+        "rect": [
+          107,
+          270,
+          50,
+          48
+        ],
+        "group": "Analog stick",
+        "ellipse": false
+      },
+      {
+        "action": "axis:0:1",
+        "label": "\u2192",
+        "rect": [
+          220,
+          270,
+          50,
+          48
+        ],
+        "group": "Analog stick",
+        "ellipse": false
+      },
+      {
+        "action": "axis:1:-1",
+        "label": "\u2191",
+        "rect": [
+          166,
+          213,
+          46,
+          50
+        ],
+        "group": "Analog stick",
+        "ellipse": false
+      },
+      {
+        "action": "axis:1:1",
+        "label": "\u2193",
+        "rect": [
+          166,
+          327,
+          46,
+          50
+        ],
+        "group": "Analog stick",
+        "ellipse": false
+      },
+      {
+        "action": "button:2",
+        "label": "A",
+        "rect": [
+          854,
+          424,
+          80,
+          80
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:1",
+        "label": "B",
+        "rect": [
+          944,
+          339,
+          80,
+          80
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:2048",
+        "label": "X",
+        "rect": [
+          758,
+          338,
+          80,
+          80
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:1024",
+        "label": "Y",
+        "rect": [
+          854,
+          250,
+          80,
+          80
+        ],
+        "group": "Buttons",
+        "ellipse": true
+      },
+      {
+        "action": "button:8",
+        "label": "Start",
+        "rect": [
+          512,
+          562,
+          76,
+          76
+        ],
+        "group": "Menu buttons",
+        "ellipse": false
+      },
+      {
+        "action": "button:4096",
+        "label": "L",
+        "rect": [
+          147,
+          58,
+          136,
+          86
+        ],
+        "group": "Triggers",
+        "ellipse": false
+      },
+      {
+        "action": "button:8192",
+        "label": "R",
+        "rect": [
+          822,
+          58,
+          142,
+          82
+        ],
+        "group": "Triggers",
+        "ellipse": false
+      }
+    ]
   }
 }

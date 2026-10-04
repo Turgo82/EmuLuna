@@ -1,5 +1,6 @@
 """Large-library regressions: visible-only image work, cache bounds and lazy lists."""
 import os
+import hashlib
 from pathlib import Path
 import tempfile
 import time
@@ -32,9 +33,18 @@ class LibraryPerformance(unittest.TestCase):
                     'cover_revision': 0}
             cache = ThumbnailCache(root)
             try:
+                # A valid preview from the previous release must not mask the
+                # higher-quality tier when reopening an existing library.
+                old_name = hashlib.sha256(game['id'].encode()).hexdigest()[:32] + '-0.png'
+                old_preview = cache.preview_directory / old_name
+                old_preview.parent.mkdir(parents=True)
+                image.scaled(28, 40).save(str(old_preview))
                 cache.warm_previews([game])
                 cache.warm_pool.waitForDone()
                 self.assertTrue(cache.preview_path(game).is_file())
+                saved = QImage(str(cache.preview_path(game)))
+                self.assertEqual(saved.height(), 96)
+                self.assertLessEqual(abs(saved.width() / saved.height() - .7), .02)
             finally:
                 cache.close()
             reopened = ThumbnailCache(root)
@@ -42,7 +52,7 @@ class LibraryPerformance(unittest.TestCase):
                 preview = reopened.icon(game)
                 self.assertIsNotNone(preview)
                 self.assertFalse(preview.isNull())
-                self.assertEqual(preview.pixmap(200, 200).size().height(), 200)
+                self.assertEqual(preview.pixmap(200, 200).size().height(), 96)
                 image.fill(QColor('blue'))
                 image.save(str(source))
                 reopened.rebuild()
@@ -89,7 +99,7 @@ class LibraryPerformance(unittest.TestCase):
                 # The immediately following row is already decoded before scrolling.
                 viewport = window.games.viewport().rect()
                 below = [window.games.item(i) for i in range(window.games.count())
-                         if 0 <= window.games.visualItemRect(window.games.item(i)).top() - viewport.bottom() < window.cover_size.value() + 66]
+                         if 0 <= window.games.visualItemRect(window.games.item(i)).top() - viewport.bottom() < window.games.cover_height + 82]
                 self.assertTrue(below)
                 for item in below:
                     key = item.data(256)
@@ -117,7 +127,7 @@ class LibraryPerformance(unittest.TestCase):
             finally:
                 window.close()
 
-    def test_landscape_cards_use_compact_rows_and_slider_resets(self):
+    def test_landscape_cards_use_compact_rows_without_size_slider(self):
         from PySide6.QtCore import Qt
         with tempfile.TemporaryDirectory() as folder:
             library = Library(folder)
@@ -129,24 +139,18 @@ class LibraryPerformance(unittest.TestCase):
             window = Window(library, auto_artwork=False)
             try:
                 window.show(); QTest.qWait(50)
-                slider = window.cover_size
-                slider.setValue(172)
-                QTest.mouseRelease(slider, Qt.LeftButton)
-                self.assertEqual(slider.value(), 172)
-                slider.setValue(256)
-                QTest.mouseDClick(slider, Qt.LeftButton)
-                self.assertEqual(slider.value(), 176)
+                self.assertFalse(hasattr(window, 'cover_size'))
                 self.assertFalse(hasattr(window, 'heading'))
                 first = window.games.item(0)
                 rect = window.games.visualItemRect(first)
                 art = window.games.itemDelegate().art_rect(rect, first.icon(), '0')
-                self.assertLess(rect.height(), 200)
+                self.assertLess(rect.height(), 380)
                 self.assertGreater(rect.bottom() - art.bottom(), 40)  # Title, empty stars and breathing room.
                 self.assertLess(art.top(), 16)
             finally:
                 window.close()
 
-    def test_cover_gaps_match_for_landscape_portrait_and_mixed_libraries(self):
+    def test_fixed_cover_size_and_balanced_horizontal_gaps_on_resize(self):
         from PySide6.QtCore import Qt
         with tempfile.TemporaryDirectory() as folder:
             library = Library(folder)
@@ -159,14 +163,39 @@ class LibraryPerformance(unittest.TestCase):
             window = Window(library, auto_artwork=False)
             try:
                 window.show()
+                left_edges = {}
                 for section in ('all', 'snes', 'genesis'):
                     if section != 'all':
                         window.nav.setCurrentRow(next(i for i in range(window.nav.count())
                             if window.nav.item(i).data(Qt.UserRole) == section))
-                    for size in (96, 176, 256):
-                        window.cover_size.setValue(size)
-                        QTest.qWait(30)
+                    first_dimensions = None
+                    for size in (850, 1140, 1450):
+                        window.resize(size, 750)
+                        for _ in range(5):
+                            QTest.qWait(20)
                         pairs = 0
+                        row_gaps = {}
+                        dimensions = dict(window.games.display_dimensions)
+                        if first_dimensions is None:
+                            first_dimensions = dimensions
+                        self.assertEqual(dimensions, first_dimensions, (section, size))
+                        for item_id, value in dimensions.items():
+                            self.assertLessEqual(max(value.width(), value.height()), 256)
+                            self.assertEqual(value.height(), 180 if int(item_id) % 2 == 0 else 256)
+                        rects = [window.games.visualItemRect(window.games.item(i))
+                                 for i in range(window.games.count())]
+                        delegate = window.games.itemDelegate()
+                        row_starts = {}
+                        for i, rect in enumerate(rects):
+                            item = window.games.item(i)
+                            art = delegate.art_rect(rect, item.icon(), item.data(Qt.UserRole))
+                            if rect.top() not in row_starts:
+                                row_starts[rect.top()] = art.left()
+                                self.assertEqual(art.left(), window.games.cover_inset, (section, size, i))
+                        first_art = delegate.art_rect(rects[0], window.games.item(0).icon(), window.games.item(0).data(Qt.UserRole))
+                        from PySide6.QtCore import QPoint
+                        edge = window.games.viewport().mapTo(window, QPoint(first_art.left(), 0)).x()
+                        self.assertEqual(edge, left_edges.setdefault(size, edge), (section, size))
                         for i in range(window.games.count() - 1):
                             first, second = window.games.item(i), window.games.item(i + 1)
                             left = window.games.visualItemRect(first)
@@ -176,8 +205,60 @@ class LibraryPerformance(unittest.TestCase):
                             delegate = window.games.itemDelegate()
                             a = delegate.art_rect(left, first.icon(), first.data(Qt.UserRole))
                             b = delegate.art_rect(right, second.icon(), second.data(Qt.UserRole))
-                            self.assertEqual(b.left() - a.right() - 1, 40, (section, size))
+                            if first.data(Qt.UserRole + 3) == second.data(Qt.UserRole + 3):
+                                self.assertEqual(a.height(), b.height(), (section, size))
+                            gap = b.left() - a.right() - 1
+                            self.assertGreaterEqual(gap, 32, (section, size))
+                            self.assertLessEqual(gap, 64, (section, size))
+                            previous = row_gaps.setdefault(left.top(), gap)
+                            self.assertLessEqual(abs(gap - previous), 1, (section, size))
                             pairs += 1
-                        self.assertGreater(pairs, 0)
+                        if len(row_starts) < len(rects):
+                            self.assertGreater(pairs, 0, (section, size))
             finally:
                 window.close()
+
+    def test_saturn_mixed_cover_shapes_have_equal_gaps_and_partial_row_alignment(self):
+        from PySide6.QtCore import Qt, QSize
+        from PySide6.QtGui import QIcon, QPixmap
+        from PySide6.QtWidgets import QListWidgetItem, QListWidget
+        from emuluna.library_widgets import GameGrid, CoverDelegate
+        grid = GameGrid()
+        grid.setViewMode(QListWidget.IconMode)
+        grid.setResizeMode(QListWidget.Adjust)
+        grid.setMovement(QListWidget.Static)
+        grid.setItemDelegate(CoverDelegate(grid))
+        original = None
+        try:
+            for i, width in enumerate((150, 150, 240, 150, 230, 150, 150, 150)):
+                item = QListWidgetItem('Example', grid)
+                pixmap = QPixmap(16, 16)
+                pixmap.fill(QColor('red'))
+                item.setIcon(QIcon(pixmap))
+                item.setData(Qt.UserRole, str(i))
+                item.setData(Qt.UserRole + 1, 'Example')
+                item.setData(Qt.UserRole + 2, 0)
+                item.setData(Qt.UserRole + 3, 'saturn')
+                grid.cover_dimensions[str(i)] = QSize(width, 256)
+            grid.show()
+            for width in (700, 1200, 1600):
+                grid.resize(width, 720)
+                QTest.qWait(80)
+                dimensions = dict(grid.display_dimensions)
+                self.assertEqual(dimensions, original or dimensions)
+                original = dimensions
+                rows = {}
+                for i in range(grid.count()):
+                    item = grid.item(i)
+                    rect = grid.visualItemRect(item)
+                    art = grid.itemDelegate().art_rect(rect, item.icon(), str(i))
+                    rows.setdefault(rect.top(), []).append(art)
+                for arts in rows.values():
+                    self.assertEqual(arts[0].left(), 28)
+                    gaps = [b.left() - a.right() - 1 for a, b in zip(arts, arts[1:])]
+                    if gaps:
+                        self.assertEqual(min(gaps), max(gaps))
+                        self.assertGreaterEqual(min(gaps), 32)
+                        self.assertLessEqual(max(gaps), 64)
+        finally:
+            grid.close()

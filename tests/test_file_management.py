@@ -75,6 +75,21 @@ class FileManagement(unittest.TestCase):
         self.assertEqual(set(self.moved),{self.rom,self.state,self.preview,self.screenshot})
         self.assertTrue(self.source.exists()); self.assertTrue(self.battery.exists())
         self.assertIsNone(self.lib.get(self.game_id))
+        self.assertFalse(self.rom.parent.exists())
+
+    def test_managed_nested_disc_folders_are_removed_only_when_empty(self):
+        folder = self.root / 'Disc source'
+        (folder / 'tracks').mkdir(parents=True)
+        cue = folder / 'game.cue'
+        cue.write_text('FILE "tracks/one.bin" BINARY\nTRACK 01 MODE1/2352\nINDEX 01 00:00:00\n')
+        track = folder / 'tracks/one.bin'
+        track.write_bytes(bytes(4096))
+        game_id = self.lib.import_file(cue, system_override='psx')[0]
+        managed = self.lib.root / self.lib.get(game_id)['rom_path']
+        remove_games(self.lib, [game_id], trash_roms=True)
+        self.assertFalse(managed.parent.exists())
+        self.assertTrue(cue.exists())
+        self.assertTrue(track.exists())
 
     def test_right_click_keeps_batch_selection_and_trashes_every_selected_rom(self):
         ids = [self.game_id]
@@ -152,6 +167,7 @@ class FileManagement(unittest.TestCase):
         remove_games(self.lib,ids[1:],trash_roms=True)
         self.assertIn(track,self.moved)
         self.assertTrue(unrelated.exists())
+        self.assertTrue(disc.exists())
 
     def test_individual_state_and_screenshot_removal_keep_game_and_other_media(self):
         game = self.lib.get(self.game_id)
@@ -214,9 +230,12 @@ class FileManagement(unittest.TestCase):
         self.assertEqual(len(self.moved),1)
 
     def test_unavailable_os_trash_never_falls_back_to_permanent_deletion(self):
-        # Call the unpatched imported function; only stub Qt's platform call.
-        with patch('emuluna.file_management.QFile.moveToTrash',return_value=False):
+        # Stub the instance overload: patching Qt's class method is unreliable
+        # across PySide builds and can accidentally invoke the real desktop Trash.
+        with patch('emuluna.file_management.QFile') as file_class:
+            file_class.return_value.moveToTrash.return_value = False
             with self.assertRaises(OSError): move_to_trash(self.rom)
+            file_class.return_value.moveToTrash.assert_called_once_with()
         self.assertTrue(self.rom.exists())
 
     def test_external_media_symlink_and_ambiguous_screenshot_prefix_are_preserved(self):

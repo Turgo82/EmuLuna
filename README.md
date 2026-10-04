@@ -32,14 +32,25 @@ game. You can also manage cores in **Settings → Cores**, or right-click a cons
 to choose its installed core. BIOS files, games, and their licenses are yours
 to supply; EmuLuna does not include them.
 
+**Settings → System Files** shows essential and recommended files for your
+consoles and selected cores. Optional boot ROMs and accessories are hidden until
+you choose **Show optional files and accessories**. Shared files appear once;
+regional BIOS choices only need to cover the regions you play.
+
 ## What you can do
 
 - Organize games by console or collection. Search, rate favorites, switch
-  between grid and list views, and adjust cover size.
+  between grid and list views. The grid fits the window automatically, with
+  a consistent left edge, even horizontal gaps and fixed covers capped at
+  256 pixels on the longest edge, with matching heights within each console.
+  Resizing only changes spacing and wrapping.
 - Download cover art automatically after imports, optionally check for
   missing covers at startup, or right-click a game to pick a cover visually.
-  A small cached preview fills each cover while its full image loads. Use
+  A sharper cached preview fills each cover while its full image loads. Use
   **Advanced → Rebuild cover cache** if those previews become stale.
+  Downloads use WebP at quality 85 by default. **Advanced → Developer options**
+  lets you choose quality 75, 85, 95 or lossless. **Convert existing
+  covers to WebP** converts older artwork in the background and refreshes previews.
 - Play with keyboard or controller, customize controls for each console,
   and use save states, screenshots, video filters, fullscreen, and scaling.
 - Browse save states and screenshots separately. Remove a game from the
@@ -63,7 +74,7 @@ to choose another location.
 
 ## Cores and graphics
 
-EmuLuna's curated catalog contains 29 downloadable libretro cores. Existing
+EmuLuna's curated catalog contains 30 downloadable libretro cores. Existing
 cores are updated only when you request it, and the previous build is kept for
 rollback. Installed cores, ROMs, saves, and downloaded artwork live in your
 library folder, outside the AppImage.
@@ -75,6 +86,19 @@ supports libretro OpenGL contexts and Beetle PSX HW's Vulkan context. Beetle
 PSX HW tries Vulkan, then OpenGL, then software for new games. Save states
 resume with the renderer that created them. Beetle PSX HW also needs a
 region-matched PlayStation BIOS supplied by the user.
+
+Dreamcast uses Flycast with Vulkan or OpenGL. Import GDI, CDI, CHD, CUE, or
+M3U disc sets; keep every GDI/CUE track with its descriptor. An optional BIOS
+belongs in `system/dc/dc_boot.bin`. Dreamcast VMU saves are kept per game.
+For polygon or transparency glitches, try **Dreamcast Video → Accurate
+transparency** in the game's menu. It enables Flycast's per-pixel sorting;
+this is more accurate but uses more GPU resources. The choice is remembered
+for Dreamcast games.
+
+CHD imports identify supported consoles from the disc contents, including
+Dreamcast, PlayStation, Sega CD, Saturn and TurboGrafx-CD. If a disc cannot be
+identified, choose its console in Import issues. This identifies the console;
+cover matching still uses the game title. No separate CHD tools are needed.
 
 The video-filter menu includes CRT, LCD, smoothing, and other bundled
 community shaders. Some effects require a capable GPU. See the

@@ -1,7 +1,7 @@
 """Bounded disc-header inspection; never infer a console from a game's name."""
 from pathlib import Path
 import re
-from .content import content_files, references
+from .content import content_files, references, gdi_tracks
 
 PROBE_BYTES = 2 * 1024 * 1024
 
@@ -51,6 +51,10 @@ def data_tracks(path):
                 yield current, ((minutes * 60 + seconds) * 75 + frames) * stride
     elif suffix == '.ccd':
         yield path.with_suffix('.img'), 0
+    elif suffix == '.gdi':
+        for name, mode, offset in gdi_tracks(path.read_text(encoding='utf-8-sig')):
+            if mode == 4:
+                yield path.parent / name.replace('\\', '/'), offset
     else:
         yield path, 0
 
@@ -67,9 +71,16 @@ def probe_track(path, offset=0):
         header_size, version = int.from_bytes(data[8:12], 'big'), int.from_bytes(data[12:16], 'big')
         if version not in (3, 4, 5) or header_size != {3:120, 4:108, 5:124}[version] or len(data) < header_size:
             raise ValueError('Unsupported or incomplete CHD header. Use a complete CHD version 3, 4 or 5 image.')
-        # CHD metadata describes track layout, not console identity. Compressed
-        # payload bytes are not signatures; resolve these explicitly in the UI.
-        return set()
+        from .chd import track_samples
+        found = set()
+        for sample in track_samples(path):
+            found.update(probe_bytes(sample))
+        return found
+    return probe_bytes(data)
+
+
+def probe_bytes(data):
+    """Identify decoded sector contents; filenames and compressed bytes are irrelevant."""
     found = set()
     for start in (0, 16, 24):
         header = data[start:start+16]
@@ -77,6 +88,8 @@ def probe_track(path, offset=0):
             found.add('segacd')
         if header.startswith(b'SEGA SEGASATURN'):
             found.add('saturn')
+        if header == b'SEGA SEGAKATANA ':
+            found.add('dreamcast')
     # PCE has no universal header offset. Limit reads instead of loading a CD
     # into memory. Exclude the known PC-FX signature collision (Battle Heat).
     marker = data.find(b'PC Engine CD-ROM SYSTEM')
@@ -101,8 +114,9 @@ def probe_track(path, offset=0):
 
 
 def detect_disc(path):
-    content_files(path)  # Validate the entire set before opening any references.
-    found = set()
+    files = content_files(path)  # Validate the entire set before opening any references.
+    found = ({'dreamcast'} if any(Path(name).suffix.lower() in ('.gdi', '.cdi')
+                                 for name in files) else set())
     tracks = list(data_tracks(path))
     if not tracks:
         raise ValueError('No data track found in this CUE sheet. Choose the game disc descriptor, not an audio-only disc.')

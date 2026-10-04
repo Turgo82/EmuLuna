@@ -99,5 +99,59 @@
     "stick_as_dpad": false,
     "hint": "Arrows: stick   X/Z: A/B   Space: Z trigger   I/J/K/L: C buttons   Enter: Start   F1: controls",
     "description": "Control stick: arrow keys\nA: X    B: Z    Z trigger: Space\nC buttons: I (up), J (left), K (down), L (right)\nL/R shoulders: Q/W    Start: Enter\nD-pad: T/F/G/H\n\nController: left stick = control stick, right stick = C buttons, south = A, west = B, left trigger = Z, shoulders = L/R, Start and d-pad."
+  },
+  "dreamcast": {
+    "keys": {
+      "Key_X": 2,
+      "Key_Z": 1,
+      "Key_A": 2048,
+      "Key_S": 1024,
+      "Key_Return": 8,
+      "Key_Enter": 8,
+      "Key_Q": 4096,
+      "Key_W": 8192,
+      "Key_T": 64,
+      "Key_G": 128,
+      "Key_F": 32,
+      "Key_H": 16
+    },
+    "axes": {
+      "Key_Left": [
+        0,
+        -32767
+      ],
+      "Key_Right": [
+        0,
+        32767
+      ],
+      "Key_Up": [
+        1,
+        -32767
+      ],
+      "Key_Down": [
+        1,
+        32767
+      ]
+    },
+    "gamepad": {
+      "0": 2,
+      "1": 1,
+      "2": 2048,
+      "3": 1024,
+      "6": 8,
+      "11": 64,
+      "12": 128,
+      "13": 32,
+      "14": 16,
+      "9": 4096,
+      "10": 8192
+    },
+    "triggers": {
+      "4": 4096,
+      "5": 8192
+    },
+    "stick_as_dpad": false,
+    "hint": "Arrows: stick   X/Z: A/B   A/S: X/Y   Q/W: triggers   Enter: Start   F1: controls",
+    "description": "Analog stick: arrow keys\nA: X    B: Z    X: A    Y: S\nL/R triggers: Q/W    Start: Enter\nD-pad: T/F/G/H\n\nController: left stick, d-pad, south=A, east=B, west=X, north=Y, triggers or shoulders=L/R, Start."
   }
 }

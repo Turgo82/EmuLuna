@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <linearGradient id="body" x2="1" y2="1"><stop stop-color="#eeeffb"/><stop offset=".5" stop-color="#b8bed6"/><stop offset="1" stop-color="#747d9d"/></linearGradient>
+    <linearGradient id="rim" y2="1" x2="0"><stop stop-color="#8a72d4"/><stop offset="1" stop-color="#494276"/></linearGradient>
+    <linearGradient id="pad" y2="1" x2="0"><stop stop-color="#54617b"/><stop offset="1" stop-color="#1f2b43"/></linearGradient>
+    <linearGradient id="button" x2="1" y2="1"><stop stop-color="#97e5ff"/><stop offset="1" stop-color="#2899df"/></linearGradient>
+  </defs>
+  <ellipse cx="24" cy="43" rx="17" ry="2" fill="#101826" opacity=".22"/>
+  <rect x="6" y="5" width="36" height="37" rx="8" fill="url(#rim)" stroke="#383651"/>
+  <rect x="7" y="5" width="34" height="34" rx="7" fill="url(#body)" stroke="#5d6481"/>
+  <path d="M12 7H36Q39 7 39 11" fill="none" stroke="#fff" opacity=".75" stroke-linecap="round"/>
+  <circle cx="23" cy="23" r="13" fill="#858ea7" stroke="#dce1ef"/>
+  <circle cx="23" cy="23" r="11" fill="#52607c"/>
+  <path d="M19 13H27V19H33V27H27V33H19V27H13V19H19Z" fill="url(#pad)" stroke="#1e2a42" stroke-width="1.2" stroke-linejoin="round"/>
+  <path d="M20.5 14.5H25.5V20.5H31.5M14.5 20.5H20.5" fill="none" stroke="#8795ae" stroke-width="1.1" stroke-linecap="round"/>
+  <circle cx="23" cy="23" r="3" fill="#3c4964" stroke="#6b7890"/>
+  <circle cx="36.5" cy="33" r="2.4" fill="url(#button)" stroke="#2773a9" stroke-width=".7"/>
+  <circle cx="11" cy="11" r="1.2" fill="#ad77e7"/>
+</svg>

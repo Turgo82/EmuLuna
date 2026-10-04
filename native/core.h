@@ -27,6 +27,7 @@ unsigned el_height(void* instance);
 double el_fps(void* instance);
 double el_aspect_ratio(void* instance);
 unsigned el_sample_rate(void* instance);
+size_t el_state_size_limit(void);
 int el_save_state(void* instance, const char* path);
 int el_load_state(void* instance, const char* path);
 void el_flush(void* instance);

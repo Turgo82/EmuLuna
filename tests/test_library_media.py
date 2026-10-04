@@ -71,7 +71,9 @@ class LibraryMedia(unittest.TestCase):
                 QTest.mouseClick(window.section_buttons[key], Qt.LeftButton)
                 self.assertEqual(window.library_tab, key)
                 self.assertTrue(window.section_buttons[key].isChecked())
-                self.assertFalse(window.section_buttons[key].icon().isNull())
+                self.assertEqual(window.section_buttons[key].icon().isNull(), size[0] >= 1000)
+                self.assertEqual(window.section_buttons[key].text(),
+                                 window.section_buttons[key].accessibleName() if size[0] >= 1000 else '')
         sidebar = window.findChild(QLabel, 'brand')
         self.assertIsNone(sidebar)
         self.assertNotIn('Never played', [window.nav.item(i).text() for i in range(window.nav.count())])

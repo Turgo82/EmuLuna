@@ -13,7 +13,7 @@ from PySide6.QtCore import (Qt, QSize, QProcess, QProcessEnvironment, QThread, S
 from PySide6.QtGui import QAction, QColor, QDesktopServices, QFont, QFontMetrics, QIcon, QPainter, QPixmap, QLinearGradient
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QHBoxLayout, QVBoxLayout,
     QLabel, QPushButton, QListWidget, QListWidgetItem, QLineEdit, QFileDialog, QMessageBox, QGridLayout, QToolButton,
-    QInputDialog, QMenu, QAbstractItemView, QStackedWidget, QSlider, QButtonGroup, QHeaderView, QDialog)
+    QInputDialog, QMenu, QAbstractItemView, QStackedWidget, QButtonGroup, QHeaderView, QDialog)
 
 try:
     # QtMultimedia loads the host PulseAudio library on Linux. Keep that
@@ -23,7 +23,7 @@ except (ImportError, OSError):
     QSoundEffect = None
 
 from . import __version__
-from .artwork import ArtworkWorker
+from .artwork import ArtworkWorker, CoverConversionWorker
 from .branding import ICON, LOGO, UNLOCK_SOUND, configure_application, navigation_icon
 from .core import ROOT, CoreError
 from .core_manager import CoreManager, DefaultCoreWorker
@@ -36,7 +36,7 @@ from .media_library import MediaBrowser
 from .thumbnails import ThumbnailCache
 from .notifications import NotificationBell
 from .sidebar_activity import SidebarActivity
-from .library_widgets import (GameGrid, GameTable, CoverDelegate, CoverSizeSlider, LibrarySidebar, SortItem, SmartCollectionDialog,
+from .library_widgets import (GameGrid, GameTable, CoverDelegate, LibrarySidebar, SortItem, SmartCollectionDialog,
                               GameInfoDialog, date_text, AlphabetIndex, title_initial, LibraryScrollBar, ExpandableSearch,
                               SIDEBAR_COUNT_ROLE)
 
@@ -79,7 +79,8 @@ class AboutLogo(QToolButton):
 
 
 class AboutDialog(QDialog):
-    advanced_unlocked = Signal()
+    advanced_changed = Signal(bool)
+    advanced_requested = Signal()
 
     def __init__(self, already_unlocked=False, parent=None):
         super().__init__(parent)
@@ -105,11 +106,18 @@ class AboutDialog(QDialog):
         information.setAlignment(Qt.AlignCenter)
         information.setWordWrap(True)
         layout.addWidget(information)
-        self.unlock_notice = QLabel('Advanced settings unlocked')
-        self.unlock_notice.setAlignment(Qt.AlignCenter)
-        self.unlock_notice.setStyleSheet('color:palette(highlight);font-weight:600')
-        self.unlock_notice.hide()
-        layout.addWidget(self.unlock_notice)
+        self.unlock_notice = QPushButton('Advanced settings unlocked')
+        self.unlock_notice.setFlat(True)
+        self.unlock_notice.setCursor(Qt.PointingHandCursor)
+        self.unlock_notice.setToolTip('Open Advanced settings')
+        self.unlock_notice.setStyleSheet(
+            'QPushButton {background:transparent;border:0;color:palette(highlight);'
+            'font-weight:600;padding:4px;} '
+            'QPushButton:hover {text-decoration:underline;} '
+            'QPushButton:focus {border:1px solid palette(highlight);border-radius:4px;}')
+        self.unlock_notice.setVisible(already_unlocked)
+        self.unlock_notice.clicked.connect(self.open_advanced)
+        layout.addWidget(self.unlock_notice, 0, Qt.AlignHCenter)
         close = QPushButton('OK')
         close.clicked.connect(self.accept)
         layout.addWidget(close, 0, Qt.AlignRight)
@@ -129,15 +137,20 @@ class AboutDialog(QDialog):
             self.unlock_sound.statusChanged.connect(self.unlock_sound_status_changed)
 
     def logo_clicked(self):
-        if self.is_advanced_unlocked:
-            return
         self.logo_clicks += 1
         if self.logo_clicks == 4:
-            self.is_advanced_unlocked = True
-            self.unlock_notice.show()
-            self.play_unlock_chime()
+            self.logo_clicks = 0
+            self.is_advanced_unlocked = not self.is_advanced_unlocked
+            self.unlock_notice.setVisible(self.is_advanced_unlocked)
+            if self.is_advanced_unlocked:
+                self.play_unlock_chime()
             self.logo_animation.start()
-            self.advanced_unlocked.emit()
+            self.advanced_changed.emit(self.is_advanced_unlocked)
+
+    def open_advanced(self):
+        if self.is_advanced_unlocked:
+            self.accept()
+            self.advanced_requested.emit()
 
     def play_unlock_chime(self):
         """Play the bundled About-logo unlock sound."""
@@ -206,12 +219,15 @@ def cover_pixmap(game, library, dimensions=None):
 
 
 class Window(QMainWindow):
+    cover_conversion_status = Signal(str, bool)
+
     def __init__(self, library, *, auto_artwork=True, auto_metadata=None):
         super().__init__()
         self.library = library
         self.worker = None
         self.issue_dialog = None
         self.art_worker = None
+        self.cover_conversion_worker = None
         self.art_pending = []
         self.metadata_worker = None
         self.metadata_pending = []
@@ -221,7 +237,7 @@ class Window(QMainWindow):
         self.core_pending = set()
         self.auto_cores_enabled = auto_artwork
         self.closing = False
-        self.advanced_settings_unlocked = False
+        self.advanced_settings_unlocked = self.library.setting('advanced.unlocked', '0') == '1'
         self.processes = {}
         self.game_restore_state = None
         self.library_tab = "library"
@@ -312,36 +328,24 @@ class Window(QMainWindow):
             group.addButton(button)
             button.clicked.connect(lambda checked=False, mode=mode: self.change_view(mode))
             left.addWidget(button)
-        self.cover_size = CoverSizeSlider()
-        try:
-            self.cover_size.setValue(int(self.library.setting("library.cover_size", "176")))
-        except ValueError:
-            self.cover_size.setValue(176)
-        self.cover_size.setFixedWidth(76)
-        self.cover_size.setAccessibleName("Cover size")
-        left.addSpacing(16)
-        left.addWidget(self.cover_size)
         controls.addWidget(self.view_controls, 0, 0, Qt.AlignLeft)
         self.library_tabs = QWidget()
         self.library_tabs.setObjectName("libraryNavigation")
         tabs = QHBoxLayout(self.library_tabs)
-        tabs.setContentsMargins(3, 3, 3, 3)
-        tabs.setSpacing(3)
+        tabs.setContentsMargins(1, 1, 1, 1)
+        tabs.setSpacing(1)
         tab_group = QButtonGroup(self)
         self.section_buttons = {}
         for key, title in [("library", "Library"), ("states", "Save States"), ("screenshots", "Screenshots")]:
-            if self.section_buttons:
-                divider = QWidget()
-                divider.setObjectName("navigationDivider")
-                divider.setFixedSize(1, 16)
-                tabs.addWidget(divider, 0, Qt.AlignVCenter)
             button = QPushButton(title)
             button.setObjectName("sectionNavigation")
-            button.setIcon(navigation_icon(key))
+            button.setProperty('segment', 'first' if key == 'library' else
+                               'last' if key == 'screenshots' else 'middle')
+            button.setIcon(navigation_icon(key) if self.width() < 1000 else QIcon())
             button.setIconSize(QSize(18, 18))
             button.setAccessibleName(title)
             button.setToolTip(title)
-            button.setFixedHeight(28)
+            button.setFixedHeight(32)
             button.setCheckable(True)
             button.setChecked(key == self.library_tab)
             button.clicked.connect(lambda checked=False, key=key: self.change_library_tab(key))
@@ -445,8 +449,6 @@ class Window(QMainWindow):
         self.media_browser.message.connect(lambda text: self.notifications.post(text))
         self.media_browser.activated.connect(self.activate_media)
         self.pages.addWidget(self.media_browser)
-        self.cover_size.valueChanged.connect(self.resize_covers)
-        self.resize_covers(self.cover_size.value())
         self.alphabet_index = AlphabetIndex()
         self.alphabet_index.jump_requested.connect(self.jump_to_letter)
         self.letter_targets = {}
@@ -576,7 +578,7 @@ class Window(QMainWindow):
         super().changeEvent(event)
         if event.type() in (QEvent.PaletteChange, QEvent.ApplicationPaletteChange) and hasattr(self, "notifications"):
             for key, button in self.section_buttons.items():
-                button.setIcon(navigation_icon(key))
+                button.setIcon(navigation_icon(key) if self.width() < 1000 else QIcon())
             self.menu_button.setIcon(navigation_icon("menu"))
             self.grid_button.setIcon(navigation_icon("grid"))
             self.list_button.setIcon(navigation_icon("list"))
@@ -592,16 +594,20 @@ class Window(QMainWindow):
         if hasattr(self, "section_buttons"):
             # Keep navigation centered without crowding search on small windows.
             compact = self.width() < 1000
-            for button in self.section_buttons.values():
+            for key, button in self.section_buttons.items():
                 button.setText("" if compact else button.accessibleName())
+                button.setIcon(navigation_icon(key) if compact else QIcon())
 
     def show_about(self):
         self.about_dialog = AboutDialog(self.advanced_settings_unlocked, self)
-        self.about_dialog.advanced_unlocked.connect(self.unlock_advanced_settings)
+        self.about_dialog.advanced_changed.connect(self.set_advanced_settings_unlocked)
+        self.about_dialog.advanced_requested.connect(
+            lambda: QTimer.singleShot(0, lambda: self.open_settings(page='advanced')))
         self.about_dialog.open()
 
-    def unlock_advanced_settings(self):
-        self.advanced_settings_unlocked = True
+    def set_advanced_settings_unlocked(self, unlocked):
+        self.advanced_settings_unlocked = unlocked
+        self.library.set_setting('advanced.unlocked', int(unlocked))
 
     def queue_default_cores(self, systems=None):
         if self.closing or not self.auto_cores_enabled:
@@ -676,6 +682,9 @@ class Window(QMainWindow):
                         dialog.table.selectRow(row)
                         break
         dialog.rebuild_cover_cache_requested.connect(self.rebuild_cover_cache)
+        dialog.convert_covers_requested.connect(self.convert_covers)
+        dialog.cancel_cover_conversion_requested.connect(self.cancel_cover_conversion)
+        self.cover_conversion_status.connect(dialog.update_cover_conversion)
         def sync():
             self.auto_art_action.setChecked(self.library.setting("artwork_auto", "1") == "1")
             self.backup_art_action.setChecked(self.library.setting("artwork_backup", "1") == "1")
@@ -698,6 +707,54 @@ class Window(QMainWindow):
         self.placeholder_cache.clear()
         self.refresh()
         self.notifications.post("Rebuilding cover previews in the background…", 5000)
+
+    def convert_covers(self):
+        if self.cover_conversion_worker or self.closing:
+            return
+        worker = CoverConversionWorker(self.library.root)
+        self.cover_conversion_worker = worker
+        worker.progress.connect(self.cover_conversion_progress)
+        worker.changed.connect(self.cover_converted)
+        worker.result.connect(self.cover_conversion_done)
+        worker.finished.connect(self.cover_conversion_finished)
+        self.sidebar_activity.begin('cover-conversion', 'Converting cover art', cancel=self.cancel_cover_conversion)
+        self.cover_conversion_status.emit('Preparing cover conversion…', True)
+        worker.start()
+
+    def cancel_cover_conversion(self):
+        if self.cover_conversion_worker:
+            self.cover_conversion_worker.requestInterruption()
+
+    def cover_conversion_progress(self, message):
+        self.cover_conversion_status.emit(message, True)
+        self.sidebar_activity.update_message('cover-conversion', 'Converting cover art', message)
+
+    def cover_converted(self, game_id):
+        # Conversion keeps cover dimensions intact, so avoid relaying out the
+        # whole library after each file in a large batch.
+        row = self.library.get(game_id)
+        if row and game_id in self.rows:
+            self.rows[game_id] = row
+            self.thumbnail_ready(game_id)
+
+    def cover_conversion_done(self, summary):
+        message = f"{summary['converted']} covers converted · {summary['skipped']} skipped"
+        if summary['cancelled']:
+            message = 'Conversion stopped. ' + message
+        if summary['failed']:
+            message += f" · {summary['failed']} could not be converted"
+        if summary['error']:
+            message += '\n' + summary['error']
+        self.rebuild_cover_cache()
+        self.cover_conversion_status.emit(message, False)
+        self.notifications.post(message, 9000)
+
+    def cover_conversion_finished(self):
+        self.cover_conversion_worker.deleteLater()
+        self.cover_conversion_worker = None
+        self.sidebar_activity.finish('cover-conversion')
+        if self.closing:
+            self.close()
 
 
     def toggle_auto_artwork(self, enabled):
@@ -830,7 +887,7 @@ class Window(QMainWindow):
         if game_id in self.rows:
             self.rows[game_id] = row
         self.games.cover_dimensions[game_id] = self.thumbnails.dimensions(row)
-        self.layout_cards(self.cover_size.value())
+        self.layout_cards()
         self.thumbnail_ready(game_id)
 
     def prefetch_covers(self):
@@ -839,7 +896,7 @@ class Window(QMainWindow):
         # Two extra rows above and below; prioritize anything already on screen.
         # Inspecting item rectangles is cheap, and avoids decoding the entire library.
         viewport = self.games.viewport().rect()
-        margin = (self.cover_size.value() + 66) * 2
+        margin = (self.games.cover_height + 82) * 2
         nearby = viewport.adjusted(0, -margin, 0, margin)
         candidates = []
         for key, item in self.game_items.items():
@@ -1164,7 +1221,6 @@ class Window(QMainWindow):
         self.library.set_setting("library.view", mode)
         self.grid_button.setChecked(mode == "grid")
         self.list_button.setChecked(mode == "list")
-        self.cover_size.setEnabled(mode == "grid")
         self.restore_selection(ids)
         if self.library_tab == "library":
             self.pages.setCurrentIndex((2 if mode == "list" else 0) if self.rows else 1)
@@ -1197,23 +1253,8 @@ class Window(QMainWindow):
             self.games.setFocus(Qt.OtherFocusReason)
             self.prefetch_timer.start()
 
-    def resize_covers(self, size):
-        self.games.setIconSize(QSize(size, size))
-        self.games.hide_actions()
-        self.layout_cards(size)
-        self.library.set_setting("library.cover_size", size)
-        self.media_browser.resize_items(size)
-
-    def layout_cards(self, size):
-        metrics = self.games.fontMetrics()
-        for key, item in self.game_items.items():
-            dimensions = self.games.cover_dimensions.get(key, QSize(256, 256)).scaled(QSize(size, size), Qt.KeepAspectRatio)
-            # Pad the displayed artwork, not the square thumbnail bounding box:
-            # portrait and landscape covers should have the same visible gap.
-            card_width = dimensions.width() + 40
-            text_height = min(34, metrics.boundingRect(QRect(0, 0, card_width - 14, 34), Qt.TextWordWrap, item.data(Qt.UserRole + 1)).height())
-            item.setSizeHint(QSize(card_width, dimensions.height() + text_height + 16 + 32))
-        self.games.doItemsLayout()
+    def layout_cards(self):
+        self.games.layout_cards()
         self.prefetch_timer.start()
 
     def refresh(self, *_):
@@ -1254,6 +1295,7 @@ class Window(QMainWindow):
             item.setData(Qt.UserRole, row["id"])
             item.setData(Qt.UserRole + 1, ("★ " if row["favorite"] else "") + row["title"])
             item.setData(Qt.UserRole + 2, row["rating"])
+            item.setData(Qt.UserRole + 3, row['system'])
             item.setToolTip(f"{row['title']}\n{SYSTEMS[row['system']].name}\nFile: {Path(row['rom_path']).name}\nDouble-click to play")
             info = artwork.get(row["id"])
             if info and info["status"] == "downloaded" and row["cover"]:
@@ -1266,7 +1308,7 @@ class Window(QMainWindow):
             self.game_items[row["id"]] = item
             self.games.cover_dimensions[row["id"]] = self.thumbnails.dimensions(row)
         self.games.blockSignals(False)
-        self.layout_cards(self.cover_size.value())
+        self.layout_cards()
         self.table_dirty = True
         if self.view_mode == "list" and self.library_tab == "library":
             self.populate_table(rows)
@@ -1277,7 +1319,6 @@ class Window(QMainWindow):
         self.restore_selection(previous)
         self.games.verticalScrollBar().setValue(scroll_grid)
         self.table.verticalScrollBar().setValue(scroll_list)
-        self.cover_size.setEnabled(self.view_mode == "grid")
         self.pages.setCurrentIndex((2 if self.view_mode == "list" else 0) if rows else 1)
         if self.search.text() or key != "all":
             self.empty_title.setText("No games here yet")
@@ -1699,8 +1740,10 @@ class Window(QMainWindow):
             self.library.root, game["system"], game["title"], self)
         try:
             if dialog.exec() and dialog.selection:
-                target = Path("covers") / f"{game_id}.chosen.png"
-                atomic_bytes(self.library.root / target, dialog.selection["image"])
+                from .artwork import image_webp, webp_quality
+                quality = webp_quality(self.library)
+                target = Path("covers") / f"{game_id}.chosen.q{quality}.webp"
+                atomic_bytes(self.library.root / target, image_webp(dialog.selection['image'], quality=quality))
                 self.library.set_manual_cover(game_id, target)
                 metadata = dialog.selection.get("metadata", {})
                 if metadata:
@@ -1747,10 +1790,12 @@ class Window(QMainWindow):
             return
         self.closing = True
         self.search_timer.stop()
+        if self.cover_conversion_worker:
+            self.cover_conversion_worker.requestInterruption()
         if self.core_worker:
             self.core_pending.clear()
             self.core_worker.requestInterruption()
-        if self.art_worker or self.metadata_worker or self.core_worker:
+        if self.art_worker or self.metadata_worker or self.core_worker or self.cover_conversion_worker:
             self.cancel_artwork()
             self.cancel_metadata()
             self.notifications.post("Stopping background lookups…")

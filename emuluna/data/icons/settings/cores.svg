@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <linearGradient id="board" x2="1" y2="1"><stop stop-color="#94d77a"/><stop offset=".5" stop-color="#4eaa68"/><stop offset="1" stop-color="#277757"/></linearGradient>
+    <linearGradient id="chip" x2="1" y2="1"><stop stop-color="#9aa3ab"/><stop offset=".5" stop-color="#606e7a"/><stop offset="1" stop-color="#3d4b5c"/></linearGradient>
+    <linearGradient id="pins" y2="1" x2="0"><stop stop-color="#ffe7a2"/><stop offset="1" stop-color="#bd8734"/></linearGradient>
+  </defs>
+  <ellipse cx="24" cy="44" rx="17" ry="2" fill="#101826" opacity=".22"/>
+  <rect x="7" y="5" width="34" height="37" rx="3" fill="url(#board)" stroke="#24593f" stroke-width="1.2"/>
+  <path d="M10 7H38M10 7V38" fill="none" stroke="#c7efab" opacity=".7"/>
+  <path d="M11 16H17M11 31H16V35H21M37 14H32M36 30H31V35H27" fill="none" stroke="#afdc84" stroke-width="1.2"/>
+  <path d="M17 10V16M22 10V16M27 10V16M32 10V16M17 31V37M22 31V37M27 31V37M32 31V37M11 17H17M11 22H17M11 27H17M31 17H37M31 22H37M31 27H37" fill="none" stroke="url(#pins)" stroke-width="2.4"/>
+  <rect x="15" y="14" width="19" height="19" rx="2.5" fill="url(#chip)" stroke="#354a48"/>
+  <path d="M17 16H31V19" fill="none" stroke="#d7dce0" opacity=".6"/>
+  <rect x="19" y="18" width="11" height="11" rx="1.5" fill="#88978e" stroke="#aebdb0"/>
+  <path d="M21 22H28M21 25H26" stroke="#d7e2d9" stroke-width="1.2" opacity=".75"/>
+  <circle cx="11" cy="38" r="1.6" fill="#d8eaba" stroke="#32764f"/><circle cx="37" cy="9" r="1.6" fill="#d8eaba" stroke="#32764f"/>
+</svg>

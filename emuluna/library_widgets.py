@@ -1,6 +1,7 @@
 """Library controls shared by the grid and list; no emulator implementation here."""
 import json
 import unicodedata
+from statistics import median
 from datetime import datetime
 from pathlib import Path
 
@@ -10,7 +11,7 @@ from PySide6.QtGui import QDrag, QColor, QPen, QPixmap, QPainter, QIcon, QPolygo
 from PySide6.QtWidgets import (QApplication, QAbstractItemView, QCheckBox, QComboBox, QDialog,
     QDialogButtonBox, QFormLayout, QLabel, QLineEdit, QListWidget, QSpinBox,
     QTableWidget, QTableWidgetItem, QVBoxLayout, QStyledItemDelegate, QStyle, QStyleOptionViewItem,
-    QScrollArea, QWidget, QPlainTextEdit, QPushButton, QMessageBox, QHBoxLayout, QToolButton, QSlider, QSizePolicy, QScrollBar)
+    QScrollArea, QWidget, QPlainTextEdit, QPushButton, QMessageBox, QHBoxLayout, QToolButton, QSizePolicy, QScrollBar)
 
 from .library import SYSTEMS
 from .theme import paint_thumbnail_highlight
@@ -213,27 +214,13 @@ class GameDragMixin:
             event.acceptProposedAction()
 
 
-class CoverSizeSlider(QSlider):
-    default_size = 176
-
-    def __init__(self):
-        super().__init__(Qt.Horizontal)
-        self.setRange(96, 256)
-        self.setTickPosition(QSlider.NoTicks)
-        self.setSingleStep(8)
-        self.setPageStep(16)
-        self.setToolTip("Cover size · double-click to reset")
-
-    def mouseDoubleClickEvent(self, event):
-        if event.button() == Qt.LeftButton:
-            self.setValue(self.default_size)
-            event.accept()
-        else:
-            super().mouseDoubleClickEvent(event)
-
-
 class GameGrid(GameDragMixin, QListWidget):
     files_dropped = Signal(list, object)
+
+    # OpenEmu's OEGridView configures 35-point cell margins. Qt must space
+    # the visible artwork explicitly to handle mixed cover proportions.
+    minimum_gap = 35
+    maximum_gap = 64
 
     viewport_changed = Signal()
     play_requested = Signal(str)
@@ -244,6 +231,13 @@ class GameGrid(GameDragMixin, QListWidget):
         self.action_info = lambda game_id: (False, False)
         self.hovered_id = None
         self.cover_dimensions = {}
+        self.display_dimensions = {}
+        self.cover_height = 256
+        self.cover_inset = 28
+        self.layout_timer = QTimer(self)
+        self.layout_timer.setSingleShot(True)
+        self.layout_timer.setInterval(16)
+        self.layout_timer.timeout.connect(self.layout_cards)
         self.setMouseTracking(True)
         self.viewport().setMouseTracking(True)
         self.actions_bar = QWidget(self.viewport())
@@ -294,7 +288,75 @@ class GameGrid(GameDragMixin, QListWidget):
 
     def clear(self):
         self.hide_actions()
+        self.display_dimensions.clear()
         super().clear()
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        if hasattr(self, 'layout_timer'):
+            self.layout_timer.start()
+
+    def layout_cards(self):
+        """Fixed covers, a shared left edge and even gaps between actual artwork."""
+        if not self.count():
+            return
+        self.hide_actions()
+        # QListView wraps a card touching its right boundary; reserve two pixels.
+        margins = self.viewportMargins()
+        width = max(1, self.viewport().width() + margins.left() + margins.right()
+                    - 2 * self.spacing() - 2)
+        self.setViewportMargins(0, 0, 0, 0)
+        items = [self.item(index) for index in range(self.count())]
+        dimensions = [self.cover_dimensions.get(item.data(Qt.UserRole), QSize(256, 256))
+                      for item in items]
+        ratios_by_system = {}
+        for item, size in zip(items, dimensions):
+            system = item.data(Qt.UserRole + 3)
+            ratios_by_system.setdefault(system, []).append(size.width() / max(1, size.height()))
+        typical_ratios = {key: median(values) for key, values in ratios_by_system.items()}
+        heights = {}
+        for key, ratios in ratios_by_system.items():
+            normal = [value for value in ratios if value <= typical_ratios[key] * 1.2]
+            canonical = SYSTEMS[key].cover_size if key in SYSTEMS else (256, 256)
+            heights[key] = min(canonical[1], int(256 / max(1, max(normal))))
+        sizes = [size.scaled(QSize(256, heights[item.data(Qt.UserRole + 3)]), Qt.KeepAspectRatio)
+                 for item, size in zip(items, dimensions)]
+        self.cover_height = max(size.height() for size in sizes)
+        metrics = self.fontMetrics()
+        label_height = max(34, metrics.height() * 2)
+        card_height = self.cover_height + label_height + 48
+        # Spacing belongs between the visible cover edges, rather than between
+        # equal-width cells. Saturn mixes narrow cases and square imports;
+        # centering them in those cells makes the apparent gaps unequal.
+        row = []
+        row_width = 0
+        last_gap = self.minimum_gap
+
+        def finish_row(final=False):
+            nonlocal last_gap
+            gap = max(self.minimum_gap, min(self.maximum_gap, (width - row_width) // len(row)))
+            if final:
+                gap = min(gap, last_gap)
+            else:
+                last_gap = gap
+            for item, art in row:
+                self.display_dimensions[item.data(Qt.UserRole)] = art
+                hint = QSize(art.width() + gap, card_height)
+                if item.sizeHint() != hint:
+                    item.setSizeHint(hint)
+
+        for item, art in zip(items, sizes):
+            if row and row_width + art.width() + (len(row) + 1) * self.minimum_gap > width:
+                finish_row()
+                row, row_width = [], 0
+            row.append((item, art))
+            row_width += art.width()
+        if row:
+            finish_row(final=True)
+        widest = max(art.width() for art in sizes)
+        self.setIconSize(QSize(max(widest, self.cover_height), max(widest, self.cover_height)))
+        self.doItemsLayout()
+        self.viewport_changed.emit()
 
     def show_actions(self, item):
         if item is None:
@@ -330,6 +392,8 @@ class GameGrid(GameDragMixin, QListWidget):
             self.hide_actions()
             if event.type() != QEvent.Hide:
                 self.viewport_changed.emit()
+                if not self.layout_timer.isActive():
+                    self.layout_timer.start()
         return super().eventFilter(watched, event)
 
     def game_ids(self):
@@ -348,8 +412,10 @@ class CoverDelegate(QStyledItemDelegate):
     def art_rect(self, item_rect, icon, game_id):
         rect = item_rect.adjusted(5, 5, -5, -5)
         size = self.parent().iconSize().width()
-        image_size = self.parent().cover_dimensions.get(game_id, QSize(size, size)).scaled(QSize(size, size), Qt.KeepAspectRatio)
-        return QRect(rect.left() + (rect.width() - image_size.width()) // 2,
+        image_size = self.parent().display_dimensions.get(game_id)
+        if image_size is None:
+            image_size = self.parent().cover_dimensions.get(game_id, QSize(size, size)).scaled(QSize(size, size), Qt.KeepAspectRatio)
+        return QRect(item_rect.left() + self.parent().cover_inset,
                      rect.top() + 4, image_size.width(), image_size.height())
 
     def paint(self, painter, option, index):
@@ -358,11 +424,12 @@ class CoverDelegate(QStyledItemDelegate):
         icon = self.icon_provider(index.data(Qt.UserRole)) if self.icon_provider else index.data(Qt.DecorationRole)
         art_rect = self.art_rect(option.rect, icon, index.data(Qt.UserRole))
         paint_thumbnail_highlight(painter, art_rect, option)
-        icon.paint(painter, art_rect, Qt.AlignCenter)
-        title_rect = QRect(rect.left() + 2, art_rect.bottom() + 5, rect.width() - 4, 34)
+        painter.setRenderHint(QPainter.SmoothPixmapTransform)
+        painter.drawPixmap(art_rect, icon.pixmap(art_rect.size()))
+        max_title_height = max(34, option.fontMetrics.height() * 2)
+        title_rect = QRect(art_rect.left() - 13, art_rect.bottom() + 5,
+                           art_rect.width() + 26, max_title_height)
         title = index.data(Qt.UserRole + 1)
-        title_height = option.fontMetrics.boundingRect(title_rect, Qt.TextWordWrap, title).height()
-        title_rect.setHeight(min(34, title_height))
         painter.setFont(option.font)
         painter.setPen(option.palette.color(QPalette.Text))
         painter.setClipRect(title_rect)
@@ -370,7 +437,7 @@ class CoverDelegate(QStyledItemDelegate):
         painter.setClipping(False)
         rating = index.data(Qt.UserRole + 2)
         painter.setPen(option.palette.color(QPalette.Highlight if rating else QPalette.PlaceholderText))
-        painter.drawText(QRect(rect.left(), title_rect.bottom() + 2, rect.width(), 16), Qt.AlignCenter,
+        painter.drawText(QRect(title_rect.left(), title_rect.bottom() + 2, title_rect.width(), 16), Qt.AlignCenter,
                          "★" * rating + "☆" * (5 - rating))
         painter.restore()
 

@@ -36,7 +36,7 @@ class ControllerSettings(unittest.TestCase):
 
     def test_every_system_and_player_has_a_complete_data_driven_profile(self):
         self.assertEqual(set(SPECS), set(SYSTEMS))
-        self.assertEqual(len(SPECS), 32)
+        self.assertEqual(len(SPECS), 33)
         for system, spec in SPECS.items():
             self.assertGreaterEqual(spec['players'], 1, system)
             self.assertLessEqual(spec['players'], 4, system)

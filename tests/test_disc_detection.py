@@ -18,7 +18,7 @@ def image(system, raw=False):
     data = bytearray(stride * 32)
     signatures = {'segacd': b'SEGADISCSYSTEM   ', 'saturn':b'SEGA SEGASATURN  '}
     if system in signatures:
-        data[skip:skip+16] = signatures[system]
+        data[skip:skip+len(signatures[system])] = signatures[system]
     elif system == 'pcecd':
         marker = b'PC Engine CD-ROM SYSTEM'
         data[5000:5000+len(marker)] = marker
@@ -109,7 +109,7 @@ class DiscIdentification(unittest.TestCase):
         self.assertEqual(worker.new_games,0)
         self.assertEqual({r['code'] for r in self.lib.import_issues()},{'unknown_disc'})
         dialog=ImportIssuesDialog(self.lib);dialog.table.selectAll()
-        self.assertEqual({dialog.system.itemData(i) for i in range(1,dialog.system.count())},{'psx','segacd','saturn','pcecd'})
+        self.assertEqual({dialog.system.itemData(i) for i in range(1,dialog.system.count())},{'psx','segacd','saturn','pcecd','dreamcast'})
         emitted=[];dialog.retry_many.connect(lambda files,system:emitted.append((files,system)))
         dialog.retry_selected();self.assertEqual(emitted,[])
         dialog.system.setCurrentIndex(dialog.system.findData('psx'));dialog.retry_selected()

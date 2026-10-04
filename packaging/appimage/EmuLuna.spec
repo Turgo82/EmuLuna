@@ -4,6 +4,7 @@ project = Path(SPEC).resolve().parents[2]
 data = [
     (str(project / "emuluna" / "data"), "emuluna/data"),
     (str(project / "build" / "cores" / "libemuluna_host.so"), "build/cores"),
+    (str(project / "build" / "cores" / "emuluna-chd-probe"), "build/cores"),
     (str(project / "LICENSE"), "."),
     (str(project / "THIRD_PARTY_NOTICES.md"), "."),
 ]

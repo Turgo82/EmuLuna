@@ -68,7 +68,7 @@ class SystemTheme(unittest.TestCase):
                         self.assertEqual(widget.palette().color(QPalette.Window), chosen.color(QPalette.Window), type(widget).__name__)
                         self.assertEqual(widget.palette().color(QPalette.Text), chosen.color(QPalette.Text), type(widget).__name__)
                     self.assertEqual(window.section_buttons['library'].palette().color(QPalette.Highlight), chosen.color(QPalette.Highlight))
-                    self.assertFalse(window.section_buttons['library'].icon().isNull())
+                    self.assertEqual(window.section_buttons['library'].icon().isNull(), window.width() >= 1000)
                     self.assertEqual(window.media_browser.grid.palette().color(QPalette.Text), chosen.color(QPalette.Text))
                     self.assertEqual(settings.volume.palette().color(QPalette.Accent), chosen.color(QPalette.Accent))
                     self.assertEqual(window.search.height(), window.library_tabs.height())
@@ -83,7 +83,7 @@ class SystemTheme(unittest.TestCase):
                 self.assertEqual(window.palette().color(QPalette.Window), QColor('#24252b'))
                 self.assertEqual(window.games.palette().color(QPalette.Text), QColor('#ebeaf0'))
                 self.assertEqual(window.search.palette().color(QPalette.Base), QColor('#24252b'))
-                for widget in (settings.volume, settings.focus_pause, window.cover_size):
+                for widget in (settings.volume, settings.focus_pause):
                     for group in (QPalette.Active, QPalette.Inactive, QPalette.Disabled):
                         self.assertEqual(widget.palette().color(group, QPalette.Accent), QColor('#b6a0e4'))
                 self.assertEqual(settings.focus_pause.palette().color(QPalette.Accent),

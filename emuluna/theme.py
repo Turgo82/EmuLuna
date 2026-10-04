@@ -13,8 +13,7 @@ EMULUNA_WINDOW_COLOR_SCHEME = Path(__file__).with_name('data') / 'EmuLuna-Window
 LIBRARY_STYLE = """
 QMainWindow {background:palette(window); color:palette(window-text);}
 QWidget#sidebar {background:palette(alternate-base); border:0;}
-QWidget#libraryNavigation {background:palette(window);border:1px solid palette(mid);border-radius:7px;}
-QWidget#navigationDivider {background:palette(mid);border:0;}
+QWidget#libraryNavigation {background:palette(mid);border:0;border-radius:8px;}
 QToolButton#applicationMenuButton {background:transparent; border:0; border-radius:5px; padding:5px;}
 QToolButton#applicationMenuButton:hover, QToolButton#applicationMenuButton:pressed {background:palette(midlight);}
 QToolButton#applicationMenuButton::menu-indicator {image:none;}
@@ -33,7 +32,9 @@ QToolButton#aboutLogoButton {background:transparent;border:0;padding:0;}
 QToolButton#aboutLogoButton:hover,QToolButton#aboutLogoButton:pressed {background:transparent;}
 QLineEdit#librarySearch {background:palette(window);color:palette(text);placeholder-text-color:palette(placeholder-text);border:1px solid palette(mid);border-radius:7px;padding:3px 8px;selection-background-color:palette(highlight);selection-color:palette(highlighted-text);}
 QLineEdit#librarySearch:focus {border-color:palette(highlight);}
-QPushButton#sectionNavigation {background:transparent; border:1px solid transparent; border-radius:5px; padding:3px 10px;}
+QPushButton#sectionNavigation {background:palette(window);color:palette(window-text);border:1px solid transparent;border-radius:0;padding:4px 18px;}
+QPushButton#sectionNavigation[segment="first"] {border-top-left-radius:7px;border-bottom-left-radius:7px;}
+QPushButton#sectionNavigation[segment="last"] {border-top-right-radius:7px;border-bottom-right-radius:7px;}
 QPushButton#sectionNavigation:hover {background:palette(midlight);}
 QPushButton#sectionNavigation:focus {border-color:palette(highlight);}
 QPushButton#sectionNavigation:checked {background:palette(highlight); color:palette(highlighted-text); border-color:palette(highlight);}
@@ -142,7 +143,8 @@ class SystemThemeBinding(QObject):
         for widget in widgets:
             widget.setPalette(palette)
             if self.decoration and widget.isWindow():
-                scheme = (EMULUNA_COLOR_SCHEME if widget.property('emuluna.library_window')
+                scheme = (EMULUNA_COLOR_SCHEME if (widget.property('emuluna.library_window')
+                                                   or widget.property('emuluna.library_header'))
                           else EMULUNA_WINDOW_COLOR_SCHEME)
                 self.decoration.apply(widget, '' if self.use_system else str(scheme))
         # QSS resolves palette() through the application palette on some Qt

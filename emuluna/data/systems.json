@@ -551,5 +551,27 @@
       184,
       256
     ]
+  },
+  "dreamcast": {
+    "name": "Sega Dreamcast",
+    "extensions": [
+      "gdi",
+      "cdi",
+      "chd",
+      "cue",
+      "m3u",
+      "elf"
+    ],
+    "default_core": "flycast",
+    "color": "#9caedb",
+    "icon": "dreamcast.png",
+    "thumbnail": "Sega_-_Dreamcast",
+    "media": "disc",
+    "openvgdb_id": "openemu.system.dreamcast",
+    "input_profile": "dreamcast",
+    "cover_size": [
+      256,
+      256
+    ]
   }
 }

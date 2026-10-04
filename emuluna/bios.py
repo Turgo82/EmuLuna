@@ -6,13 +6,37 @@ import tempfile
 
 from .core import CoreError
 from .hashing import file_hexdigest
-from .systems import CATALOG
+from .systems import CATALOG, SYSTEMS
 
 MAX_BIOS = 64 * 1024 * 1024
 
 
 def requirements(core_id):
     return CATALOG.get(core_id, {}).get('firmware', [])
+
+
+def checklist(core_systems):
+    """One row per file/checksum, with only its relevant consoles and cores."""
+    files = {}
+    for system, core_id in core_systems:
+        for entry in requirements(core_id):
+            if system not in entry.get('systems', CATALOG[core_id]['systems']):
+                continue
+            key = (entry['path'], entry.get('md5'))
+            row = files.setdefault(key, {'entry': entry, 'uses': [],
+                                         'requirements': [], 'essential': False})
+            use = (system, core_id)
+            if use not in row['uses']:
+                row['uses'].append(use)
+            requirement = entry.get('requirement', 'Optional' if entry['optional'] else 'Required')
+            if requirement not in row['requirements']:
+                row['requirements'].append(requirement)
+            row['essential'] |= (not entry['optional'] or
+                                 system in entry.get('required_systems', []) or
+                                 requirement.startswith('Required') or entry.get('recommended', False))
+    return sorted(files.values(), key=lambda row: (
+        not row['essential'], min(SYSTEMS[system].name.casefold() for system, _ in row['uses']),
+        row['entry']['path'].casefold()))
 
 
 def bios_status(directory, entry):
@@ -51,7 +75,7 @@ def validate_bios(core_id, system, directory):
         if not any(valid for _, valid in entries):
             missing.append('one of ' + ', '.join(path for path, _ in entries))
     if missing:
-        raise CoreError('BIOS required: ' + '; '.join(missing) + '. Open Settings → BIOS checklist to import your files.')
+        raise CoreError('BIOS required: ' + '; '.join(missing) + '. Open Settings → System Files to import your files.')
 
 
 def import_bios(source, directory, entry):

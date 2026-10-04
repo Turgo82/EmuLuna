@@ -70,7 +70,8 @@ class HoverActions(unittest.TestCase):
             args = process.return_value.setArguments.call_args.args[0]
             self.assertEqual(args[args.index('--state-file') + 1], str(automatic))
         self.window.processes.clear()
-        self.window.cover_size.setValue(96)
+        self.window.resize(850, 560)
+        QTest.qWait(40)
         grid.show_actions(item)
         self.assertTrue(grid.viewport().rect().contains(grid.actions_bar.geometry()))
         grid.verticalScrollBar().valueChanged.emit(10)

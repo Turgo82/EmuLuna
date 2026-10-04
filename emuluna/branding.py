@@ -11,6 +11,7 @@ MASCOT = Path(__file__).parent / 'data' / 'branding' / 'emuluna-mascot.png'
 UNLOCK_SOUND = Path(__file__).parent / 'data' / 'sounds' / 'unlock-pop.wav'
 UI_ICON_DIR = Path(__file__).parent / 'data' / 'icons' / 'ui'
 COLLECTION_ICON_DIR = Path(__file__).parent / 'data' / 'icons' / 'collections'
+SETTINGS_ICON_DIR = Path(__file__).parent / 'data' / 'icons' / 'settings'
 COLLECTION_ICONS = {
     'collection-all': 'all-games.svg',
     'collection-recent': 'recently-played.svg',
@@ -73,6 +74,33 @@ class PaletteSvgIconEngine(QIconEngine):
         pixmap = self.pixmap(pixel_size, mode, state)
         pixmap.setDevicePixelRatio(scale)
         return pixmap
+
+
+class ColorSvgIconEngine(PaletteSvgIconEngine):
+    """Keep illustrated SVG colors in every tab state, with HiDPI rendering."""
+
+    def clone(self):
+        return ColorSvgIconEngine(self.path)
+
+    def key(self):
+        return 'EmuLunaColorSvg'
+
+    def renderer(self, mode, state):
+        return QSvgRenderer(QByteArray(self.template.encode('utf-8')))
+
+    def paint(self, painter, rect, mode, state):
+        painter.save()
+        if mode == QIcon.Disabled:
+            painter.setOpacity(painter.opacity() * .45)
+        super().paint(painter, rect, mode, state)
+        painter.restore()
+
+
+def settings_icon(name):
+    path = SETTINGS_ICON_DIR / (name + '.svg')
+    if not path.is_file():
+        raise KeyError(f'Unknown settings icon: {name}')
+    return QIcon(ColorSvgIconEngine(path))
 
 
 def navigation_icon(name, foreground=None):

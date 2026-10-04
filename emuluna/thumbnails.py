@@ -1,4 +1,4 @@
-"""Persistent tiny cover previews followed by bounded full thumbnails."""
+"""Persistent small cover previews followed by bounded full thumbnails."""
 from collections import OrderedDict
 import hashlib
 import os
@@ -9,6 +9,8 @@ from .systems import SYSTEMS
 
 from PySide6.QtCore import QObject, QRunnable, QThreadPool, Signal, Slot, Qt, QSize
 from PySide6.QtGui import QImage, QImageReader, QPixmap, QIcon
+
+PREVIEW_SIZE = 96
 
 
 class ThumbnailSignals(QObject):
@@ -38,7 +40,7 @@ def _preview_image(source, preview):
         image = QImage(str(preview))
         if not image.isNull():
             return image
-    image = _read_scaled(source, 40)
+    image = _read_scaled(source, PREVIEW_SIZE)
     if image.isNull():
         return image
     try:
@@ -54,10 +56,9 @@ def _preview_image(source, preview):
 
 
 def _preview_icon(image):
-    # QIcon does not upscale a small source to the requested paint rectangle.
-    # Supply a card-sized pixmap so the preview fills the cover's proportions.
-    expanded = image.scaled(QSize(256, 256), Qt.KeepAspectRatio, Qt.SmoothTransformation)
-    return QIcon(QPixmap.fromImage(expanded))
+    # Keep the fallback tier small in memory; the delegate scales it to fill
+    # the exact cover rectangle while the sharper image loads.
+    return QIcon(QPixmap.fromImage(image))
 
 
 class ThumbnailJob(QRunnable):
@@ -72,7 +73,7 @@ class ThumbnailJob(QRunnable):
             preview = _preview_image(self.path, self.preview_path)
             if not preview.isNull():
                 self.signals.preview.emit(self.key, preview)
-            image = _read_scaled(self.path, 256)
+            image = _read_scaled(self.path, 512)
         finally:
             self.signals.finished.emit(self.key, image)
 
@@ -114,7 +115,9 @@ class ThumbnailCache(QObject):
 
     def preview_path(self, game):
         identity = hashlib.sha256(str(game['id']).encode()).hexdigest()[:32]
-        return self.preview_directory / f"{identity}-{game['cover_revision']}.png"
+        # Include quality in the cache identity so older, blurrier previews
+        # are regenerated automatically without touching original artwork.
+        return self.preview_directory / f"{identity}-{game['cover_revision']}-{PREVIEW_SIZE}px.png"
 
     def warm_previews(self, games):
         """Fill the small on-disk tier off-thread, so later fast scrolls never flash blanks."""

@@ -62,6 +62,7 @@ class Core:
             "aspect_ratio": (C.c_double, [C.c_void_p]),
             "fps": (C.c_double, [C.c_void_p]), "sample_rate": (C.c_uint, [C.c_void_p]),
             "save_state": (C.c_int, [C.c_void_p, C.c_char_p]),
+            "state_size_limit": (C.c_size_t, []),
             "load_state": (C.c_int, [C.c_void_p, C.c_char_p]),
             "flush": (None, [C.c_void_p]),
             "hardware_active": (C.c_int, [C.c_void_p]),
@@ -225,7 +226,8 @@ class Core:
         path = Path(path)
         if not path.is_file():
             raise CoreError("There is no saved state in this slot yet.")
-        if path.stat().st_size > 32 * 1024 * 1024:
+        # Use the host's payload limit plus room for the integrity header.
+        if path.stat().st_size > self.lib.el_state_size_limit() + 16384:
             raise CoreError("The saved state is too large.")
         try:
             magic, header, raw = path.read_bytes().split(b"\n", 2)

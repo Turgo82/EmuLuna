@@ -122,9 +122,12 @@ class Player(QMainWindow):
             saved_renderer = saved_state_renderer(state_file) if state_file else None
             hardware_enabled = library.setting("experimental.hardware_rendering", "1") == "1"
             catalog_id = selected.get("catalog_id") or selected["id"]
-            adaptive = bool(CATALOG.get(catalog_id, {}).get("hardware_options"))
+            core_record = CATALOG.get(catalog_id, {})
+            hardware_required = bool(core_record.get('hardware_required'))
+            adaptive = bool(core_record.get("hardware_options") or hardware_required)
             capabilities = probe_hardware_contexts() if adaptive or compatible_hardware else (0, 0, 0, 0)
-            vulkan_available = bool(adaptive and CATALOG.get(catalog_id, {}).get("vulkan_options")
+            vulkan_available = bool(adaptive and (core_record.get("vulkan_options") or
+                                                  core_record.get('vulkan_context'))
                                     and probe_vulkan_context())
             n64_gpu_available = bool(capabilities[0] or capabilities[2])
             hardware_candidate = compatible_hardware and n64_gpu_available and (
@@ -139,6 +142,11 @@ class Player(QMainWindow):
                 raise CoreError("This save state needs an OpenGL core context that is unavailable on this computer.")
             if adaptive and state_file and saved_renderer == "vulkan" and not vulkan_available:
                 raise CoreError("This save state needs a Vulkan core context that is unavailable on this computer.")
+            if hardware_required and not using_hardware:
+                raise CoreError("This core requires Vulkan or OpenGL hardware rendering. "
+                                "A compatible GPU context is unavailable for this game or save state.")
+            if hardware_required and state_file and saved_renderer == 'opengl':
+                vulkan_available = False
             self.hardware_state_compatibility = bool(
                 (compatible_hardware and hardware_enabled and n64_gpu_available and state_file
                  and saved_renderer != "opengl")
@@ -168,19 +176,21 @@ class Player(QMainWindow):
             if hardware_candidate or render_options:
                 core_options["options"] = accelerated
             print("Core: " + selected["id"], flush=True)
-            attempts = [render_options]
+            attempts = [(render_options, vulkan_available)]
+            if hardware_required and vulkan_available and capabilities[2] and not state_file:
+                attempts.append((render_options, False))
             if catalog_id == "mednafen_psx_hw" and not state_file:
                 if render_options == CATALOG[catalog_id].get("vulkan_options"):
                     gl_options, _, gl_usable = core_render_options(catalog_id, capabilities)
                     if gl_usable:
-                        attempts.append(gl_options)
+                        attempts.append((gl_options, False))
                 if render_options != CATALOG[catalog_id].get("software_options"):
-                    attempts.append(CATALOG[catalog_id]["software_options"])
-            for index, candidate in enumerate(attempts):
+                    attempts.append((CATALOG[catalog_id]["software_options"], False))
+            for index, (candidate, use_vulkan) in enumerate(attempts):
                 attempt_options = dict(core_options)
+                attempt_options['allow_vulkan'] = use_vulkan
                 if candidate != render_options:
                     attempt_options["options"] = {**options.get("options", {}), **candidate}
-                    attempt_options["allow_vulkan"] = False
                 try:
                     self.core = Core(rom_path, self.game["system"], save_directory, **attempt_options)
                     if self.core.hardware_requested:
@@ -189,7 +199,7 @@ class Player(QMainWindow):
                         print("Core requested hardware context: " + kind, flush=True)
                         (VulkanCoreDisplay if self.core.hardware_context_type == 6 else
                          HardwareCoreDisplay)(self.core)
-                    elif candidate != CATALOG.get(catalog_id, {}).get("software_options") and len(attempts) > 1:
+                    elif hardware_required or (candidate != core_record.get("software_options") and len(attempts) > 1):
                         raise CoreError("The core declined the requested hardware renderer.")
                     break
                 except (CoreError, HardwareRenderError) as error:

@@ -21,10 +21,10 @@ cmake_command="${CMAKE:-cmake}"
 if command -v "$cmake_command" >/dev/null 2>&1; then
     "$cmake_command" -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
     "$cmake_command" --build build --parallel "${BUILD_JOBS:-4}"
-elif [[ -f build/cores/libemuluna_host.so ]]; then
-    printf '%s\n' 'CMake is unavailable; using the existing native host build.'
+elif [[ -f build/cores/libemuluna_host.so && -x build/cores/emuluna-chd-probe ]]; then
+    printf '%s\n' 'CMake is unavailable; using the existing native host and CHD reader builds.'
 else
-    printf '%s\n' 'CMake is required because build/cores/libemuluna_host.so does not exist.' >&2
+    printf '%s\n' 'CMake is required to build the native host and CHD reader.' >&2
     exit 1
 fi
 

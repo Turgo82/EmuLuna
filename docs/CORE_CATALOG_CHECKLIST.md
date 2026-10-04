@@ -1,11 +1,11 @@
 # EmuLuna and Libretro core checklist
 
-Snapshot: buildbot availability checked 2026-09-28; curated catalog updated 2026-09-30 · Linux x86_64 · [official Libretro buildbot](https://buildbot.libretro.com/nightly/linux/x86_64/latest/)
+Snapshot: buildbot availability checked 2026-09-28; curated catalog updated 2026-10-02 · Linux x86_64 · [official Libretro buildbot](https://buildbot.libretro.com/nightly/linux/x86_64/latest/)
 
 - **241** downloadable Libretro core packages in the current buildbot index
-- **29** cores in EmuLuna’s curated download catalog
+- **30** cores in EmuLuna’s curated download catalog
 - **13** curated cores installed in the active library
-- **212** downloadable packages outside EmuLuna’s catalog at the snapshot date
+- **211** downloadable packages outside EmuLuna’s catalog at the snapshot date
 
 Checklist meaning: checked items are included in EmuLuna’s curated downloader. Unchecked items exist on the official buildbot but are not currently offered by EmuLuna. “Installed” reflects the active library at the time this report was generated.
 
@@ -40,6 +40,8 @@ The buildbot includes more than console emulators. It also contains arcade varia
 - [x] **Snes9x 2010** (`snes9x2010`) — Super Nintendo (SNES) — Not installed — build 2026-09-28
 - [x] **bsnes** (`bsnes`) — Super Nintendo (SNES) — **Installed:** 115 — build 2026-09-28
 - [x] **FCEUmm** (`fceumm`) — Nintendo (NES), Famicom Disk System — **Installed:** (SVN) 236ccdf — build 2026-09-28
+
+- [x] **Flycast** (`flycast`) — Sega Dreamcast — GPU context required; optional Dreamcast BIOS — availability verified 2026-10-02
 
 ## Available from Libretro but outside EmuLuna’s catalog
 
@@ -93,7 +95,6 @@ The buildbot includes more than console emulators. It also contains arcade varia
 - [ ] **Arcade (FinalBurn Neo)** (`fbneo`) — Arcade (various) — build 2026-09-28
 - [ ] **Nintendo - Game Boy / Color (fixGB)** (`fixgb`) — Game Boy/Game Boy Color — build 2026-09-28
 - [ ] **Nintendo - NES / Famicom (fixNES)** (`fixnes`) — Nintendo Entertainment System — build 2026-09-28
-- [ ] **Sega - Dreamcast/Naomi (Flycast)** (`flycast`) — Sega Dreamcast — build 2026-09-28
 - [ ] **Microsoft - MSX (fMSX)** (`fmsx`) — MSX — build 2026-09-28
 - [ ] **Fairchild - ChannelF (FreeChaF)** (`freechaf`) — Channel F — build 2026-09-28
 - [ ] **Commodore - C64 (Frodo)** (`frodo`) — C64 — build 2026-09-28

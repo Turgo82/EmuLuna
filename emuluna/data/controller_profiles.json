@@ -849,5 +849,35 @@
     },
     "analog": false,
     "diagram": "wsc"
+  },
+  "dreamcast": {
+    "players": 4,
+    "shape": "gamepad",
+    "primary": [
+      64,
+      128,
+      32,
+      16,
+      8,
+      2,
+      1,
+      2048,
+      1024,
+      4096,
+      8192
+    ],
+    "labels": {
+      "2": "A",
+      "1": "B",
+      "2048": "X",
+      "1024": "Y",
+      "4096": "L trigger",
+      "8192": "R trigger"
+    },
+    "analog": true,
+    "sticks": [
+      "Analog stick"
+    ],
+    "diagram": "dreamcast"
   }
 }

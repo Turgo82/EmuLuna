@@ -1,8 +1,9 @@
 """Settings surfaces use one palette, including native-style indicators."""
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QPainter, QPen, QPalette, QPainterPath
+from PySide6.QtCore import Qt, QSize, QRect
+from PySide6.QtGui import QPainter, QPen, QPalette, QPainterPath, QColor, QFontMetrics, QIcon
 from PySide6.QtWidgets import (QCheckBox, QComboBox, QSpinBox, QAbstractSpinBox, QStyle, QStyleOptionButton,
-                              QStyleOptionComboBox, QStyleOptionSpinBox, QStylePainter)
+                              QStyleOptionComboBox, QStyleOptionSpinBox, QStylePainter,
+                              QStyledItemDelegate, QStyleOptionViewItem, QTabBar, QStyleOptionTab)
 
 SETTINGS_STYLE = """
 QDialog {background:palette(window);color:palette(window-text);}
@@ -11,8 +12,9 @@ QLabel#subtle {color:palette(placeholder-text);}
 QLabel#controlTitle {font-weight:600;}
 QLabel#controlGroup {color:palette(placeholder-text);font-weight:600;padding:7px 0 3px;}
 QFrame#settingsCard {background:palette(base);border:1px solid palette(mid);border-radius:8px;}
+QFrame#controllerPreviewCard {background:transparent;border:0;}
 QWidget#controlMappings {background:palette(base);}
-QTabWidget::pane {background:palette(window);border:1px solid palette(mid);border-radius:7px;top:-1px;}
+QTabWidget::pane {background:transparent;border:0;}
 QTabWidget::tab-bar {alignment:center;}
 QTabBar {background:palette(alternate-base);outline:0;}
 QTabBar::tab {background:transparent;color:palette(window-text);border:0;border-bottom:3px solid transparent;padding:10px 12px;margin:0 1px;}
@@ -61,7 +63,99 @@ QMenu::item {padding:6px 22px;border-radius:3px;}
 QMenu::item:selected {background:palette(highlight);color:palette(highlighted-text);}
 QMenu::item:disabled {color:palette(disabled-text);}
 QMenu::separator {height:1px;background:palette(mid);margin:4px;}
+/* Controls uses a single wood surface from the tab strip to the bottom edge. */
+QTabWidget#settingsTabs[woodControls="true"]::pane {background:transparent;border:0;}
+QWidget#woodControlsPage {background:transparent;}
+QWidget#woodControlsPage QLabel {color:#fff5e9;}
+QWidget#woodControlsPage QLabel#subtle,QWidget#woodControlsPage QLabel#controlGroup {color:#ead7bc;}
+QWidget#woodControlsPage QFrame#settingsCard {background:rgba(34,21,13,105);border:1px solid rgba(228,184,116,100);}
+QWidget#woodControlsPage QWidget#controlMappings {background:transparent;}
+QWidget#woodControlsPage QPushButton,QWidget#woodControlsPage QComboBox,
+QPushButton#settingsDone[woodControls="true"] {background:rgba(34,21,13,140);color:#fff5e9;border-color:rgba(228,184,116,150);}
+QWidget#woodControlsPage QPushButton:hover,QWidget#woodControlsPage QComboBox:hover,
+QPushButton#settingsDone[woodControls="true"]:hover {background:rgba(107,69,40,190);border-color:#e4b874;}
+QWidget#woodControlsPage QPushButton:focus,QWidget#woodControlsPage QComboBox:focus,
+QPushButton#settingsDone[woodControls="true"]:focus {border-color:#e4b874;}
+QWidget#woodControlsPage QComboBox QAbstractItemView {background:#302015;color:#fff5e9;border-color:#b48a5b;}
+QWidget#woodControlsPage QScrollBar {background:rgba(34,21,13,105);}
+QWidget#woodControlsPage QScrollBar::handle {background:#c2a17b;border-color:transparent;}
 """
+
+
+class SettingsTabBar(QTabBar):
+    """Keep native tab behavior with centered icons above their labels."""
+    def tabSizeHint(self, index):
+        font = self.font()
+        font.setBold(True)
+        metrics = QFontMetrics(font)
+        return QSize(max(84, metrics.horizontalAdvance(self.tabText(index)) + 24),
+                     self.iconSize().height() + metrics.height() + 29)
+
+    def minimumTabSizeHint(self, index):
+        return self.tabSizeHint(index)
+
+    def paintEvent(self, event):
+        painter = QStylePainter(self)
+        for index in range(self.count()):
+            option = QStyleOptionTab()
+            self.initStyleOption(option, index)
+            painter.drawControl(QStyle.CE_TabBarTabShape, option)
+            rect = self.tabRect(index)
+            size = self.iconSize()
+            icon_rect = QRect(rect.center().x() - size.width() // 2,
+                              rect.top() + 10, size.width(), size.height())
+            mode = QIcon.Normal if self.isTabEnabled(index) else QIcon.Disabled
+            self.tabIcon(index).paint(painter, icon_rect, Qt.AlignCenter, mode)
+            font = self.font()
+            font.setBold(index == self.currentIndex())
+            painter.setFont(font)
+            group = QPalette.Active if self.isTabEnabled(index) else QPalette.Disabled
+            painter.setPen(self.window().palette().color(group, QPalette.WindowText))
+            label_rect = QRect(rect.left() + 8, icon_rect.bottom() + 7,
+                               rect.width() - 16, QFontMetrics(font).height())
+            painter.drawText(label_rect, Qt.AlignCenter | Qt.TextSingleLine, self.tabText(index))
+
+
+def verification_green(background):
+    """Choose a green that remains legible against the actual row color."""
+    def luminance(color):
+        channels = [channel / 12.92 if channel <= .04045 else ((channel + .055) / 1.055) ** 2.4
+                    for channel in (color.redF(), color.greenF(), color.blueF())]
+        return sum(channel * weight for channel, weight in zip(channels, (.2126, .7152, .0722)))
+    base = luminance(background)
+    colors = [QColor(value) for value in ('#67dc9b', '#0b5728', '#00240f', '#b6f7d3')]
+    def contrast(color):
+        value = luminance(color)
+        return (max(base, value) + .05) / (min(base, value) + .05)
+    return next((color for color in colors if contrast(color) >= 4.5), max(colors, key=contrast))
+
+
+class SystemFileDelegate(QStyledItemDelegate):
+    """Keep verification green on selected rows and every desktop theme."""
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        from .branding import navigation_icon
+        self.verified_icon = navigation_icon('file-verified', '#198754')
+        self.unverified_icon = navigation_icon('file-unverified')
+
+    def initStyleOption(self, option, index):
+        super().initStyleOption(option, index)
+        verified = index.siblingAtColumn(3).data(Qt.DisplayRole) == 'Verified'
+        if index.column() == 3 and verified:
+            background = option.palette.color(QPalette.Highlight if option.state & QStyle.State_Selected
+                                               else QPalette.Base)
+            green = verification_green(background)
+            option.palette.setColor(QPalette.Text, green)
+            option.palette.setColor(QPalette.HighlightedText, green)
+            option.font.setBold(True)
+        elif index.column() == 0:
+            # SVG decorations reserve the native indicator's space without
+            # allowing the desktop style to replace them with check bitmaps.
+            option.features &= ~QStyleOptionViewItem.HasCheckIndicator
+            option.features |= QStyleOptionViewItem.HasDecoration
+            option.icon = self.verified_icon if verified else self.unverified_icon
+            option.decorationSize = QSize(18, 18)
+            option.decorationAlignment = Qt.AlignCenter
 
 
 class SettingsCheckBox(QCheckBox):

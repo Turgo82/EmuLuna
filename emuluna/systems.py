@@ -19,6 +19,11 @@ def core_render_options(core_id, gl_capabilities, *, vulkan_available=False,
                         resuming=False, saved_renderer=None):
     """Choose a core's GPU or software options without changing its display API."""
     record = CATALOG.get(core_id, {})
+    if record.get('hardware_required'):
+        available = bool(gl_capabilities[2] or (vulkan_available and record.get('vulkan_context')))
+        usable = (bool(gl_capabilities[2]) if saved_renderer == 'opengl' else
+                  bool(vulkan_available) if saved_renderer == 'vulkan' else False) if resuming else available
+        return {}, available, usable
     if not record.get("hardware_options") and not record.get("vulkan_options"):
         return {}, False, False
     compatibility_gl, _, core_gl, _ = gl_capabilities

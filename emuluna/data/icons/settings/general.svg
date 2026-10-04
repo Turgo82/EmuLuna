@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <linearGradient id="plate" x2="1" y2="1"><stop stop-color="#73c7f2"/><stop offset=".5" stop-color="#478ccc"/><stop offset="1" stop-color="#405a9d"/></linearGradient>
+    <linearGradient id="metal" x2="1" y2="1"><stop stop-color="#fafcff"/><stop offset=".5" stop-color="#c6d3e5"/><stop offset="1" stop-color="#8c9cb7"/></linearGradient>
+    <linearGradient id="hub" x2="1" y2="1"><stop stop-color="#729cce"/><stop offset="1" stop-color="#334673"/></linearGradient>
+  </defs>
+  <ellipse cx="24" cy="43" rx="17" ry="2" fill="#101826" opacity=".22"/>
+  <rect x="6" y="5" width="36" height="36" rx="8" fill="url(#plate)" stroke="#304f7c" stroke-width="1.2"/>
+  <path d="M12 7H35Q40 7 40 12" fill="none" stroke="#ccefff" opacity=".7"/>
+  <path d="M20 9H28L29 14L33 16L38 15L41 22L37 25L36 29L38 33L32 38L28 35H23L19 38L12 34L14 29L12 25L8 22L11 15L16 16L19 14Z" fill="#263e69" opacity=".3" transform="translate(0 1)"/>
+  <path d="M20 9H28L29 14L33 16L37 15L40 22L36 25L35 29L37 33L31 37L27 34H22L18 37L12 33L14 28L12 24L8 21L11 15L16 16L19 14Z" fill="url(#metal)" stroke="#607796" stroke-width="1.1" stroke-linejoin="round"/>
+  <circle cx="24" cy="23" r="9" fill="url(#hub)" stroke="#7e94b0"/>
+  <circle cx="24" cy="23" r="5" fill="#d7e7fa" stroke="#f7fbff"/>
+  <path d="M20 10H27M10 20L12 16M14 32L18 35" fill="none" stroke="#fff" opacity=".8" stroke-linecap="round"/>
+</svg>

@@ -124,6 +124,9 @@ class HardwareCoreDisplay:
             if not self.fbo.isValid() or not self.fbo.bind():
                 raise HardwareRenderError("OpenGL could not create the core render target.")
             self._load_readback_functions()
+            functions = self.context.functions()
+            functions.glClearColor(0.0, 0.0, 0.0, 1.0)
+            functions.glClear(0x00004000 | 0x00000100 | 0x00000400)
             core.attach_hardware(self)
         except Exception:
             if hasattr(self, 'fbo'):
@@ -141,9 +144,7 @@ class HardwareCoreDisplay:
     def begin(self):
         if not self.context.makeCurrent(self.surface) or not self.fbo.bind():
             raise HardwareRenderError("The experimental OpenGL context was lost.")
-        functions = self.context.functions()
-        functions.glClearColor(0.0, 0.0, 0.0, 1.0)
-        functions.glClear(0x00004000 | 0x00000100 | 0x00000400)  # color, depth, stencil
+        # The core owns frame clearing; duplicate callbacks retain this target.
 
     def _load_readback_functions(self):
         """Load the small GL subset needed for deterministic CPU readback."""

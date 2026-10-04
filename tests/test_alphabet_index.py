@@ -63,7 +63,13 @@ class AlphabetNavigation(unittest.TestCase):
                 self.assertEqual(window.rows[window.selected_ids()[0]]['title'], 'Z game 01')
                 window.search.setText('M game')
                 QTest.qWait(30)
-                self.assertFalse(window.library_scrollbar.isVisible())
+                # Large fixed covers can still need scrolling after filtering
+                # to three games in a narrow window. Follow the actual bounds.
+                rects = [window.games.visualItemRect(window.games.item(i))
+                         for i in range(window.games.count())]
+                self.assertEqual(window.library_scrollbar.isVisible(),
+                                 max(rect.bottom() for rect in rects) + 1 - min(rect.top() for rect in rects)
+                                 > window.games.viewport().height())
                 self.assertEqual([key for key,button in rail.buttons.items() if button.isEnabled()], ['M'])
                 window.change_view('list')
                 QTest.qWait(30)

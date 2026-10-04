@@ -1,7 +1,8 @@
 """Friendly per-console controller setup, backed by persistent input profiles."""
 import time
-from PySide6.QtCore import Qt, Signal, QTimer
-from PySide6.QtGui import QIcon
+from functools import lru_cache
+from PySide6.QtCore import Qt, Signal, QTimer, QRectF
+from PySide6.QtGui import QIcon, QPixmap, QPainter, QColor
 from PySide6.QtWidgets import (QWidget, QHBoxLayout, QVBoxLayout, QFormLayout,
     QPushButton, QScrollArea, QLabel, QMenu, QSizePolicy, QGridLayout, QFrame,
     QStylePainter, QStyleOptionButton, QStyle)
@@ -11,7 +12,26 @@ from .controller_profiles import (SPECS, PAD_BUTTONS, actions, axis_label, bind,
 from .controller_diagrams import ControllerDiagram
 from .settings_style import SettingsComboBox as QComboBox
 from .gamepad import Gamepad
-from .systems import SYSTEMS
+from .systems import SYSTEMS, DATA
+
+
+@lru_cache(maxsize=1)
+def controller_wood_texture():
+    return QPixmap(str(DATA / 'textures' / 'controller-walnut.png'))
+
+
+def paint_controller_wood(painter, bounds):
+    """One continuous surface beneath the Controls navigation and widgets."""
+    texture = controller_wood_texture()
+    painter.setRenderHint(QPainter.SmoothPixmapTransform)
+    painter.fillRect(bounds, QColor('#52331f'))
+    if not texture.isNull() and not bounds.isEmpty():
+        scale = max(bounds.width() / texture.width(), bounds.height() / texture.height())
+        width, height = bounds.width() / scale, bounds.height() / scale
+        source = QRectF((texture.width() - width) / 2,
+                        (texture.height() - height) / 2, width, height)
+        painter.drawPixmap(bounds, texture, source)
+    painter.fillRect(bounds, QColor(0, 0, 0, 18))
 
 
 class BindingButton(QPushButton):
@@ -99,6 +119,7 @@ class ControlsPage(QWidget):
 
     def __init__(self, library, parent=None):
         super().__init__(parent)
+        self.setObjectName('woodControlsPage')
         self.library = library
         self.loading = False
         self.capture_pad = None
@@ -159,7 +180,7 @@ class ControlsPage(QWidget):
         body = QHBoxLayout()
         body.setSpacing(14)
         self.preview_card = QFrame()
-        self.preview_card.setObjectName('settingsCard')
+        self.preview_card.setObjectName('controllerPreviewCard')
         preview = QVBoxLayout(self.preview_card)
         preview.setContentsMargins(12, 12, 12, 12)
         self.diagram_title = QLabel()
@@ -201,6 +222,7 @@ class ControlsPage(QWidget):
         self.mapping_scroll.setWidgetResizable(True)
         self.mapping_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.mapping_scroll.setWidget(right)
+        self.mapping_scroll.viewport().setAutoFillBackground(False)
         mapping_box.addWidget(self.mapping_scroll)
         body.addWidget(mapping_card)
         outer.addLayout(body, 1)

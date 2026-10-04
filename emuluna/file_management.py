@@ -1,5 +1,6 @@
 """Explicit library removal and recoverable OS Trash operations."""
 from contextlib import contextmanager
+import os
 from pathlib import Path
 
 from PySide6.QtCore import QFile, QLockFile
@@ -102,6 +103,25 @@ def trash_files(paths):
             raise OSError(str(error) + detail) from error
 
 
+def clean_empty_game_folders(library, games):
+    """Remove only empty managed game directories, never external ROM folders."""
+    roms = library.root / 'roms'
+    for game in games:
+        main = library.root / game['rom_path']
+        for folder in (roms / game['system'] / game['id'], roms / game['id']):
+            if not main.is_relative_to(folder) or not folder.is_dir() or folder.is_symlink():
+                continue
+            if not folder.resolve().is_relative_to(roms.resolve()):
+                continue
+            # rmdir cannot delete files. Unrelated files, shared tracks and
+            # symlinks therefore keep their containing directories intact.
+            for current, _, _ in os.walk(folder, topdown=False, followlinks=False):
+                try:
+                    Path(current).rmdir()
+                except OSError:
+                    pass
+
+
 def remove_games(library, game_ids, *, trash_roms=False, states=False, screenshots=False):
     with game_locks(library, game_ids):
         plan = removal_plan(library, game_ids, include_roms=trash_roms)
@@ -116,6 +136,8 @@ def remove_games(library, game_ids, *, trash_roms=False, states=False, screensho
             library.db.executemany("DELETE FROM settings WHERE key LIKE ? ESCAPE '\\'",
                                    [("core\\_option." + game_id + ".%",) for game_id, in ids])
             library.db.executemany('DELETE FROM games WHERE id=?', ids)
+        if trash_roms:
+            clean_empty_game_folders(library, plan['games'])
         return plan
 
 

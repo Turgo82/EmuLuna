@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <linearGradient id="board" x2="1" y2="1"><stop stop-color="#3f88b3"/><stop offset=".5" stop-color="#285379"/><stop offset="1" stop-color="#193451"/></linearGradient>
+    <linearGradient id="chip" y2="1" x2="0"><stop stop-color="#536784"/><stop offset="1" stop-color="#182b45"/></linearGradient>
+    <linearGradient id="label" y2="1" x2="0"><stop stop-color="#ff8c79"/><stop offset="1" stop-color="#c44753"/></linearGradient>
+  </defs>
+  <ellipse cx="24" cy="43" rx="16" ry="2" fill="#101826" opacity=".22"/>
+  <path d="M11 4H30L38 12V41H11Z" fill="url(#board)" stroke="#16324d" stroke-width="1.2" stroke-linejoin="round"/>
+  <path d="M30 4V12H38" fill="#70a7c9" stroke="#16324d"/>
+  <path d="M14 7H26M14 10H26M14 13H23M15 17H20V22M34 16H29V22M15 37H21V34M34 37H29V34" fill="none" stroke="#60b7ce" stroke-width="1.1" opacity=".8"/>
+  <path d="M18 18V23M23 18V23M28 18V23M33 18V23M18 32V37M23 32V37M28 32V37M33 32V37" stroke="#ebce86" stroke-width="2"/>
+  <rect x="15" y="21" width="21" height="14" rx="2" fill="url(#chip)" stroke="#11243e"/>
+  <rect x="8" y="24" width="32" height="12" rx="2" fill="url(#label)" stroke="#943c47"/>
+  <path d="M11 25.5H37" stroke="#ffd1bf" stroke-linecap="round" opacity=".6"/>
+  <!-- Letterforms are vector paths so no installed font is needed. -->
+  <path d="M12 28V33H14Q16 33 16 31.7Q16 30.5 14 30.5H12M14 30.5Q15.5 30.5 15.5 29.3Q15.5 28 14 28H12M19 28V33M22 29Q22 28 24 28Q26 28 26 29V32Q26 33 24 33Q22 33 22 32ZM34 28H31Q29 28 29 29.2Q29 30.5 31.5 30.5Q34 30.5 34 31.7Q34 33 32 33H29" fill="none" stroke="#fff4ea" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

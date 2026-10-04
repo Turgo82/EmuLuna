@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <linearGradient id="glass" x2="1" y2="1"><stop stop-color="#f2eaff"/><stop offset=".5" stop-color="#bba8e5"/><stop offset="1" stop-color="#7169ac"/></linearGradient>
+    <linearGradient id="fluid" y2="1" x2="0"><stop stop-color="#89e8ef"/><stop offset="1" stop-color="#2687c8"/></linearGradient>
+    <linearGradient id="rim" y2="1" x2="0"><stop stop-color="#ca9afa"/><stop offset="1" stop-color="#8457b7"/></linearGradient>
+  </defs>
+  <ellipse cx="23" cy="43" rx="17" ry="2" fill="#101826" opacity=".22"/>
+  <path d="M17 8H28V21L39 35Q42 41 35 42H11Q4 41 7 35L17 21Z" fill="url(#glass)" stroke="#605686" stroke-width="1.2"/>
+  <path d="M13 30Q19 27 25 30Q30 32 33 30L37 36Q39 39 35 39H11Q8 39 10 36Z" fill="url(#fluid)" stroke="#478eae" stroke-width=".8"/>
+  <rect x="14" y="5" width="17" height="5" rx="2" fill="url(#rim)" stroke="#69508a"/>
+  <path d="M17 6.5H28M19 12V21L10 34" fill="none" stroke="#fff" stroke-width="1.5" opacity=".75" stroke-linecap="round"/>
+  <circle cx="19" cy="33" r="1.8" fill="#dbfcff"/><circle cx="27" cy="35" r="1.1" fill="#c9f4fd"/><circle cx="24" cy="25" r="1.2" fill="#b2eff8"/>
+  <path d="M38 8L39.5 12.5L44 14L39.5 15.5L38 20L36.5 15.5L32 14L36.5 12.5Z" fill="#ffe0a3" stroke="#ba9250" stroke-width=".8" stroke-linejoin="round"/>
+</svg>

@@ -96,6 +96,7 @@ class ArtworkTests(unittest.TestCase):
             self.assertEqual(summary["downloaded"], 1)
             self.assertEqual(get.call_count, 1)
             row = self.lib.get(self.game_id)
+            self.assertEqual(Path(row['cover']).suffix, '.webp')
             self.assertFalse(QImage(str(self.lib.root / row["cover"])).isNull())
             self.assertEqual(self.lib.artwork_info(self.game_id)["status"], "downloaded")
             self.assertEqual(self.worker(force=True)["downloaded"], 0)
@@ -178,9 +179,12 @@ class ArtworkTests(unittest.TestCase):
         self.assertEqual(catalog.path.read_bytes(), original)
 
     def test_image_validation_and_download_limits(self):
-        self.assertTrue(art.image_png(self.png).startswith(b"\x89PNG"))
+        encoded = art.image_webp(self.png, quality=100)
+        self.assertEqual(encoded[:4], b'RIFF')
+        self.assertEqual(encoded[8:12], b'WEBP')
+        self.assertEqual(QImage.fromData(encoded).pixelColor(20, 20), QColor('#a56cc1'))
         with self.assertRaises(ValueError):
-            art.image_png(b"<html>Access denied</html>")
+            art.image_webp(b"<html>Access denied</html>")
         class Response(io.BytesIO):
             headers = {}
             url = "https://example.org/image"
@@ -222,7 +226,7 @@ class ArtworkTests(unittest.TestCase):
             worker.run()
         self.assertEqual(candidates[0]["title"], "GoldenEye 007 (USA)")
         self.assertEqual(candidates[0]["score"], 1.0)
-        self.assertTrue(candidates[0]["image"].startswith(b"\x89PNG"))
+        self.assertEqual(candidates[0]['image'][8:12], b'WEBP')
         self.assertEqual(candidates[0]["metadata"]["title"], "GoldenEye 007")
         self.assertEqual(candidates[0]["metadata"]["region"], "USA")
         # Identical downloaded images from dump-name variants appear once.

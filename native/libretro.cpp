@@ -273,6 +273,7 @@ static void video(const void *data, unsigned width, unsigned height, size_t pitc
     }
     unsigned bytes = active->pixel_format == RETRO_PIXEL_FORMAT_XRGB8888 ? 4 : 2;
     if (pitch < width * bytes || pitch > 1024 * 16) { active->error = "Invalid core video stride."; return; }
+    active->last_frame_hardware = false;
     active->width = width; active->height = height; active->pixels.resize(width * height);
     for (unsigned y = 0; y < height; ++y) {
         auto row = static_cast<const uint8_t*>(data) + y * pitch;
@@ -497,7 +498,8 @@ void el_reset(void *instance) {
 }
 int el_frame(void *instance, unsigned keys) {
     auto h = static_cast<Host*>(instance); h->keys[0] = keys; h->audio.clear();
-    h->last_frame_hardware = false; h->run();
+    // NULL video callbacks retain the previous framebuffer, including its API.
+    h->run();
     if (!h->error.empty() || h->shutdown) return -1;
     // Convert each core's native rate (including SameBoy's MHz-rate audio) to the
     // desktop's 48 kHz stream, preserving fractional position between frames.
@@ -541,15 +543,17 @@ double el_aspect_ratio(void *instance) {
     return std::isfinite(h->aspect) && h->aspect > 0 && h->aspect < 10 ? h->aspect : double(h->width) / h->height;
 }
 unsigned el_sample_rate(void*) { return 48000; }
+// Dreamcast states include RAM, VRAM and device state and exceed the old 31 MiB cap.
+size_t el_state_size_limit(void) { return 128u * 1024u * 1024u; }
 int el_save_state(void *instance, const char *path) {
     auto h = static_cast<Host*>(instance); size_t size = h->serialize_size();
-    if (!size || size > 31 * 1024 * 1024) return 0;
+    if (!size || size > el_state_size_limit()) return 0;
     std::vector<char> state(size); if (!h->serialize(state.data(), size)) return 0;
     std::ofstream file(path, std::ios::binary); file.write(state.data(), size); return file.good();
 }
 int el_load_state(void *instance, const char *path) {
     std::ifstream file(path, std::ios::binary | std::ios::ate);
-    if (!file || file.tellg() <= 0 || file.tellg() > 31 * 1024 * 1024) return 0;
+    if (!file || file.tellg() <= 0 || file.tellg() > static_cast<std::streamoff>(el_state_size_limit())) return 0;
     size_t size = file.tellg(); file.seekg(0); std::vector<char> state(size); file.read(state.data(), size);
     auto h = static_cast<Host*>(instance);
     // Persistent saves and memory cards are independent of emulator states.

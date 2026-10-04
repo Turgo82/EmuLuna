@@ -27,7 +27,7 @@ class ImportedControllerArt(unittest.TestCase):
         manifest=json.loads((ART/'artwork_manifest.json').read_text())
         fallback={'atari5200','odyssey2','sg1000','ngp','ws'}
         diagrams={spec['diagram'] for spec in SPECS.values()}
-        self.assertEqual(set(imported),diagrams-fallback)
+        self.assertEqual(set(imported),diagrams-fallback-{'dreamcast'})
         self.assertEqual(set(imported),set(manifest))
         self.assertEqual(sum(spec['diagram'] in imported for spec in SPECS.values()),27)
         for key,record in imported.items():

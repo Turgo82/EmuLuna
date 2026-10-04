@@ -149,7 +149,7 @@ class ControllerRedesign(unittest.TestCase):
         self.assertEqual(buttons,0)
         self.assertEqual(axes,(24000,0,0,0))
 
-    def test_rendered_checkbox_slider_and_binding_surfaces_switch_palettes(self):
+    def test_rendered_wood_bindings_and_gameplay_surfaces_follow_their_themes(self):
         dialog=SettingsDialog(self.library)
         try:
             dialog.show();dialog.show_page('controls')
@@ -163,7 +163,14 @@ class ControllerRedesign(unittest.TestCase):
                 page.system.setCurrentIndex(page.system.findData('snes'))
                 QTest.qWait(10)
                 button=page.mapping_buttons['button:64']
-                self.assertEqual(button.grab().toImage().pixelColor(5,5),theme_palette().color(QPalette.Button))
+                # Bindings keep warm translucent panels over the wood in both
+                # themes; gameplay widgets still follow the active palette.
+                surface=button.grab().toImage().pixelColor(5,5)
+                self.assertGreater(surface.red(),surface.green())
+                self.assertGreater(surface.green(),surface.blue())
+                self.assertGreater(surface.alpha(),0)
+                self.assertLess(surface.alpha(),255)
+                self.assertGreater(button.palette().color(QPalette.ButtonText).lightnessF(),.8)
                 dialog.show_page('gameplay');QTest.qWait(10)
                 box=dialog.focus_pause
                 option=QStyleOptionButton();box.initStyleOption(option)

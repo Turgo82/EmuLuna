@@ -1,31 +1,36 @@
 """User settings and the Libretro core library."""
 from pathlib import Path
 
-from PySide6.QtCore import Qt, Signal, QTimer, QSize, QEvent, QByteArray, QUrl
-from PySide6.QtGui import QDesktopServices
+from PySide6.QtCore import Qt, Signal, QTimer, QSize, QEvent, QByteArray, QUrl, QPoint, QRectF
+from PySide6.QtGui import QDesktopServices, QPainter, QColor, QPalette
 from PySide6.QtMultimedia import QMediaDevices
 from PySide6.QtWidgets import (QApplication, QDialog, QVBoxLayout, QHBoxLayout, QTabWidget, QWidget, QFormLayout,
     QLabel, QSlider, QLineEdit, QPushButton, QFileDialog, QTableWidget,
     QTableWidgetItem, QHeaderView, QAbstractItemView, QScrollArea, QMessageBox, QInputDialog)
 
 from .theme import set_system_theme, follow_system_theme, theme_palette
-from .bios import bios_status, requirements, import_bios
+from .bios import bios_status, checklist, import_bios
+from .core import CoreError
 from .core_manager import CATALOG, CoreManager, CoreWorker
 from .library import SYSTEMS
 from .video_filters import ALL_FILTERS, valid_filter
-from .controller_settings import ControlsPage
-from .branding import navigation_icon
+from .controller_settings import ControlsPage, paint_controller_wood
+from .branding import navigation_icon, settings_icon
 from .gamepad import Gamepad
 from .settings_style import (SETTINGS_STYLE, SettingsCheckBox as QCheckBox,
-                             SettingsComboBox as QComboBox, SettingsSpinBox as QSpinBox)
+                             SettingsComboBox as QComboBox, SettingsSpinBox as QSpinBox,
+                             SystemFileDelegate, SettingsTabBar)
 
 
 class SettingsDialog(QDialog):
     changed = Signal()
     rebuild_cover_cache_requested = Signal()
+    convert_covers_requested = Signal()
+    cancel_cover_conversion_requested = Signal()
 
-    def __init__(self, library, parent=None, *, advanced_unlocked=False):
+    def __init__(self, library, parent=None, *, advanced_unlocked=None):
         super().__init__(parent)
+        self.setProperty('emuluna.library_header', True)
         self.library = library
         follow_system_theme(library)
         self.setPalette(theme_palette())
@@ -40,8 +45,11 @@ class SettingsDialog(QDialog):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(16, 16, 16, 14)
         self.tabs = QTabWidget()
-        self.tabs.setIconSize(QSize(23, 23))
-        self.tabs.setDocumentMode(True)
+        self.tabs.setTabBar(SettingsTabBar())
+        self.tabs.setObjectName('settingsTabs')
+        self.tabs.setIconSize(QSize(30, 30))
+        self.tabs.setDocumentMode(False)
+        self.tabs.tabBar().setExpanding(False)
         self.tabs.tabBar().setDrawBase(False)
         self.tabs.tabBar().setFocusPolicy(Qt.NoFocus)
         self.advanced_unlocked = False
@@ -60,6 +68,8 @@ class SettingsDialog(QDialog):
             self.tabs.addTab(page, title)
         self.tabs.currentChanged.connect(self.ensure_page)
         self.refresh_navigation_icons()
+        if advanced_unlocked is None:
+            advanced_unlocked = library.setting('advanced.unlocked', '0') == '1'
         if advanced_unlocked:
             self.unlock_advanced()
         self.status = QLabel()
@@ -68,10 +78,13 @@ class SettingsDialog(QDialog):
         layout.addWidget(self.status)
         buttons = QHBoxLayout()
         buttons.addStretch()
-        close = QPushButton("Done")
-        close.clicked.connect(self.accept)
-        buttons.addWidget(close)
+        self.done_button = QPushButton("Done")
+        self.done_button.setObjectName('settingsDone')
+        self.done_button.clicked.connect(self.accept)
+        buttons.addWidget(self.done_button)
         layout.addLayout(buttons)
+        self.tabs.currentChanged.connect(self.update_controls_surface)
+        self.update_controls_surface(self.tabs.currentIndex())
         self.core_watch = QTimer(self)
         self.core_watch.timeout.connect(self.check_core_changes)
         self.core_watch.start(1000)
@@ -82,6 +95,27 @@ class SettingsDialog(QDialog):
                 self.restoreGeometry(QByteArray(bytes.fromhex(geometry)))
             except ValueError:
                 pass  # Keep the default size if the saved preference is invalid.
+
+    def update_controls_surface(self, index):
+        wood = index >= 0 and self.page_keys[index] == 'controls'
+        for widget in (self.tabs, self.done_button):
+            widget.setProperty('woodControls', wood)
+            widget.style().unpolish(widget)
+            widget.style().polish(widget)
+            widget.update()
+        self.update()
+
+    def paintEvent(self, event):
+        super().paintEvent(event)
+        bar = self.tabs.tabBar()
+        top = bar.mapTo(self, QPoint(0, bar.height())).y()
+        painter = QPainter(self)
+        painter.fillRect(0, 0, self.width(), top, self.palette().color(QPalette.AlternateBase))
+        if self.tabs.property('woodControls'):
+            # Paint through the pane, its margins, and the footer. The tab
+            # buttons and native title bar stay on the regular theme surface.
+            paint_controller_wood(painter, QRectF(0, top, self.width(), self.height() - top))
+        painter.fillRect(0, top, self.width(), 2, QColor('#111216'))
 
     def show_page(self, key):
         """Select a section, constructing its contents on the first visit."""
@@ -122,9 +156,9 @@ class SettingsDialog(QDialog):
 
     def refresh_navigation_icons(self):
         for index, key in enumerate(self.page_keys):
-            # Keep the same legible foreground in selected and unselected tabs;
-            # the tab background and underline already communicate selection.
-            self.tabs.setTabIcon(index, navigation_icon(key))
+            # Illustrations retain their colors; selection is shown by the
+            # palette-colored tab background and underline.
+            self.tabs.setTabIcon(index, settings_icon(key))
 
     def changeEvent(self, event):
         super().changeEvent(event)
@@ -294,6 +328,8 @@ class SettingsDialog(QDialog):
 
     def advanced_tab(self):
         page = QWidget()
+        page.setObjectName('advancedSettingsPage')
+        page.setStyleSheet('QWidget#advancedSettingsPage {background:palette(window);}')
         form = QFormLayout(page)
         form.setContentsMargins(20, 22, 20, 20)
         form.setSpacing(16)
@@ -357,13 +393,52 @@ class SettingsDialog(QDialog):
         )
         self.rebuild_cover_cache_button.clicked.connect(self.rebuild_cover_cache_requested.emit)
         form.addRow(self.rebuild_cover_cache_button)
+        developer_label = QLabel('Developer options')
+        developer_label.setObjectName('controlGroup')
+        form.addRow(developer_label)
+        from .artwork import webp_quality
+        self.webp_quality = QComboBox()
+        for label, value in [('75 — Smaller files', 75), ('85 — Balanced (recommended)', 85),
+                             ('95 — Higher detail', 95), ('100 — Lossless', 100)]:
+            self.webp_quality.addItem(label, value)
+        self.webp_quality.setCurrentIndex(self.webp_quality.findData(webp_quality(self.library)))
+        self.webp_quality.currentIndexChanged.connect(lambda index: self.set_setting(
+            'artwork.webp_quality', self.webp_quality.itemData(index)))
+        form.addRow('WebP quality', self.webp_quality)
+        self.convert_covers_button = QPushButton('Convert existing covers to WebP')
+        self.convert_covers_button.setToolTip(
+            'Convert library box art using the selected quality. Existing WebP covers are recompressed if needed; external files are kept.')
+        self.convert_covers_button.clicked.connect(self.convert_covers_requested.emit)
+        self.cancel_cover_conversion_button = QPushButton('Stop conversion')
+        self.cancel_cover_conversion_button.clicked.connect(self.cancel_cover_conversion_requested.emit)
+        self.cancel_cover_conversion_button.hide()
+        form.addRow(self.convert_covers_button)
+        form.addRow(self.cancel_cover_conversion_button)
+        self.cover_conversion_status = QLabel('Newly downloaded covers are saved as WebP automatically.')
+        self.cover_conversion_status.setWordWrap(True)
+        self.cover_conversion_status.setObjectName('subtle')
+        form.addRow(self.cover_conversion_status)
+        parent = self.parent()
+        if parent and getattr(parent, 'cover_conversion_worker', None):
+            self.update_cover_conversion('Converting covers in the background…', True)
         note = QLabel(
             "Advanced options are experimental and may change as EmuLuna evolves."
         )
         note.setWordWrap(True)
         note.setStyleSheet("color:palette(placeholder-text)")
         form.addRow(note)
-        return page
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setWidget(page)
+        return scroll
+
+    def update_cover_conversion(self, message, running):
+        if not hasattr(self, 'convert_covers_button'):
+            return
+        self.convert_covers_button.setEnabled(not running)
+        self.webp_quality.setEnabled(not running)
+        self.cancel_cover_conversion_button.setVisible(running)
+        self.cover_conversion_status.setText(message)
 
     def test_vibration(self):
         """Test the first connected controller without requiring a game."""
@@ -558,7 +633,7 @@ class SettingsDialog(QDialog):
             info = CATALOG.get(core_id, {})
             previous = self.manager.history(core_id)
             details = info.get("launch_block") or info.get("notice") or \
-                "Standard libretro core · Linux .so file. See BIOS checklist for firmware requirements."
+                "Standard libretro core · Linux .so file. See System Files for firmware requirements."
             if previous:
                 details += f" {len(previous)} previous build{'s' if len(previous) != 1 else ''} available."
             else:
@@ -642,29 +717,51 @@ class SettingsDialog(QDialog):
         folder_row.addWidget(browse)
         directory_form.addRow("BIOS / system folder", folder)
         layout.addLayout(directory_form)
-        note = QLabel("Check the BIOS / system folder for files required by each core. Import your own files using the required filename; originals are kept. No BIOS files are downloaded.")
+        note = QLabel("System files for the cores you use. Regional BIOS files are alternatives: add the regions you play. Import your own files; originals are kept.")
         note.setWordWrap(True)
         layout.addWidget(note)
+        filters = QHBoxLayout()
         self.bios_system = QComboBox()
-        self.bios_system.addItem("All systems", None)
+        self.bios_system.setAccessibleName('Console system files')
+        self.bios_system.addItem("My consoles", 'library')
+        self.bios_system.addItem("All consoles", None)
         for key, system in SYSTEMS.items():
             self.bios_system.addItem(system.name, key)
+        if not self.library.db.execute('SELECT 1 FROM games LIMIT 1').fetchone():
+            self.bios_system.setCurrentIndex(1)
         self.bios_system.currentIndexChanged.connect(self.refresh_bios)
-        layout.addWidget(self.bios_system)
-        self.bios_table = QTableWidget(0, 5)
-        self.bios_table.setHorizontalHeaderLabels(["File / status", "System / core", "Requirement", "Status", "Expected MD5"])
+        filters.addWidget(self.bios_system, 1)
+        self.bios_core_scope = QComboBox()
+        self.bios_core_scope.setAccessibleName('Core system files')
+        self.bios_core_scope.addItem('Selected cores', False)
+        self.bios_core_scope.addItem('All compatible cores', True)
+        self.bios_core_scope.currentIndexChanged.connect(self.refresh_bios)
+        filters.addWidget(self.bios_core_scope)
+        layout.addLayout(filters)
+        self.bios_optional = QCheckBox('Show optional files and accessories')
+        self.bios_optional.toggled.connect(self.refresh_bios)
+        layout.addWidget(self.bios_optional)
+        self.bios_table = QTableWidget(0, 4)
+        self.bios_table.setItemDelegate(SystemFileDelegate(self.bios_table))
+        self.bios_table.setHorizontalHeaderLabels(["File", "Used by", "Requirement", "Status"])
         self.bios_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.bios_table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.bios_table.setSelectionMode(QAbstractItemView.SingleSelection)
-        self.bios_table.horizontalHeader().setSectionResizeMode(QHeaderView.Interactive)
-        for column, width in enumerate((175, 190, 200, 130, 265)):
-            self.bios_table.setColumnWidth(column, width)
+        header = self.bios_table.horizontalHeader()
+        header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(1, QHeaderView.Stretch)
+        header.setSectionResizeMode(2, QHeaderView.Stretch)
+        header.setSectionResizeMode(3, QHeaderView.ResizeToContents)
         self.bios_table.verticalHeader().hide()
         self.bios_table.itemSelectionChanged.connect(self.bios_selection_changed)
         layout.addWidget(self.bios_table, 1)
         self.bios_summary = QLabel()
         self.bios_summary.setWordWrap(True)
         layout.addWidget(self.bios_summary)
+        self.bios_details = QLabel()
+        self.bios_details.setWordWrap(True)
+        self.bios_details.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        layout.addWidget(self.bios_details)
         controls = QHBoxLayout()
         refresh = QPushButton("Check again")
         refresh.clicked.connect(self.refresh_bios)
@@ -680,42 +777,73 @@ class SettingsDialog(QDialog):
     def refresh_bios(self):
         selected = self.bios_system.currentData()
         directory = self.bios_path.text()
-        rows = []
-        for system, details in SYSTEMS.items():
-            if selected and selected != system:
+        systems = (set(row[0] for row in self.library.db.execute('SELECT DISTINCT system FROM games'))
+                   if selected == 'library' else {selected} if selected else set(SYSTEMS))
+        pairs, unknown = [], []
+        manager = CoreManager(self.library.root)
+        for system in SYSTEMS:
+            if system not in systems:
                 continue
-            for core_id, core in sorted(CATALOG.items(), key=lambda pair: pair[1]["name"].casefold()):
-                if system not in core["systems"]:
-                    continue
-                for entry in requirements(core_id):
-                    rows.append((system, core_id, entry))
+            if self.bios_core_scope.currentData():
+                pairs.extend((system, key) for key, core in CATALOG.items() if system in core['systems'])
+            else:
+                try:
+                    record = manager.choice(self.library, system)
+                    core_id = record.get('catalog_id') or record['id']
+                except CoreError:
+                    preferred = self.library.setting('core.' + system, 'auto')
+                    core_id = (preferred if preferred in CATALOG and system in CATALOG[preferred]['systems']
+                               else SYSTEMS[system].default_core)
+                if core_id not in CATALOG:
+                    unknown.append(SYSTEMS[system].name)
+                pairs.append((system, core_id))
+        all_rows = checklist(pairs)
+        rows = [row for row in all_rows if row['essential'] or self.bios_optional.isChecked()]
+        previous = self.bios_table.item(self.bios_table.currentRow(), 0)
+        previous = previous.data(Qt.UserRole) if previous else None
+        self.bios_table.blockSignals(True)
         self.bios_table.setRowCount(len(rows))
         valid_count = 0
-        cache = {}
-        for row, (system, core_id, entry) in enumerate(rows):
-            cache_key = (entry['path'], entry.get('md5'))
-            if cache_key not in cache:
-                cache[cache_key] = bios_status(directory, entry)
-            status, valid = cache[cache_key]
+        selected_row = 0
+        for row, details in enumerate(rows):
+            entry = details['entry']
+            if previous and (entry['path'], entry.get('md5')) == (previous['path'], previous.get('md5')):
+                selected_row = row
+            status, valid = bios_status(directory, entry)
             valid_count += int(valid)
-            values = (entry['path'], SYSTEMS[system].name + ' / ' + CATALOG[core_id]['name'],
-                      entry.get('requirement', 'Optional' if entry['optional'] else 'Required'), status, entry.get('md5', 'Not published'))
+            systems_used = list(dict.fromkeys(SYSTEMS[system].name for system, _ in details['uses']))
+            cores_used = list(dict.fromkeys(CATALOG[core_id]['name'] for _, core_id in details['uses']))
+            uses = ', '.join(systems_used) + '\n' + ', '.join(cores_used)
+            values = (entry['path'], uses, '\n'.join(details['requirements']), status)
             for column, value in enumerate(values):
                 item = QTableWidgetItem(value)
-                item.setToolTip(value + ("\n" + entry['description'] if column == 0 else ""))
+                item.setToolTip(value + ("\n" + entry['description'] + '\nExpected MD5: ' +
+                                        entry.get('md5', 'Not published') if column == 0 else ""))
                 if column == 0:
                     item.setData(Qt.UserRole, entry)
-                    item.setCheckState(Qt.Checked if valid else Qt.Unchecked)
+                    item.setCheckState(Qt.Checked if status == 'Verified' else Qt.Unchecked)
                     item.setFlags(item.flags() & ~Qt.ItemIsUserCheckable)
                 self.bios_table.setItem(row, column, item)
-        self.bios_summary.setText(f"{valid_count} of {len(rows)} listed requirements present. Optional files are not needed for every game. Regional alternatives need the BIOS matching the game.\nFolder: {directory}")
+        self.bios_table.resizeRowsToContents()
+        hidden = len(all_rows) - len(rows)
+        summary = f'{valid_count} of {len(rows)} listed files present.' if rows else 'No essential system files are listed for these consoles and cores.'
+        if hidden:
+            summary += f' {hidden} optional files hidden.'
+        if unknown:
+            summary += '\nNo checklist is available for the imported core used by: ' + ', '.join(unknown) + '.'
+        self.bios_summary.setText(summary)
         if rows:
-            self.bios_table.selectRow(0)
+            self.bios_table.selectRow(selected_row)
+        self.bios_table.blockSignals(False)
         self.bios_selection_changed()
 
     def bios_selection_changed(self):
         if hasattr(self, 'bios_import'):
             self.bios_import.setEnabled(self.bios_table.currentRow() >= 0)
+        row = self.bios_table.currentRow()
+        entry = self.bios_table.item(row, 0).data(Qt.UserRole) if row >= 0 else None
+        self.bios_details.setText(entry['description'] + '\nExpected MD5: ' +
+                                 entry.get('md5', 'Not published') if entry else '')
 
     def import_selected_bios(self):
         row = self.bios_table.currentRow()

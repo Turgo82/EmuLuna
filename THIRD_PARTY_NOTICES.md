@@ -25,6 +25,7 @@ dependencies or artwork.
 | Component | Use and upstream terms |
 | --- | --- |
 | native/vendor/libretro.h | Bundled libretro API header; its upstream MIT notice remains at the top of the file. [Libretro](https://github.com/libretro/libretro-common). |
+| Dreamcast console/controller illustrations | New assets created for EmuLuna with the built-in image generation tool. They are separate from OpenEmu and Pinapple_Graphics artwork. Prompts and asset paths are recorded in docs/DREAMCAST_ARTWORK.md. |
 | native/vendor/libretro_vulkan.h | Bundled libretro Vulkan interface header; its upstream permissive notice remains in the file. [RetroArch](https://github.com/libretro/RetroArch/blob/master/libretro-common/include/libretro_vulkan.h). |
 | native/vendor/vulkan/ and native/vendor/vk_video/ | Vulkan API headers from Khronos, licensed under Apache-2.0 OR MIT as marked in the files. The MIT license text is included in emuluna/data/licenses/vulkan-headers-MIT.txt. The native host loads the system Vulkan loader at runtime; no GPU driver is bundled. [Vulkan-Headers](https://github.com/KhronosGroup/Vulkan-Headers). |
 | Python | The AppImage bundles a Python runtime. Python is distributed under the [Python Software Foundation License](https://docs.python.org/3/license.html), with additional licenses for some incorporated software. Source installs use the system's Python. |
@@ -32,6 +33,8 @@ dependencies or artwork.
 | Wayland client library | Used for native Wayland windows and KDE decoration palette requests. MIT license; the upstream copyright and license text is included in emuluna/data/licenses/wayland-client-COPYING.txt. |
 | certifi | Certificate-authority bundle used for verified downloads; included with the AppImage. [MPL-2.0](https://github.com/certifi/python-certifi/blob/master/LICENSE). |
 | SDL2 | Controller input and rumble. The current AppImage includes libSDL2-2.0.so.0; source installs load the system library. SDL2 uses the [zlib license](https://github.com/libsdl-org/SDL/blob/SDL2/LICENSE.txt). |
+| libchdr | Read-only CHD decoding for console identification. Vendored from [rtissera/libchdr](https://github.com/rtissera/libchdr) at commit 607694ca0812edfc9cc2030c64634fc2393668de and statically linked into the bundled emuluna-chd-probe helper. BSD-3-Clause; copyright and license are retained in native/vendor/libchdr/LICENSE.txt and emuluna/data/licenses/libchdr-LICENSE.txt. |
+| libchdr's bundled decoders | LZMA SDK 26.02 (Igor Pavlov, public domain), miniz 3.1.2 (MIT), Zstandard 1.5.7 (BSD-3-Clause selected), and dr_flac (David Reid, public-domain/MIT No Attribution alternatives). Original notices remain in the vendored sources; distribution notices are included in emuluna/data/licenses/{lzma,miniz,zstd-BSD,dr-flac}-LICENSE.txt. |
 | PyInstaller | Build tool and bootloader used for the AppImage; its [license and bootloader exception](https://pyinstaller.org/en/stable/license.html) are separate from EmuLuna's license. |
 | AppImage runtime / appimagetool | Used to package and launch the AppImage. [AppImageKit is MIT-licensed](https://docs.appimage.org/packaging-guide/distribution.html); the build downloads appimagetool if it is not already cached. |
 

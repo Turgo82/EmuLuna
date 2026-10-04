@@ -2,6 +2,135 @@
 
 This file records user-facing changes to EmuLuna releases.
 
+## [0.18.0] - 2026-10-03
+
+This release adds Dreamcast, identifies CHD discs from their contents, redesigns
+settings, and refreshes library layout and artwork storage. It also fixes
+Dreamcast saves and disc re-imports after files have been moved to Trash.
+
+### Changed
+
+- Make the library grid responsive to window width: resizing changes horizontal
+  spacing and wrapping while box art keeps its size.
+- Give every console grid the same left starting point, matching the Genesis
+  layout. Full rows, short final rows and single-game results stay left aligned.
+- Space the visible cover edges evenly, including Saturn libraries that mix
+  narrow cases and square Japanese covers. Gaps remain compact at wider sizes.
+- Cap box art at 256 pixels on its longest edge and preserve its proportions.
+  Match ordinary cover heights within a console without enlarging landscape
+  SNES and N64 boxes to the height of portrait boxes.
+- Remove the manual library cover-size slider; the grid now handles window
+  width automatically.
+- Increase cached cover previews from 40 to 96 pixels for sharper artwork
+  during fast scrolling. Older previews are regenerated automatically.
+- Draw cached previews at the full displayed cover size while the larger
+  thumbnail loads, preserving the original artwork's shape.
+- Save automatically downloaded box art and artwork chosen through the visual
+  cover picker as WebP, using quality 85 by default.
+- Offer WebP quality 75, 85, 95 or lossless in Advanced settings under the new
+  Developer options section. The selected quality applies to downloads and
+  bulk conversion.
+- Match the settings header and title bar to the main library's darker toolbar
+  color without contrasting side gaps. Center the tabs with labels below their
+  icons and add a full-width dark divider beneath them.
+- Cover Controls settings below the navigation with a continuous walnut
+  texture, including the controller illustration and binding area. Translucent
+  panels keep labels readable in light and dark themes.
+- Mark verified System Files with green status text and crisp green SVG checks,
+  including selected rows and both light and dark themes.
+- Simplify System Files to show the selected cores for consoles in the library.
+  Combine shared BIOS files, separate optional files and accessories, and keep
+  regional choices and checksum details available without a crowded table.
+- Show firmware only under its relevant console, rather than repeating Sega CD
+  BIOS files under cartridge consoles that share the same core.
+- Simplify Library, Save States and Screenshots navigation into a text-first
+  segmented control inspired by OpenEmu, with compact SVG icons on narrow windows.
+- Refresh the README, core catalog checklist and third-party notices for
+  Dreamcast, CHD decoding, new artwork assets and artwork conversion.
+
+### Added
+
+- Sega Dreamcast as a library console, with downloadable Flycast in the
+  curated core catalog. The library now supports 33 systems and 30 downloadable
+  cores.
+- Flycast hardware-context negotiation with Vulkan and OpenGL. New Dreamcast
+  sessions can try OpenGL when Vulkan initialization fails; existing states
+  keep the renderer they were created with.
+- Dreamcast GDI, CDI, CHD, CUE, M3U and ELF imports, including multi-disc
+  playlists. GDI imports validate and copy every referenced track.
+- Four-player Dreamcast control profiles with keyboard and controller
+  bindings, sticks, digital triggers and controller illustration hotspots.
+- Per-game Dreamcast VMU saves and optional user-supplied BIOS guidance for
+  `system/dc/dc_boot.bin`.
+- A Dreamcast Video option for accurate per-pixel transparency sorting in
+  Flycast, adjustable during gameplay and remembered across launches. This is
+  an optional compatibility setting and can require more GPU resources.
+- Colorful, shaded SVG illustrations for settings sections, with a larger
+  icon size and crisp rendering on scaled displays.
+- Keep the secret Advanced settings menu unlocked across restarts until the
+  user clicks the About logo four times again to lock it. The unlock animation
+  and sound remain on the About logo.
+- Make the About screen's unlocked notice clickable so it opens Advanced
+  settings directly.
+- Automatically identify supported CHD discs by their decoded data tracks,
+  including Dreamcast, PlayStation, Sega CD, Saturn and TurboGrafx-CD
+  signatures. Unrecognized discs retain manual console selection. The bundled
+  reader requires no additional tools or installed emulator cores.
+- A generated pixel-art Dreamcast console icon with a clearer disc lid and
+  four controller ports, and a controller illustration
+  without branding, with clickable button/stick/trigger mappings in Settings.
+- Add **Advanced → Developer options → Convert existing covers to WebP**.
+  Conversion runs in the background with progress, a stop button and a summary;
+  the library and cover cache update automatically.
+- Preserve cover resolution, game metadata and manually selected replacement
+  artwork during bulk conversion. External originals and shared artwork are
+  retained; unused older files inside the managed covers folder are removed.
+- Skip artwork already converted at the selected quality, and support
+  recompressing earlier WebP covers when a different quality is selected.
+
+### Fixed
+
+- Re-import discs after removing their managed files to Trash. Leftover game
+  folders now receive verified missing files instead of reporting that the
+  original ROM is missing; intact copies and unrelated files are preserved.
+- Remove empty managed game folders after their ROMs are moved to Trash,
+  including empty track subfolders. Keep external source folders and any
+  directories that still contain files.
+- Dreamcast manual save states and auto-save now support Flycast states larger
+  than 31 MiB. Save and load share a bounded 128 MiB payload limit.
+- Retain the previous hardware framebuffer when a core repeats a frame,
+  preventing black frames in Flycast's OpenGL output.
+- Keep Flycast rendering on the game thread for compatibility with EmuLuna's
+  graphics context and frame timing.
+- Keep cover titles, ratings, selection highlights and hover actions attached
+  to the correct artwork after the grid wraps or changes between consoles.
+- Keep missing or unreadable artwork in the console's expected box shape, and
+  refresh the shape when replacement artwork is selected.
+- Isolate missing or corrupt images during bulk WebP conversion so one bad
+  cover does not stop the rest of the library. Cancelling leaves unconverted
+  originals available, and a newer manual cover choice wins over a conversion.
+
+### Known issues
+
+- Ecco the Dolphin: Defender of the Future can still show polygon artifacts
+  with Flycast's Vulkan renderer. Accurate transparency is available to try,
+  but it does not resolve every rendering issue.
+- Rayman 2 can still show a strip of incorrect image data with ParaLLEl N64's
+  experimental OpenGL path. Software rendering remains a working alternative
+  for this title.
+
+### Validation
+
+All 238 automated tests passed, including CHD identification, disc re-imports,
+managed file cleanup, controller mappings, WebP conversion and cancellation,
+large save states, and retained hardware frames. Grid checks cover all 33
+systems and All Games at window widths from 850 to 2048 pixels, including mixed
+box shapes, missing artwork, short rows, single-game and empty results.
+
+The Linux AppImage passed an offscreen startup and screenshot check. Its bundled
+CHD reader decoded five console signatures, its Flycast and Snes9x metadata
+probes passed, and the packaged host exposes the 128 MiB save-state limit.
+
 ## [0.17.0] - 2026-10-02
 
 ### Changed
