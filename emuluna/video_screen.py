@@ -1,7 +1,7 @@
 """Gameplay display: Vulkan, OpenGL, then a readable software fallback."""
 import sys
 from PySide6.QtCore import Qt,QRect,QSize,QTimer,Signal
-from PySide6.QtGui import QImage,QPainter,QColor,QSurfaceFormat
+from PySide6.QtGui import QImage,QPainter,QSurfaceFormat
 from PySide6.QtWidgets import QApplication,QWidget
 from PySide6.QtOpenGLWidgets import QOpenGLWidget
 from .shaders import ShaderRenderer,ShaderError
@@ -197,9 +197,11 @@ class Screen(QWidget):
         else:self.canvas.update()
 
     def paintEvent(self,event):
-        if self.canvas and not self._fatal:return
         painter=QPainter(self)
-        painter.fillRect(self.rect(),QColor('#0c0d10'))
+        painter.fillRect(self.rect(),Qt.black)
+        if self.canvas and not self._fatal:
+            painter.end()
+            return
         if not self.frame.isNull():self.renderer.draw(painter,self.frame,self.target_rect(),self.video_filter)
         painter.end()
         if self.video_filter not in ('nearest','linear'):

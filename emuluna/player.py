@@ -1,12 +1,13 @@
 """A separate EmuLuna process owns each running game and libretro core."""
 import argparse
 import json
+import math
 from datetime import datetime
 from pathlib import Path
 import sys
 import time
 
-from PySide6.QtCore import Qt, QTimer, QLockFile, QSaveFile, QIODevice
+from PySide6.QtCore import Qt, QSize, QTimer, QLockFile, QSaveFile, QIODevice
 from PySide6.QtGui import QAction, QActionGroup, QImage, QKeySequence
 from PySide6.QtMultimedia import QAudio, QAudioFormat, QAudioSink, QMediaDevices
 from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox, QComboBox, QStyle, QMenu
@@ -15,8 +16,10 @@ from .branding import configure_application
 from .theme import follow_system_theme, theme_palette
 from .core import Core, CoreError, saved_state_renderer
 from .video_filters import ALL_FILTERS, valid_filter
+from .game_window import GameSizeGrip
 from .shaders import PRESETS, parameter_values
 from .shader_controls import ShaderControls
+from .n64_borders import N64BorderControls, border_settings, core_border_options
 from .core_manager import CoreManager
 from .desktop import prefer_native_desktop, restore_window_size, save_window_size
 from .systems import CATALOG, core_launch_options, core_render_options
@@ -49,6 +52,8 @@ class Player(QMainWindow):
         if not self.game:
             raise CoreError("The game is no longer in the library.")
         self.game_id = game_id
+        self.n64_border_settings = None
+        self.n64_border_dialog = None
         self.lock = QLockFile(str(library.root / "saves" / (game_id + ".lock")))
         self.lock.setStaleLockTime(0)
         if not self.lock.tryLock(0):
@@ -175,6 +180,14 @@ class Player(QMainWindow):
                 })
             if hardware_candidate or render_options:
                 core_options["options"] = accelerated
+            if compatible_hardware:
+                self.n64_border_renderer = "gliden64" if hardware_candidate else "angrylion"
+                self.n64_border_setting = f"screen_borders.{game_id}.parallel_n64.{self.n64_border_renderer}"
+                self.n64_border_settings = border_settings(library.setting(self.n64_border_setting, "{}"))
+                core_options["options"] = {
+                    **core_options.get("options", {}),
+                    **core_border_options(self.n64_border_settings, self.n64_border_renderer),
+                }
             print("Core: " + selected["id"], flush=True)
             attempts = [(render_options, vulkan_available)]
             if hardware_required and vulkan_available and capabilities[2] and not state_file:
@@ -283,8 +296,16 @@ class Player(QMainWindow):
         self.setWindowTitle(f"{self.game['title']} — {selected['name'] + ' (Libretro)' if selected else 'EmuLuna'}")
         self.resize(850, 630)
         self.window_size_key = f"window.game.{self.game['system']}.size"
+        self.aspect_resize_timer = QTimer(self)
+        self.aspect_resize_timer.setSingleShot(True)
+        self.aspect_resize_timer.timeout.connect(self.fit_window_aspect)
+        self._aspect_ready = False
+        self._aspect_correcting = False
+        self._aspect_target_size = None
+        self._aspect_resize_axis = 'width'
+        self._aspect_restore_size = None
         self.setStyleSheet("""
-            QMainWindow,QToolBar,QStatusBar,QMenuBar,QMenu {background:palette(window);color:palette(window-text)}
+            QMainWindow,QToolBar,QMenuBar,QMenu {background:palette(window);color:palette(window-text)}
             QToolBar {spacing:12px;padding:8px}
             QToolButton {color:palette(button-text);padding:6px;border:1px solid transparent;border-radius:4px}
             QToolButton:hover,QMenuBar::item:selected,QMenu::item:selected {background:palette(highlight);color:palette(highlighted-text)}
@@ -358,6 +379,9 @@ class Player(QMainWindow):
         self.fit_action.setChecked(not self.screen.integer_scale)
         scaling.addSeparator()
         self.resize_integer_action = self.action(scaling, "Resize window to integer scale", "", self.resize_to_integer_scale)
+        self.maximize_action = self.action(scaling, "Maximize window", "", self.toggle_maximized)
+        if self.n64_border_settings is not None:
+            self.action(scaling, "Screen borders…", "", self.adjust_n64_borders)
         self.action(menu, "Controls", "F1", self.controls)
         for popup in (menu, *menu.findChildren(QMenu)):
             popup.setAttribute(Qt.WA_TranslucentBackground)
@@ -388,7 +412,7 @@ class Player(QMainWindow):
                 "This state was created by the software renderer. Restart the game to begin an OpenGL session."
             )
             self.notice.show_message("Resumed with the save state's software renderer")
-        self.statusBar().showMessage(self.control_layout["hint"])
+        self.resize_grip = GameSizeGrip(self)
         self.setup_audio()
         self.audio_devices = QMediaDevices(self)
         self.audio_devices.audioOutputsChanged.connect(self.audio_output_changed)
@@ -406,7 +430,11 @@ class Player(QMainWindow):
         self.controls_timer.timeout.connect(self.refresh_controls)
         self.controls_timer.start(1000)
         QApplication.instance().applicationStateChanged.connect(self.application_focus_changed)
-        restore_window_size(self, library, self.window_size_key)
+        self._window_aspect = self.gameplay_aspect()
+        restore_window_size(self, library, self.window_size_key,
+                            size_transform=self.aspect_window_size)
+        self._aspect_ready = True
+        self.fit_window_aspect()
         self.windowed_state = self.windowState()
         if library.setting("fullscreen_default", "0") == "1" and not frame_limit:
             QTimer.singleShot(0, self.initial_fullscreen)
@@ -416,6 +444,123 @@ class Player(QMainWindow):
             return max(minimum, min(maximum, int(self.library.setting(key, str(default)))))
         except ValueError:
             return default
+
+    def gameplay_aspect(self):
+        aspect = self.screen.display_aspect or self.core.width / max(1, self.core.height)
+        return aspect if math.isfinite(aspect) and 0 < aspect < 10 else 4 / 3
+
+    def aspect_window_size(self, window_size, *, snap=False):
+        """Size the gameplay area, adding any window chrome outside its ratio."""
+        self.layout().activate()
+        # Hidden windows can retain their previous central-widget geometry even
+        # after restoring a new size. Measure chrome against the current layout.
+        self.layout().setGeometry(self.rect())
+        chrome = self.size() - self.screen.size()
+        content = window_size - chrome
+        aspect = self.gameplay_aspect()
+        height = (content.height() if self._aspect_resize_axis == 'height'
+                  else round(content.width() / aspect))
+        width = (round(height * aspect) if self._aspect_resize_axis == 'height'
+                 else content.width())
+        if snap:
+            # Small viewport steps; saved sizes and integer-scale commands
+            # retain their exact dimensions.
+            height = max(16, round(height / 16) * 16)
+            width = round(height * aspect)
+        requested_height = height
+        minimum = max(self.screen.minimumHeight(), math.ceil(self.screen.minimumWidth() / aspect))
+        height = max(minimum, height)
+        desktop = self.windowHandle().screen() if self.windowHandle() else QApplication.primaryScreen()
+        if desktop and QApplication.platformName() not in ('offscreen', 'minimal'):
+            available = desktop.availableGeometry().size() - (self.frameGeometry().size() - self.size()) - chrome
+            limit = min(available.height(), math.floor(available.width() / aspect))
+            height = min(height, max(minimum, limit))
+        if height != requested_height:
+            width = round(height * aspect)
+        return QSize(width, height) + chrome
+
+    def resize_game_window(self, desired):
+        # Both bounds describe the same correctly proportioned size, so native
+        # border drags cannot stretch it between application resize requests.
+        self.aspect_resize_timer.stop()
+        self._aspect_restore_size = None
+        self._aspect_target_size = QSize(desired)
+        self._aspect_correcting = True
+        try:
+            self.setFixedSize(desired)
+            # A delayed native configure can leave geometry at an older size
+            # even though these bounds already match the new target.
+            if self.size() != desired:
+                super().resize(desired)
+            self._emuluna_windowed_size = QSize(desired)
+        finally:
+            self._aspect_correcting = False
+
+    def resize(self, *args):
+        if (getattr(self, '_aspect_ready', False) and not self._aspect_correcting
+                and not self.windowState() &
+                (Qt.WindowFullScreen | Qt.WindowMaximized | Qt.WindowMinimized)):
+            requested = args[0] if len(args) == 1 else QSize(*args)
+            self._aspect_resize_axis = 'height' if requested.width() == self.width() else 'width'
+            self.resize_game_window(self.aspect_window_size(requested, snap=True))
+        else:
+            super().resize(*args)
+
+    def release_window_size(self):
+        self.setMinimumSize(0, 0)
+        self.setMaximumSize(16777215, 16777215)
+
+    def showMaximized(self):
+        self.release_window_size()
+        # Wayland size constraints are double buffered. Commit the unlocked
+        # bounds before asking the compositor to maximize this formerly fixed
+        # window, otherwise it can reject the request as non-maximizable.
+        if QApplication.platformName().startswith('wayland') and self.isVisible():
+            self.repaint()
+        super().showMaximized()
+
+    def toggle_maximized(self):
+        if self.isMaximized():
+            self.showNormal()
+        else:
+            self.showMaximized()
+
+    def showFullScreen(self):
+        self.release_window_size()
+        super().showFullScreen()
+
+    def fit_window_aspect(self, *, snap=False):
+        if self.closed or self.isFullScreen() or self.isMaximized() or self.isMinimized():
+            self._aspect_restore_size = None
+            return
+        if self._aspect_restore_size is not None:
+            self._aspect_resize_axis = 'width'
+        desired = self.aspect_window_size(self._aspect_restore_size or self.size(),
+                                          snap=snap and self._aspect_restore_size is None)
+        self._aspect_restore_size = None
+        self.resize_game_window(desired)
+        self._window_aspect = self.gameplay_aspect()
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        if getattr(self, '_aspect_ready', False) and not getattr(self, '_aspect_shown', False):
+            # The initial layout can change once the window appears.
+            # Fit it immediately, without snapping the remembered size.
+            self._aspect_shown = True
+            self._aspect_resize_axis = 'width'
+            self.aspect_resize_timer.start(0)
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        if (getattr(self, '_aspect_ready', False) and not self._aspect_correcting
+                and not self.closed and not self.windowState() &
+                (Qt.WindowFullScreen | Qt.WindowMaximized | Qt.WindowMinimized)
+                and event.size() != self.maximumSize()):
+            # Handle a stale startup configure, not interactive dragging: the
+            # normal window's equal bounds prevent native border resizing.
+            if self._aspect_restore_size is None and self._aspect_target_size is not None:
+                self._aspect_restore_size = QSize(self._aspect_target_size)
+            self.aspect_resize_timer.start(0)
 
     def add_accessory_menus(self, menu):
         """Build core-declared accessory choices without console logic in Qt."""
@@ -469,6 +614,21 @@ class Player(QMainWindow):
         self.core.set_option(record["key"], value)
         state = "On" if checked else "Off"
         self.notice.show_message(f"{record['label']} · {state}")
+
+    def adjust_n64_borders(self):
+        if self.n64_border_dialog:
+            self.n64_border_dialog.raise_()
+            self.n64_border_dialog.activateWindow()
+            return
+        dialog = N64BorderControls(self.n64_border_settings, self.set_n64_borders, self,
+                                   renderer=self.n64_border_renderer)
+        self.n64_border_dialog = dialog
+        dialog.finished.connect(lambda: setattr(self, "n64_border_dialog", None))
+        dialog.show()
+
+    def set_n64_borders(self, settings):
+        self.n64_border_settings = border_settings(json.dumps(settings))
+        self.library.set_setting(self.n64_border_setting, json.dumps(self.n64_border_settings))
 
     def refresh_controls(self):
         """Pick up settings from the library process without restarting a core."""
@@ -546,7 +706,7 @@ class Player(QMainWindow):
         fmt.setChannelCount(2)
         fmt.setSampleFormat(QAudioFormat.Int16)
         if device.isNull() or not device.isFormatSupported(fmt):
-            self.statusBar().showMessage("Audio output unavailable. The game can still run.")
+            self.notice.show_message("Audio output unavailable. The game can still run.")
             return
         self.audio = QAudioSink(device, fmt, self)
         self.audio_latency_ms = self.preference_int("audio_latency", 80, 20, 250)
@@ -555,7 +715,7 @@ class Player(QMainWindow):
         self.audio_device = self.audio.start()
         self.audio.setVolume(0 if self.muted else self.volume)
         if self.audio_device is None:
-            self.statusBar().showMessage("Audio output could not start. Choose another output in Settings.")
+            self.notice.show_message("Audio output could not start. Choose another output in Settings.")
         else:
             self.prime_audio()
         self.sync_audio_pause()
@@ -645,6 +805,10 @@ class Player(QMainWindow):
                        self.core.width * 4, QImage.Format_RGB32).copy())
             if self.use_system_aspect:
                 self.screen.display_aspect = self.core.aspect
+            if abs(self.gameplay_aspect() - self._window_aspect) > 1e-6:
+                self._aspect_resize_axis = 'width'
+                self._window_aspect = self.gameplay_aspect()
+                self.aspect_resize_timer.start(0)
             self.screen.update()
             if self.audio_device and not self.fast:
                 self.audio_pending.extend(audio)
@@ -691,7 +855,7 @@ class Player(QMainWindow):
         except OSError:
             pass
         if not self.screen.frame.isNull():
-            self.statusBar().showMessage("State saved, but its screenshot could not be written.", 5000)
+            self.notice.show_message("State saved, but its screenshot could not be written.")
 
     def save_auto(self):
         try:
@@ -699,18 +863,17 @@ class Player(QMainWindow):
             if not self.state_restore_failed and not self.pending_state:
                 self.save_state_with_preview(self.state_path("auto.oesavestate"))
         except (OSError, CoreError) as e:
-            self.statusBar().showMessage(f"Automatic save failed: {e}")
+            self.notice.show_message(f"Automatic save failed: {e}")
 
     def flush_battery(self):
         try:
             self.core.flush()
         except (OSError, CoreError) as error:
-            self.statusBar().showMessage(f"In-game save could not be written: {error}")
+            self.notice.show_message(f"In-game save could not be written: {error}")
 
     def save(self):
         try:
             self.save_state_with_preview(self.state_path())
-            self.statusBar().showMessage(f"Saved to slot {self.slot.currentIndex()+1}", 5000)
             self.notice.show_message(f"State saved · Slot {self.slot.currentIndex()+1}")
         except (OSError, CoreError) as e:
             self.notice.show_message("State could not be saved")
@@ -722,7 +885,6 @@ class Player(QMainWindow):
             self.screen.frame = QImage(str(self.state_path().with_suffix(".png")))
             self.state_restore_failed = False
             self.flush_audio()
-            self.statusBar().showMessage(f"Restored slot {self.slot.currentIndex()+1}", 5000)
             self.notice.show_message(f"State loaded · Slot {self.slot.currentIndex()+1}")
         except (OSError, CoreError) as e:
             self.notice.show_message("State could not be loaded")
@@ -743,7 +905,6 @@ class Player(QMainWindow):
             self.screen.frame = QImage(str(self.state_path("auto.oesavestate").with_suffix(".png")))
             self.state_restore_failed = False
             self.flush_audio()
-            self.statusBar().showMessage("Restored the last automatic save", 5000)
             self.notice.show_message("Automatic state loaded")
         except (OSError, CoreError) as e:
             self.notice.show_message("Automatic state could not be loaded")
@@ -756,7 +917,7 @@ class Player(QMainWindow):
     def screenshot(self):
         path = self.library.root / "screenshots" / f"{self.game_id[:12]}-{datetime.now():%Y%m%d-%H%M%S}.png"
         if self.screen.frame.save(str(path)):
-            self.statusBar().showMessage(f"Screenshot saved: {path}", 7000)
+            self.notice.show_message("Screenshot saved")
 
     def toggle_pause(self):
         self.paused = not self.paused
@@ -874,7 +1035,6 @@ class Player(QMainWindow):
             self.shader_dialog.close()
             self.shader_dialog = None
         self.notice.show_message("Filter unavailable · using Nearest Neighbor")
-        self.statusBar().showMessage(message, 15000)
         print("Shader unavailable: " + message, file=sys.stderr)
 
     def persist_shader_parameters(self):
@@ -898,7 +1058,7 @@ class Player(QMainWindow):
             return
         content = self.screen.integer_size()
         chrome = self.size() - self.screen.size()
-        self.resize(content.width() + chrome.width(), content.height() + chrome.height())
+        self.resize_game_window(content + chrome)
         self.notice.show_message(f"Integer window · {content.width()} × {content.height()}")
 
     def fullscreen(self):
@@ -906,14 +1066,13 @@ class Player(QMainWindow):
         if leaving:
             size = self._emuluna_windowed_size
             self.showNormal()
-            self.resize(size)
+            self.resize_game_window(size)
             if self.windowed_state & Qt.WindowMaximized:
                 self.showMaximized()
         else:
             self.windowed_state = self.windowState()
             self.showFullScreen()
         self.menuBar().hide()
-        self.statusBar().setVisible(leaving)
         self.fullscreen_action.setText("Full screen" if leaving else "Exit full screen")
         set_hud_icon(self.fullscreen_action, self.hud, "fullscreen" if leaving else "fullscreen-exit")
         self.hud.reveal()
@@ -956,6 +1115,19 @@ class Player(QMainWindow):
             self.refresh_focus_pause()
             QTimer.singleShot(0, self.refresh_focus_pause)
         super().changeEvent(event)
+        if (event.type() == QEvent.WindowStateChange
+                and getattr(self, '_aspect_ready', False) and not self.closed):
+            self.maximize_action.setEnabled(not self.isFullScreen())
+            self.maximize_action.setText("Restore window size" if self.isMaximized() else "Maximize window")
+            if self.windowState() & (Qt.WindowMaximized | Qt.WindowFullScreen):
+                self.release_window_size()
+            if (event.oldState() & (Qt.WindowMaximized | Qt.WindowFullScreen)
+                    and not self.windowState() &
+                    (Qt.WindowMaximized | Qt.WindowFullScreen | Qt.WindowMinimized)):
+                # Qt's normalGeometry can still describe the maximized surface
+                # after fullscreen; retain the remembered normal window size.
+                self._aspect_restore_size = QSize(self._emuluna_windowed_size)
+            self.aspect_resize_timer.start(0)
 
     def keyPressEvent(self, event):
         if event.isAutoRepeat(): return
@@ -1008,6 +1180,8 @@ class Player(QMainWindow):
         if self.closed:
             event.accept()
             return
+        self.fit_window_aspect()
+        self.aspect_resize_timer.stop()
         self.closed = True
         save_window_size(self, self.library, self.window_size_key,
                          state=self.windowed_state if self.isFullScreen() else None)
@@ -1020,6 +1194,8 @@ class Player(QMainWindow):
         self.filter_timer.stop()
         if self.shader_dialog:
             self.shader_dialog.close()
+        if self.n64_border_dialog:
+            self.n64_border_dialog.close()
         self.hud.stop()
         self.notice.timer.stop()
         self.game_mode.stop()

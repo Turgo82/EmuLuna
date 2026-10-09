@@ -13,7 +13,7 @@ def prefer_native_desktop():
         os.environ.setdefault("QT_QPA_PLATFORM", "wayland;xcb")
 
 
-def restore_window_size(window, library, key):
+def restore_window_size(window, library, key, *, size_transform=None):
     if not hasattr(window, '_emuluna_size_memory'):
         window._emuluna_size_memory = WindowSizeMemory(window)
     try:
@@ -25,6 +25,9 @@ def restore_window_size(window, library, key):
         if screen and QApplication.platformName() != 'offscreen':
             available = screen.availableGeometry()
             width, height = min(width, available.width()), min(height, available.height())
+        if size_transform:
+            size = size_transform(QSize(width, height))
+            width, height = size.width(), size.height()
         window.resize(width, height)
         window._emuluna_windowed_size = QSize(width, height)
         if saved.get('maximized') is True:

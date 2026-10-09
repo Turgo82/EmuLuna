@@ -65,6 +65,15 @@ saves are separate.
 
 Library and game windows remember their size and maximized state. On Wayland
 desktops, EmuLuna uses native Wayland windows; KDE title bars match its theme.
+Drag the bottom-right grip to resize game windows in small steps while keeping
+the core's display proportions throughout the drag. Native border resizing is
+locked; Gameplay options → Scaling also provides Maximize / Restore.
+The gameplay background and fullscreen borders are pure black.
+For N64 games, Gameplay options → Scaling → Screen borders can trim the
+core's overscan margins. Software mode can hide them automatically; OpenGL
+mode offers individual edge adjustments. Close and reopen the game to apply
+changes. They are remembered per game and renderer;
+Restore Defaults returns to the complete, uncropped picture.
 
 EmuLuna keeps your library in `~/.local/share/emuluna` by default (or under
 `$XDG_DATA_HOME` when set).

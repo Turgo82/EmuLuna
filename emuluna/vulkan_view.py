@@ -28,7 +28,7 @@ class VulkanViewport(QQuickWidget):
         self.provider = FrameProvider()
         self.engine().addImageProvider("emuluna", self.provider)
         self.setResizeMode(QQuickWidget.SizeRootObjectToView)
-        self.setClearColor(QColor("#0c0d10"))
+        self.setClearColor(QColor("#000000"))
         self.setAttribute(Qt.WA_TransparentForMouseEvents)
         self.setFocusPolicy(Qt.NoFocus)
         self.frame_number = 0

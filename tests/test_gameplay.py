@@ -9,11 +9,11 @@ isolate_audio()
 from unittest.mock import Mock, patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
-from PySide6.QtCore import Qt, QPoint, QByteArray, QSize
-from PySide6.QtGui import QImage
+from PySide6.QtCore import Qt, QPoint, QPointF, QEvent, QByteArray, QSize
+from PySide6.QtGui import QImage, QColor, QPalette, QMouseEvent
 from PySide6.QtMultimedia import QAudio
 from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QApplication, QMainWindow
+from PySide6.QtWidgets import QApplication, QMainWindow, QStatusBar
 from emuluna.library import Library
 from emuluna.player import Player
 from emuluna.core import CoreError, saved_state_renderer
@@ -131,13 +131,18 @@ class GameplayTests(unittest.TestCase):
         QTest.qWait(250)
         player.resize(710, 520)
         QTest.qWait(250)
-        player.showMaximized()
+        expected_size = player.size()
+        self.assertLessEqual(abs(expected_size.width() - 710), player.core.aspect * 8 + 1)
+        self.assertLessEqual(abs(player.screen.width() - player.screen.height() * player.core.aspect), 1)
+        player.maximize_action.trigger()
         QTest.qWait(250)
+        self.assertEqual(player.maximize_action.text(), "Restore window size")
         player.fullscreen()
         QTest.qWait(250)
+        self.assertNotEqual(player.minimumSize(), player.maximumSize())
         player.close()
         saved = json.loads(self.library.setting('window.game.snes.size'))
-        self.assertEqual((saved['width'], saved['height']), (710, 520))
+        self.assertEqual((saved['width'], saved['height']), (expected_size.width(), expected_size.height()))
         self.assertTrue(saved['maximized'])
         self.assertEqual(self.library.setting('window.game.psx.size'), '')
         reopened = self.make_player()
@@ -150,7 +155,126 @@ class GameplayTests(unittest.TestCase):
         self.assertTrue(reopened.isMaximized())
         reopened.showNormal()
         QTest.qWait(250)
-        self.assertEqual(reopened.size(), QSize(710, 520))
+        self.assertEqual(reopened.size(), expected_size)
+        self.assertEqual(reopened.minimumSize(), reopened.maximumSize())
+        self.assertEqual(reopened.maximize_action.text(), "Maximize window")
+
+    def test_window_resize_keeps_core_aspect_and_restores_old_sizes_to_that_ratio(self):
+        self.library.set_setting('window.game.snes.size', json.dumps({'width': 901, 'height': 400}))
+        player = self.make_player()
+        self.assertEqual(player.width(), 901)
+        self.assertLessEqual(abs(player.screen.width() - player.screen.height() * player.core.aspect), 1)
+        for width, height in ((1000, 350), (550, 700), (800, 800)):
+            player.resize(width, height)
+            self.app.processEvents()
+            self.assertLessEqual(abs(player.width() - width), player.core.aspect * 8 + 1)
+            self.assertEqual(player.screen.height() % 16, 0)
+            self.assertLessEqual(abs(player.screen.width() - player.screen.height() * player.core.aspect), 1)
+        # A height-only size request also adjusts the width immediately.
+        player.resize(player.width(), 760)
+        self.app.processEvents()
+        self.assertLessEqual(abs(player.height() - 760), 8)
+        self.assertLessEqual(abs(player.screen.width() - player.screen.height() * player.core.aspect), 1)
+        for aspect in (16 / 9, 3 / 4, 1):
+            player.screen.display_aspect = aspect
+            player.resize(901, 600)
+            self.app.processEvents()
+            self.assertLessEqual(abs(player.screen.width() - player.screen.height() * aspect), 1)
+
+    def test_native_border_resize_cannot_stretch_the_normal_window(self):
+        player = self.make_player()
+        self.assertEqual(player.findChildren(QStatusBar), [])
+        self.assertEqual(player.screen.geometry(), player.rect())
+        size = player.size()
+        for requested in ((1200, 400), (500, 900), (700, 600)):
+            # Bypass Player.resize just as a native geometry change does.
+            QMainWindow.resize(player, *requested)
+            self.app.processEvents()
+            self.assertEqual(player.size(), size)
+            self.assertEqual(player.minimumSize(), size)
+            self.assertEqual(player.maximumSize(), size)
+        self.assertFalse(player.aspect_resize_timer.isActive())
+
+    def test_corner_grip_keeps_ratio_during_every_move_without_a_delayed_snap(self):
+        player = self.make_player()
+        grip = player.resize_grip
+        self.assertTrue(grip.isVisible())
+        self.assertIs(grip.parentWidget(), player.screen)
+        self.assertEqual(grip.cursor().shape(), Qt.SizeFDiagCursor)
+        self.assertIs(player.screen.childAt(player.screen.rect().bottomRight()), grip)
+        for aspect in (4 / 3, 16 / 9, 3 / 4):
+            player.screen.display_aspect = aspect
+            player.fit_window_aspect()
+            self.app.processEvents()
+            initial = player.size()
+            point = grip.rect().center()
+            origin = QPointF(grip.mapToGlobal(point))
+            self.app.sendEvent(grip, QMouseEvent(QEvent.MouseButtonPress, QPointF(point), origin,
+                                               Qt.LeftButton, Qt.LeftButton, Qt.NoModifier))
+            for delta in (QPoint(120, 0), QPoint(180, 80), QPoint(-160, -90), QPoint(0, 160)):
+                position = origin + delta
+                local = QPointF(grip.mapFromGlobal(position.toPoint()))
+                self.app.sendEvent(grip, QMouseEvent(QEvent.MouseMove, local, position,
+                                                   Qt.NoButton, Qt.LeftButton, Qt.NoModifier))
+                self.app.processEvents()
+                self.assertLessEqual(abs(player.screen.width() - player.screen.height() * aspect), 1)
+                self.assertEqual(player.minimumSize(), player.size())
+                self.assertEqual(player.maximumSize(), player.size())
+                self.assertFalse(player.aspect_resize_timer.isActive())
+                self.assertTrue(player.screen.rect().contains(grip.geometry()))
+                self.assertEqual(grip.geometry().bottomRight(), player.screen.rect().bottomRight())
+                self.assertIs(player.screen.childAt(player.screen.rect().bottomRight()), grip)
+            self.assertNotEqual(player.size(), initial)
+            size = player.size()
+            self.app.sendEvent(grip, QMouseEvent(QEvent.MouseButtonRelease, local, position,
+                                               Qt.LeftButton, Qt.NoButton, Qt.NoModifier))
+            QTest.qWait(220)
+            self.assertEqual(player.size(), size)
+
+    def test_gameplay_borders_are_pure_black_before_frames_and_in_light_theme(self):
+        screen = Screen(renderer_mode='software')
+        try:
+            screen.resize(800, 600)
+            palette = screen.palette()
+            palette.setColor(QPalette.Window, Qt.white)
+            screen.setPalette(palette)
+            screen.show(); QTest.qWait(20)
+            empty = screen.grab().toImage()
+            self.assertEqual(empty.pixelColor(0, 0), QColor(Qt.black))
+            self.assertEqual(empty.pixelColor(400, 300), QColor(Qt.black))
+            screen.frame = QImage(200, 200, QImage.Format_RGB32)
+            screen.frame.fill(Qt.red)
+            screen.update(); QTest.qWait(20)
+            image = screen.grab().toImage()
+            for point in ((0, 0), (799, 599), (20, 300), (780, 300)):
+                self.assertEqual(image.pixelColor(*point), QColor(Qt.black))
+            self.assertEqual(image.pixelColor(400, 300), QColor(Qt.red))
+        finally:
+            screen.close()
+
+    def test_window_follows_core_aspect_changes_without_using_raw_frame_ratio(self):
+        player = self.make_player()
+        image = QImage(640, 240, QImage.Format_RGB32)
+        image.fill(Qt.red)
+        width = player.width()
+        for aspect in (16 / 9, 3 / 4, 4 / 3):
+            player.core.aspect = aspect
+            with patch.object(player.core, 'frame', return_value=(image, b'')):
+                player.next_frame = 0
+                player.tick()
+            QTest.qWait(30)
+            self.assertEqual(player.width(), width)
+            self.assertLessEqual(abs(player.screen.width() - player.screen.height() * aspect), 1)
+            self.assertEqual(player.screen.target_rect().size(), player.screen.size())
+
+    def test_square_pixel_preference_sets_window_ratio_from_frame_dimensions(self):
+        self.library.set_setting('aspect_mode', 'square')
+        player = self.make_player()
+        player.resize(901, 400)
+        QTest.qWait(220)
+        self.assertIsNone(player.screen.display_aspect)
+        aspect = player.core.width / player.core.height
+        self.assertLessEqual(abs(player.screen.width() - player.screen.height() * aspect), 1)
 
     def test_integer_scaling_respects_non_square_n64_pixels(self):
         screen = Screen()
@@ -243,17 +367,20 @@ class GameplayTests(unittest.TestCase):
         self.assertTrue(player.isFullScreen())
         self.assertEqual(player.fullscreen_action.property('emuluna_hud_icon'), 'fullscreen-exit')
         self.assertFalse(player.menuBar().isVisible())
-        self.assertFalse(player.statusBar().isVisible())
+        self.assertEqual(player.findChildren(QStatusBar), [])
+        self.assertFalse(player.resize_grip.isVisible())
         QTest.keyClick(player, Qt.Key_F5)
         self.assertTrue(player.state_path().is_file())
         QTest.keyClick(player, Qt.Key_F8)
-        self.assertIn("Restored slot 4", player.statusBar().currentMessage())
+        self.assertEqual(player.notice.text(), "State loaded · Slot 4")
         QTest.keyClick(player, Qt.Key_Escape)
         self.assertFalse(player.isFullScreen())
         self.assertEqual(player.fullscreen_action.property('emuluna_hud_icon'), 'fullscreen')
         self.assertFalse(player.menuBar().isVisible())
         self.assertEqual(player.menuBar().actions(), [])
-        self.assertTrue(player.statusBar().isVisible())
+        self.assertEqual(player.findChildren(QStatusBar), [])
+        self.assertTrue(player.resize_grip.isVisible())
+        self.assertEqual(player.screen.geometry(), player.rect())
 
     def test_state_notice_visible_in_fullscreen_and_reports_failures(self):
         player = self.make_player()

@@ -1,7 +1,7 @@
 import QtQuick 2.15
 
 Rectangle {
-    color: "#0c0d10"
+    color: "#000000"
     Image {
         objectName: "frameImage"
         cache: false

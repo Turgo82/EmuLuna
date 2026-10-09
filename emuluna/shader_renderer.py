@@ -311,7 +311,7 @@ class ShaderRenderer:
         output=self.render(frame,size,key,saved)
         gl=self.gl;gl.BindFramebuffer(0x8D40,framebuffer)
         gl.Disable(0x8DB9);gl.Disable(0x0BE2);gl.Disable(0x0C11)
-        gl.ClearColor(.047,.051,.063,1);gl.Clear(0x4000)
+        gl.ClearColor(0,0,0,1);gl.Clear(0x4000)
         if output:
             gl.Viewport(*viewport);gl.BindVertexArray(self.vao);gl.UseProgram(self.present.id)
             self.bind_texture(0,output,{'linear':key=='linear' or (key!='nearest' and output.size!=viewport[2:])})

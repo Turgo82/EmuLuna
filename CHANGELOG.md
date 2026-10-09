@@ -2,6 +2,37 @@
 
 This file records user-facing changes to EmuLuna releases.
 
+## [0.19.0] - 2026-10-08
+
+This release keeps gameplay windows in the core's proportions, simplifies the
+game window, and adds optional per-game N64 overscan controls for software
+and OpenGL. Software mode uses the core's automatic overscan crop; OpenGL
+offers individual adjustments for each edge.
+
+### Changed
+
+- Add per-game Screen borders controls under Gameplay options → Scaling for
+  ParaLLEl N64. Software mode can automatically hide overscan through Angrylion;
+  OpenGL mode can trim each edge through GLideN64's own options. Remember
+  adjustments separately for each game and renderer, and restore uncropped
+  output without affecting other games. Changes apply when the game reopens.
+- Use pure black behind gameplay and in letterbox borders with Vulkan,
+  OpenGL and software presentation, including before the first frame appears.
+- Fit normal game windows to the core's display aspect ratio and preserve it
+  while dragging the bottom-right resize grip. Remembered sizes keep their scale
+  while adopting the correct ratio; fullscreen and maximized windows retain black
+  borders as needed. Square-pixel mode and integer scaling remain available.
+- Resize gameplay in 16-pixel height steps with both dimensions calculated before
+  applying each size. Lock native border resizing for normal game windows so they
+  cannot stretch during a drag or snap back afterward, including on Wayland.
+- Keep maximizing and restoring available through Gameplay options → Scaling,
+  even when the desktop disables its maximize button for a size-locked window.
+- Remove the bottom status and keyboard-hint bar from game windows. Keep the
+  resize grip over the bottom-right corner of gameplay and use temporary in-game
+  notices for screenshots, audio issues and save errors.
+- Align the gameplay resize grip's clickable area with the bottom-right window
+  corner, enlarge it, and preserve its target size through delayed desktop events.
+
 ## [0.18.0] - 2026-10-03
 
 This release adds Dreamcast, identifies CHD discs from their contents, redesigns
