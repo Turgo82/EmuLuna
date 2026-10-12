@@ -144,16 +144,19 @@ class CoverShapes(unittest.TestCase):
                                    ('test','Example','snes','roms/Example.sfc','',0,'covers/test.png','Example.sfc'))
             window=Window(library,auto_artwork=False)
             try:
-                # Request before processing worker callbacks, while still showing loading art.
+                # The warm worker may already have written a small preview.
+                # Both that preview and loading art must keep the same ratio.
                 first=window.cover_icon('test')
                 self.assertEqual(window.games.cover_dimensions['test'], QSize(100,200))
-                self.assertEqual(first.pixmap(256,256).size(), QSize(128,256))
+                size=first.pixmap(256,256).size()
+                self.assertAlmostEqual(size.width()/size.height(), .5, delta=.01)
                 image=QImage(300,200,QImage.Format_RGB32);image.fill(QColor('blue'))
                 image.save(str(library.root/'covers'/'test.png'))
                 library.set_manual_cover('test','covers/test.png')
                 window.refresh()
                 changed=window.cover_icon('test')
-                self.assertEqual(changed.pixmap(256,256).size(), QSize(256,170))
+                size=changed.pixmap(256,256).size()
+                self.assertAlmostEqual(size.width()/size.height(), 1.5, delta=.02)
                 self.assertEqual(window.games.cover_dimensions['test'], QSize(300,200))
                 with library.db:
                     library.db.execute("UPDATE games SET cover=NULL,cover_revision=cover_revision+1 WHERE id='test'")
