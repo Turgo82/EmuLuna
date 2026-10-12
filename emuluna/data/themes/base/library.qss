@@ -1,0 +1,53 @@
+QMainWindow {background:palette(window); color:palette(window-text);}
+QWidget#sidebar {background:palette(alternate-base); border:0;}
+QWidget#libraryNavigation {background:palette(mid);border:0;border-radius:8px;}
+QToolButton#applicationMenuButton {background:transparent; border:0; border-radius:5px; padding:5px;}
+QToolButton#applicationMenuButton:hover, QToolButton#applicationMenuButton:pressed {background:palette(midlight);}
+QToolButton#applicationMenuButton::menu-indicator {image:none;}
+QToolButton#sidebarAddButton {background:transparent;border:0;border-radius:5px;padding:5px;}
+QToolButton#sidebarAddButton:hover,QToolButton#sidebarAddButton:pressed {background:palette(midlight);}
+QToolButton#sidebarAddButton::menu-indicator {image:none;}
+QLabel#sidebarActivityTitle {font-weight:600;color:palette(window-text);background:transparent;}
+QLabel#sidebarActivityDetail {font-size:11px;color:palette(placeholder-text);background:transparent;}
+QProgressBar#sidebarProgress {background:palette(window);border:1px solid palette(mid);border-radius:4px;}
+QProgressBar#sidebarProgress::chunk {background:palette(highlight);border-radius:3px;}
+QToolButton#sidebarCancelButton {background:transparent;color:palette(window-text);border:0;border-radius:4px;font-size:17px;padding:0;}
+QToolButton#sidebarCancelButton:hover {background:palette(midlight);}
+QToolButton#searchButton {background:transparent;border:0;border-radius:5px;padding:5px;}
+QToolButton#searchButton:hover,QToolButton#searchButton:focus {background:palette(midlight);}
+QToolButton#aboutLogoButton {background:transparent;border:0;padding:0;}
+QToolButton#aboutLogoButton:hover,QToolButton#aboutLogoButton:pressed {background:transparent;}
+QLineEdit#librarySearch {background:palette(window);color:palette(text);placeholder-text-color:palette(placeholder-text);border:1px solid palette(mid);border-radius:7px;padding:3px 8px;selection-background-color:palette(highlight);selection-color:palette(highlighted-text);}
+QLineEdit#librarySearch:focus {border-color:palette(highlight);}
+QPushButton#sectionNavigation {background:palette(window);color:palette(window-text);border:1px solid transparent;border-radius:0;padding:4px 18px;font-weight:bold;}
+QPushButton#sectionNavigation[segment="first"] {border-top-left-radius:7px;border-bottom-left-radius:7px;}
+QPushButton#sectionNavigation[segment="last"] {border-top-right-radius:7px;border-bottom-right-radius:7px;}
+QPushButton#sectionNavigation:hover {background:palette(midlight);}
+QPushButton#sectionNavigation:focus {border-color:palette(highlight);}
+QPushButton#sectionNavigation:checked {background:palette(highlight); color:palette(highlighted-text); border-color:palette(highlight);}
+QPushButton#viewControl {background:transparent; border:0; padding:5px; border-radius:4px;}
+QPushButton#viewControl:hover {background:palette(alternate-base);}
+QPushButton#viewControl:checked {background:palette(highlight);}
+QLabel#subtle {color:palette(placeholder-text); background:transparent;}
+QListWidget {border:0; outline:0; background:transparent;}
+QListWidget#nav {font-weight:bold;}
+QListWidget#nav::item {height:28px; border-radius:6px; padding-left:18px; margin:1px 8px;}
+QListWidget#nav::item:hover {background:palette(midlight);}
+QListWidget#nav::item:selected {background:palette(highlight); color:palette(highlighted-text);}
+QTableWidget, QTreeWidget {background:palette(base); alternate-background-color:palette(alternate-base); border:0; gridline-color:palette(mid); selection-background-color:palette(highlight); selection-color:palette(highlighted-text);}
+QHeaderView::section {padding:8px;}
+QPushButton#primary {font-weight:700; padding:9px 17px;}
+QLineEdit {padding:6px 10px;}
+QScrollBar:vertical {background:palette(alternate-base); width:14px; margin:0;}
+QScrollBar:horizontal {background:palette(alternate-base); height:14px; margin:0;}
+QScrollBar::handle {background:palette(placeholder-text); border:2px solid palette(alternate-base); border-radius:6px;}
+QScrollBar::handle:vertical {min-height:36px;}
+QScrollBar::handle:horizontal {min-width:36px;}
+QScrollBar::handle:hover, QScrollBar::handle:pressed {background:palette(highlight);}
+QScrollBar::add-line, QScrollBar::sub-line {width:0; height:0; border:0; background:transparent;}
+QScrollBar::add-page, QScrollBar::sub-page {background:transparent;}
+QMenu {background:palette(window);color:palette(window-text);border:1px solid palette(mid);border-radius:7px;padding:4px;}
+QMenu::item {padding:6px 28px 6px 14px;border-radius:4px;}
+QMenu::item:selected {background:palette(highlight);color:palette(highlighted-text);}
+QMenu::item:disabled {color:palette(disabled-text);}
+QMenu::separator {height:1px;background:palette(mid);margin:4px 8px;}

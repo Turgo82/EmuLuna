@@ -1,0 +1,27 @@
+/* Onboarding's night-sky presentation is independent of the library theme. */
+QDialog#onboarding {color:#f3f3ff;}
+QDialog#onboarding QWidget {background:transparent;}
+QDialog#onboarding QLabel {color:#d1d7f0;font-size:14px;}
+QDialog#onboarding QLabel#assistantHeading {color:#ffffff;font-size:34px;font-weight:700;}
+QDialog#onboarding QLabel#assistantEyebrow {color:#adb9ef;font-size:11px;font-weight:700;}
+QDialog#onboarding QFrame#assistantCard {background:rgba(12,17,46,210);border:1px solid rgba(170,177,245,55);border-radius:22px;}
+QDialog#onboarding QPushButton {color:#e9ecff;background:rgba(109,121,181,22);border:1px solid rgba(172,181,241,55);border-radius:10px;padding:10px 20px;font-weight:600;}
+QDialog#onboarding QPushButton:hover {background:rgba(132,140,219,60);border-color:#9b9ff3;}
+QDialog#onboarding QPushButton:focus {border:2px solid #b7c4ff;}
+QDialog#onboarding QPushButton:disabled {color:#78809e;border-color:rgba(172,181,241,20);}
+QDialog#onboarding QPushButton#assistantPrimary {background:qlineargradient(x1:0,y1:0,x2:1,y2:1,stop:0 #7356ec,stop:1 #b647d0);color:white;border:1px solid #a98aff;min-width:84px;}
+QDialog#onboarding QPushButton#assistantPrimary:hover {background:#9972f5;}
+QDialog#onboarding QPushButton#assistantLater {border:0;background:transparent;color:#b8c2e5;}
+QDialog#onboarding QPushButton#assistantFullscreen {padding:7px 14px;}
+QDialog#onboarding QLineEdit,QDialog#onboarding QComboBox {color:#f0f2ff;background:#20284e;border:1px solid #525c89;border-radius:9px;padding:10px;}
+QDialog#onboarding QComboBox::drop-down {border:0;width:26px;}
+QDialog#onboarding QComboBox::down-arrow {image:none;}
+QDialog#onboarding QComboBox QAbstractItemView {background:#20284e;color:#f0f2ff;border:1px solid #737cab;border-radius:7px;padding:3px;selection-background-color:#795de0;selection-color:white;}
+QDialog#onboarding QCheckBox {color:#d1d7f0;spacing:10px;padding:6px 0;}
+QDialog#onboarding QFrame[frameShape="4"] {color:#343e65;max-height:1px;}
+
+QDialog#onboarding QScrollArea {border:1px solid #343e65;border-radius:10px;background:rgba(20,26,56,130);}
+QDialog#onboarding QScrollBar:vertical {background:transparent;width:8px;margin:3px;}
+QDialog#onboarding QScrollBar::handle:vertical {background:#606da4;border-radius:4px;min-height:24px;}
+QDialog#onboarding QScrollBar::add-line:vertical,QDialog#onboarding QScrollBar::sub-line:vertical {height:0;}
+QDialog#onboarding QScrollBar::add-page:vertical,QDialog#onboarding QScrollBar::sub-page:vertical {background:transparent;}

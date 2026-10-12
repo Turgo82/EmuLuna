@@ -29,6 +29,7 @@ class FilenameTests(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.root = Path(self.tmp.name)
         self.lib = Library(self.root / "library")
+        self.lib.set_setting("storage.layout", "legacy")
         self.rom = self.root / "Café_Game (USA) [Rev 1].SFC"
         self.data = snes()
         self.rom.write_bytes(self.data)

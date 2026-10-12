@@ -2,6 +2,112 @@
 
 This file records user-facing changes to EmuLuna releases.
 
+## [0.20.0] - 2026-10-11
+
+This release adds independent themes, an animated Setup Assistant, console-based
+library storage with move and audit tools, smoother library scrolling, expanded
+performance diagnostics, and N64 compatibility and border improvements.
+
+### Fixed
+
+- Smooth mouse-wheel scrolling in library grids, lists, save states and screenshots.
+  Keep touchpad pixel scrolling direct and cancel wheel animation when dragging
+  the scrollbar, using keys or jumping to another game. Prefetch nearby covers
+  during scrolling without scanning the entire library or restarting the queue
+  on every animation frame.
+- Stop delayed startup lookups after the library window closes.
+
+- Fix 1080° Snowboarding starting to a black screen with ParaLLEl N64 by
+  selecting Cached Interpreter for that game in software and OpenGL modes.
+  Identify it from the cartridge header as well as its library title; leave
+  other games' CPU defaults unchanged.
+
+- Automatically align ParaLLEl N64 pictures in software and OpenGL: remove
+  small, entirely black outer margins after three seconds of stable padding
+  in a sufficiently bright scene. Ignore mostly black scenes and fades during
+  detection; lock the first adjustment for the rest of the play session, including
+  resolution changes. Toggle off and on to recalibrate.
+  Preserve core display proportions.
+  Add a toggle under Scaling in the game overlay that applies immediately, plus a
+  per-game switch under Screen borders; manual native cropping takes priority.
+
+- Feed audio before core work and video submission for every core, including
+  fullscreen Saturn playback. Drain pending sound between emulation frames.
+- When software-frame playback falls behind, skip up to two display submissions
+  to catch up while preserving every emulation frame, audio, state and screenshot.
+  Resume normal presentation immediately once the deadline recovers.
+
+### Added
+
+- Enlarge settings navigation icons from 30 to 44 pixels and tighten surrounding
+  padding, keeping labels beneath the icons.
+
+- Rename the built-in themes to Luna (default), Daylight and Classic. Rename
+  folders and IDs to `luna`, `daylight` and `classic`, migrating saved old selections.
+
+- Expand the FPS display with a rolling ten-second line graph, 1% low FPS,
+  current frame interval and peak frame interval. Exclude pauses and fast-forward;
+  show 1% low after 100 samples. Flatten graph fluctuations within 2% of the
+  typical FPS for readability; keep raw timing statistics unchanged.
+  Metrics describe core frame pacing.
+
+- Make every built-in theme and newly created custom theme standalone, with its
+  own complete palette, fonts, four stylesheets and controller wood asset. Editing
+  one theme no longer changes another; new copies have no parent references.
+
+- Add a five-step first-run Setup Assistant with Welcome, Library, Appearance,
+  Emulator cores and Ready pages, Back/Next navigation and a final Let’s go action.
+  Animate a large, smoothly scaled welcome logo with twinkling stars and
+  shooting stars crossing the screen on varying paths every seven seconds, plus a gentle logo wobble. Add a vivid night sky, layered procedural clouds with faster parallax drift,
+  responsive side-by-side or stacked layouts, and Fullscreen / F11 with Escape to return;
+  offer an icon-based console checklist when automatic core downloads are disabled.
+  Download selected cores once during setup, and retain selections for retries.
+  Fade between setup pages while keeping sky, cloud and logo animations continuous.
+  Stop animation when closing setup.
+  Choose console storage, import copying, appearance and recommended core downloads.
+  Keep setup pending when dismissed. Add a side-effect-free **Preview onboarding…**
+  under Advanced → Developer options; existing libraries do not show setup after updates.
+- Add a Library audit section in Advanced settings, with background checks for
+  missing ROMs, missing disc tracks, changed sizes and optional content verification.
+  Locate matching originals or explicitly remove selected library references
+  while keeping ROM files, saves, states and screenshots.
+- Check the library before migration, list issues by game, require them to be
+  resolved, and ask for confirmation before moving files. Keep this preflight
+  available without unlocking Advanced settings.
+- Add editable theme packages with JSON colors, independent QSS styles and optional
+  controller textures. Create, select, open and reload custom themes in Settings.
+- Ship Luna as the default, plus Daylight and Classic themes. Match OpenEmu’s
+  source red accent, charcoal surfaces, gray sidebar/navigation selections,
+  lighter title typography and native-style preferences labels. Use the original
+  OpenEmu wood with dark readable labels in all three themes. Apply the Controls palette to custom-painted inputs and
+  regenerated binding rows so white text cannot leak onto the light wood.
+- Replace Organize library by console with **Move library…**. Console folders
+  remain the default; users can store `consoles` in a chosen folder or drive.
+  Copy and verify all console files before switching locations, preserve index
+  paths and saved-game identities, and recover interrupted moves. Audit missing
+  ROMs and confirm the destination first; never overwrite an existing folder.
+- Group new libraries into console folders with ROMs, battery saves, screenshots
+  and save states. Keep single-file games together and multi-file disc tracks isolated.
+- Write readable per-console `games.json` inventories with titles, game IDs,
+  paths, file hashes and save/media locations. Add an inventory rebuild button.
+- Add an explicit organization action for existing libraries, with a database
+  backup, game locks, collision protection and interrupted-operation recovery.
+  Preserve metadata, external ROM locations, source downloads and legacy media access.
+
+### Library fixes
+
+- Check game locks individually during library organization, avoiding a false
+  “close the game” error when large libraries exhaust the open-file limit.
+  Prevent game launches during organization and name an actually running game
+  in the message.
+
+### Changed
+
+- Make rated stars yellow and unrated stars dark, and bring ratings closer to
+  game titles. Keep theme-controlled title typography and styled sidebar console/collection
+  labels and library section buttons.
+- Keep native KDE decoration colors in step with selected theme palettes.
+
 ## [0.19.0] - 2026-10-08
 
 This release keeps gameplay windows in the core's proportions, simplifies the

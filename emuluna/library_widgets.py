@@ -7,12 +7,13 @@ from pathlib import Path
 
 from PySide6.QtCore import (Qt, QMimeData, Signal, QRect, QSize, QEvent, QPointF,
                             QItemSelectionModel, QSignalBlocker, QTimer)
-from PySide6.QtGui import QDrag, QColor, QPen, QPixmap, QPainter, QIcon, QPolygonF, QCursor, QPalette
+from PySide6.QtGui import QDrag, QColor, QPen, QPixmap, QPainter, QIcon, QPolygonF, QCursor, QPalette, QFont, QFontMetrics
 from PySide6.QtWidgets import (QApplication, QAbstractItemView, QCheckBox, QComboBox, QDialog,
     QDialogButtonBox, QFormLayout, QLabel, QLineEdit, QListWidget, QSpinBox,
     QTableWidget, QTableWidgetItem, QVBoxLayout, QStyledItemDelegate, QStyle, QStyleOptionViewItem,
     QScrollArea, QWidget, QPlainTextEdit, QPushButton, QMessageBox, QHBoxLayout, QToolButton, QSizePolicy, QScrollBar)
 
+from .smooth_scroll import SmoothScroll
 from .library import SYSTEMS
 from .theme import paint_thumbnail_highlight
 from .branding import navigation_icon
@@ -175,6 +176,12 @@ class LibraryScrollBar(QScrollBar):
             self.setValue(source.value())
         self.setVisible(source.maximum() > source.minimum())
 
+    def wheelEvent(self, event):
+        controller = getattr(self.view, 'smooth_scroll', None)
+        if controller is not None and controller.handle_wheel(event):
+            return
+        super().wheelEvent(event)
+
     def scroll_view(self, value):
         if self.view is not None:
             self.view.verticalScrollBar().setValue(value)
@@ -228,6 +235,7 @@ class GameGrid(GameDragMixin, QListWidget):
 
     def __init__(self):
         super().__init__()
+        self.smooth_scroll = SmoothScroll(self)
         self.action_info = lambda game_id: (False, False)
         self.hovered_id = None
         self.cover_dimensions = {}
@@ -401,7 +409,7 @@ class GameGrid(GameDragMixin, QListWidget):
 
 
 class CoverDelegate(QStyledItemDelegate):
-    """Keep covers, two title lines and ratings aligned at every grid size."""
+    """Keep covers aligned and place ratings directly beneath each title."""
     def __init__(self, parent, icon_provider=None):
         super().__init__(parent)
         self.icon_provider = icon_provider
@@ -426,24 +434,41 @@ class CoverDelegate(QStyledItemDelegate):
         paint_thumbnail_highlight(painter, art_rect, option)
         painter.setRenderHint(QPainter.SmoothPixmapTransform)
         painter.drawPixmap(art_rect, icon.pixmap(art_rect.size()))
-        max_title_height = max(34, option.fontMetrics.height() * 2)
+        title_font = QFont(option.font)
+        from .theme import theme_font
+        title_font.setWeight(QFont.Weight(theme_font("game-title-weight", 700)))
+        title_metrics = QFontMetrics(title_font)
+        max_title_height = max(34, title_metrics.height() * 2)
         title_rect = QRect(art_rect.left() - 13, art_rect.bottom() + 5,
                            art_rect.width() + 26, max_title_height)
         title = index.data(Qt.UserRole + 1)
-        painter.setFont(option.font)
+        title_flags = Qt.AlignHCenter | Qt.TextWordWrap
+        title_height = title_metrics.boundingRect(title_rect, title_flags, title).height()
+        title_rect.setHeight(min(max_title_height, max(title_metrics.height(), title_height)))
+        painter.setFont(title_font)
         painter.setPen(option.palette.color(QPalette.Text))
         painter.setClipRect(title_rect)
-        painter.drawText(title_rect, Qt.AlignHCenter | Qt.TextWordWrap, title)
+        painter.drawText(title_rect, title_flags, title)
         painter.setClipping(False)
+        painter.setFont(option.font)
         rating = index.data(Qt.UserRole + 2)
-        painter.setPen(option.palette.color(QPalette.Highlight if rating else QPalette.PlaceholderText))
-        painter.drawText(QRect(title_rect.left(), title_rect.bottom() + 2, title_rect.width(), 16), Qt.AlignCenter,
-                         "★" * rating + "☆" * (5 - rating))
+        stars = "★" * rating + "☆" * (5 - rating)
+        widths = [option.fontMetrics.horizontalAdvance(star) for star in stars]
+        x = title_rect.left() + (title_rect.width() - sum(widths)) // 2
+        for position, (star, width) in enumerate(zip(stars, widths)):
+            from .theme import theme_color
+            painter.setPen(theme_color("rating-filled" if position < rating else "rating-empty", "#f2c94c" if position < rating else "#55565e"))
+            painter.drawText(QRect(x, title_rect.bottom() + 2, width, 16), Qt.AlignCenter, star)
+            x += width
         painter.restore()
 
 
 class GameTable(GameDragMixin, QTableWidget):
     files_dropped = Signal(list, object)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.smooth_scroll = SmoothScroll(self)
 
     def game_ids(self):
         return [self.item(index.row(), 0).data(Qt.UserRole) for index in self.selectionModel().selectedRows()]
@@ -503,7 +528,11 @@ class SidebarDelegate(QStyledItemDelegate):
         count_rect = QRect(right - count_width, styled.rect.top(), count_width, styled.rect.height())
         painter.save()
         painter.setFont(styled.font)
-        painter.setPen(styled.palette.color(group, title_role))
+        title_color = styled.palette.color(group, title_role)
+        if selected and enabled:
+            from .theme import theme_color
+            title_color = theme_color('sidebar-selected-text', title_color.name())
+        painter.setPen(title_color)
         painter.drawText(title_rect, Qt.AlignVCenter | Qt.AlignLeft,
                          metrics.elidedText(title, Qt.ElideRight, title_rect.width()))
         painter.setPen(styled.palette.color(group, count_role))

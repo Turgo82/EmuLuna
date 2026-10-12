@@ -1,0 +1,56 @@
+{
+  "format": 1,
+  "id": "luna",
+  "name": "Luna",
+  "palette": {
+    "window": "#24252b",
+    "window-text": "#ebeaf0",
+    "base": "#24252b",
+    "alternate-base": "#1b1c21",
+    "text": "#ebeaf0",
+    "button": "#383943",
+    "button-text": "#ebeaf0",
+    "highlight": "#b6a0e4",
+    "accent": "#b6a0e4",
+    "highlighted-text": "#201b2b",
+    "placeholder-text": "#a4a5b2",
+    "tooltip-base": "#303139",
+    "tooltip-text": "#ebeaf0",
+    "mid": "#50515c",
+    "midlight": "#393a43",
+    "light": "#555560",
+    "dark": "#1b1c21",
+    "link": "#b6a0e4",
+    "link-visited": "#c6b2ee",
+    "disabled-text": "#70717d"
+  },
+  "colors": {
+    "rating-filled": "#f2c94c",
+    "rating-empty": "#55565e",
+    "controls-surface": "#d6a04a",
+    "controls-text": "#24170b",
+    "controls-subtle": "#493017",
+    "controls-accent": "#634016",
+    "controls-popup": "#f2d29b",
+    "controls-border": "#765123",
+    "controls-scrollbar": "#795521",
+    "sidebar-background": "#222329",
+    "sidebar-selected-background": "#47414f",
+    "sidebar-selected-text": "#c5adef",
+    "navigation-background": "#272830",
+    "navigation-selected-background": "#484451",
+    "settings-tab-selected-text": "#c5adef"
+  },
+  "fonts": {
+    "game-title-weight": 400
+  },
+  "assets": {
+    "controls-background": "controls-wood.jpg"
+  },
+  "styles": {
+    "library": "library.qss",
+    "settings": "settings.qss",
+    "gameplay": "gameplay.qss",
+    "onboarding": "onboarding.qss"
+  }
+}

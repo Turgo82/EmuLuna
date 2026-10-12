@@ -1,15 +1,144 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
-  <defs>
-    <linearGradient id="plate" x2="1" y2="1"><stop stop-color="#73c7f2"/><stop offset=".5" stop-color="#478ccc"/><stop offset="1" stop-color="#405a9d"/></linearGradient>
-    <linearGradient id="metal" x2="1" y2="1"><stop stop-color="#fafcff"/><stop offset=".5" stop-color="#c6d3e5"/><stop offset="1" stop-color="#8c9cb7"/></linearGradient>
-    <linearGradient id="hub" x2="1" y2="1"><stop stop-color="#729cce"/><stop offset="1" stop-color="#334673"/></linearGradient>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   viewBox="0 0 48 48"
+   version="1.1"
+   id="svg11"
+   sodipodi:docname="general.svg"
+   inkscape:version="1.4.4 (dcaf3e7d9e, 2026-05-05)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview11"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="18.020833"
+     inkscape:cx="23.972255"
+     inkscape:cy="24"
+     inkscape:window-width="2048"
+     inkscape:window-height="1074"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg11" />
+  <defs
+     id="defs8">
+    <linearGradient
+       id="plate"
+       x2="1"
+       y2="1">
+      <stop
+         stop-color="#73c7f2"
+         id="stop1" />
+      <stop
+         offset=".5"
+         stop-color="#478ccc"
+         id="stop2" />
+      <stop
+         offset="1"
+         stop-color="#405a9d"
+         id="stop3" />
+    </linearGradient>
+    <linearGradient
+       id="metal"
+       x2="1"
+       y2="1">
+      <stop
+         stop-color="#fafcff"
+         id="stop4" />
+      <stop
+         offset=".5"
+         stop-color="#c6d3e5"
+         id="stop5" />
+      <stop
+         offset="1"
+         stop-color="#8c9cb7"
+         id="stop6" />
+    </linearGradient>
+    <linearGradient
+       id="hub"
+       x2="33.5"
+       y2="32.5"
+       x1="14.5"
+       y1="13.5"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="translate(2.3891661e-6,0.16646666)">
+      <stop
+         stop-color="#729cce"
+         id="stop7" />
+      <stop
+         offset="1"
+         stop-color="#334673"
+         id="stop8" />
+    </linearGradient>
   </defs>
-  <ellipse cx="24" cy="43" rx="17" ry="2" fill="#101826" opacity=".22"/>
-  <rect x="6" y="5" width="36" height="36" rx="8" fill="url(#plate)" stroke="#304f7c" stroke-width="1.2"/>
-  <path d="M12 7H35Q40 7 40 12" fill="none" stroke="#ccefff" opacity=".7"/>
-  <path d="M20 9H28L29 14L33 16L38 15L41 22L37 25L36 29L38 33L32 38L28 35H23L19 38L12 34L14 29L12 25L8 22L11 15L16 16L19 14Z" fill="#263e69" opacity=".3" transform="translate(0 1)"/>
-  <path d="M20 9H28L29 14L33 16L37 15L40 22L36 25L35 29L37 33L31 37L27 34H22L18 37L12 33L14 28L12 24L8 21L11 15L16 16L19 14Z" fill="url(#metal)" stroke="#607796" stroke-width="1.1" stroke-linejoin="round"/>
-  <circle cx="24" cy="23" r="9" fill="url(#hub)" stroke="#7e94b0"/>
-  <circle cx="24" cy="23" r="5" fill="#d7e7fa" stroke="#f7fbff"/>
-  <path d="M20 10H27M10 20L12 16M14 32L18 35" fill="none" stroke="#fff" opacity=".8" stroke-linecap="round"/>
+  <ellipse
+     cx="24"
+     cy="43"
+     rx="17"
+     ry="2"
+     fill="#101826"
+     opacity=".22"
+     id="ellipse8" />
+  <rect
+     x="6"
+     y="5"
+     width="36"
+     height="36"
+     rx="8"
+     fill="url(#plate)"
+     stroke="#304f7c"
+     stroke-width="1.2"
+     id="rect8" />
+  <path
+     d="M 12,7 H 34.223121 C 37.556455,7 39.172342,8.9111401 40,12"
+     fill="none"
+     stroke="#ccefff"
+     opacity="0.7"
+     id="path8"
+     sodipodi:nodetypes="csc" />
+  <path
+     d="m 20,9 h 8 l 1,5 4,2 5,-1 3,7 -3.667052,2.778035 L 36,29 l 2,4 -6,5 -5.054335,-3 H 23 L 18.223121,38.110983 12,34 14,29 11.778035,24.278613 8,22 l 3,-7 5,1 3,-2 z"
+     fill="#263e69"
+     opacity="0.3"
+     transform="translate(0,1)"
+     id="path9"
+     sodipodi:nodetypes="ccccccccccccccccccccc" />
+  <path
+     d="m 20,9 h 8 l 1.166474,4.556069 3.389133,2.722312 4.999306,-0.83445 L 40,22 36,25 34.556069,28.778035 37,33 31.776879,37.332948 26.833526,33.722543 22.277457,33.667052 18,37 12,33 14,28 12.776878,24.277457 8,21.721387 l 3,-6.887862 4.722543,1.221966 3.34811,-2.685059 z"
+     fill="url(#metal)"
+     stroke="#607796"
+     stroke-width="1.1"
+     stroke-linejoin="round"
+     id="path10"
+     sodipodi:nodetypes="ccccccccccccccccccccc" />
+  <circle
+     cx="24.000002"
+     cy="23.166466"
+     r="9"
+     fill="url(#hub)"
+     stroke="#7e94b0"
+     id="circle10"
+     style="fill:url(#hub)" />
+  <circle
+     cx="24"
+     cy="23"
+     r="5"
+     fill="#d7e7fa"
+     stroke="#f7fbff"
+     id="circle11" />
+  <path
+     d="M 21.109827,10.166474 27,10.221965 M 9.667052,21.109827 11.778035,16.332948 m 2.055491,16.110983 4.110983,2.778034"
+     fill="none"
+     stroke="#ffffff"
+     opacity="0.8"
+     stroke-linecap="round"
+     id="path11"
+     sodipodi:nodetypes="cccccc" />
 </svg>

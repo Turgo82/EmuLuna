@@ -13,13 +13,14 @@ from PySide6.QtMultimedia import QAudio, QAudioFormat, QAudioSink, QMediaDevices
 from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox, QComboBox, QStyle, QMenu
 
 from .branding import configure_application
-from .theme import follow_system_theme, theme_palette
+from .theme import apply_theme_style, follow_system_theme, theme_palette
 from .core import Core, CoreError, saved_state_renderer
 from .video_filters import ALL_FILTERS, valid_filter
 from .game_window import GameSizeGrip
 from .shaders import PRESETS, parameter_values
 from .shader_controls import ShaderControls
-from .n64_borders import N64BorderControls, border_settings, core_border_options
+from .n64_compatibility import n64_compatibility_options
+from .n64_borders import N64BorderControls, border_settings, core_border_options, N64FrameBorders
 from .core_manager import CoreManager
 from .desktop import prefer_native_desktop, restore_window_size, save_window_size
 from .systems import CATALOG, core_launch_options, core_render_options
@@ -53,14 +54,26 @@ class Player(QMainWindow):
             raise CoreError("The game is no longer in the library.")
         self.game_id = game_id
         self.n64_border_settings = None
+        self.n64_frame_borders = N64FrameBorders()
+        self.automatic_n64_borders = library.setting("n64.automatic_borders", "1") == "1"
         self.n64_border_dialog = None
-        self.lock = QLockFile(str(library.root / "saves" / (game_id + ".lock")))
-        self.lock.setStaleLockTime(0)
-        if not self.lock.tryLock(0):
-            raise CoreError("This game is already running. Close its other window first.")
-        self.state_directory = library.root / "states" / game_id
-        save_directory = library.root / "saves" / game_id
+        # Lock ordering matches storage operations: migration gate, then game.
+        # Once the game lock is held, migration cannot pass its idle-game check.
+        gate = QLockFile(str(library.root / "storage-migration.lock"))
+        gate.setStaleLockTime(0)
+        if not gate.tryLock(0):
+            raise CoreError("The library is being organized or updated. Try starting the game when it finishes.")
         try:
+            self.lock = QLockFile(str(library.root / "saves" / (game_id + ".lock")))
+            self.lock.setStaleLockTime(0)
+            if not self.lock.tryLock(0):
+                raise CoreError("This game is already running. Close its other window first.")
+        finally:
+            gate.unlock()
+        self.game = library.get(game_id)
+        try:
+            self.state_directory = library.game_folder("states", game_id)
+            save_directory = library.game_folder("saves", game_id)
             rom_path = library.validate_game(game_id)
             manager = CoreManager(library.root)
             selected = manager.selection(library, self.game["system"])
@@ -158,13 +171,18 @@ class Player(QMainWindow):
                 or (adaptive and hardware_available and state_file and not using_hardware)
             )
             core_options = dict(options)
+            if compatible_hardware:
+                core_options['options'] = {
+                    **core_options.get('options', {}),
+                    **n64_compatibility_options(rom_path, self.game['title']),
+                }
             # A core may request a hardware context regardless of which API
             # presents frames to the window. The libretro callback negotiates
             # only contexts this machine can actually create.
             core_options["allow_hardware"] = True
             core_options["allow_vulkan"] = vulkan_available
             if hardware_candidate or render_options:
-                accelerated = dict(options.get("options", {}))
+                accelerated = dict(core_options.get("options", {}))
                 accelerated.update(render_options)
             if hardware_candidate:
                 accelerated.update({
@@ -269,6 +287,7 @@ class Player(QMainWindow):
         self.fast = False
         self.fast_speed = self.preference_int("fast_forward_speed", 3, 2, 10)
         self.frames = 0
+        self.skipped_presentations = 0
         self.fps_sample_frames = 0
         self.fps_sample_started = time.perf_counter()
         self.frame_limit, self.capture_path = frame_limit, screenshot
@@ -304,16 +323,7 @@ class Player(QMainWindow):
         self._aspect_target_size = None
         self._aspect_resize_axis = 'width'
         self._aspect_restore_size = None
-        self.setStyleSheet("""
-            QMainWindow,QToolBar,QMenuBar,QMenu {background:palette(window);color:palette(window-text)}
-            QToolBar {spacing:12px;padding:8px}
-            QToolButton {color:palette(button-text);padding:6px;border:1px solid transparent;border-radius:4px}
-            QToolButton:hover,QMenuBar::item:selected,QMenu::item:selected {background:palette(highlight);color:palette(highlighted-text)}
-            QMenu {border:1px solid palette(mid);border-radius:8px;padding:6px}
-            QMenu::item {padding:7px 38px 7px 12px}
-            QMenu::right-arrow {right:10px}
-            QComboBox {padding:5px;background:palette(button);color:palette(button-text);border:1px solid palette(mid)}
-        """)
+        apply_theme_style(self, "gameplay")
         self.setFocusPolicy(Qt.StrongFocus)
         bar = self.addToolBar("Game")
         bar.setMovable(False)
@@ -381,6 +391,13 @@ class Player(QMainWindow):
         self.resize_integer_action = self.action(scaling, "Resize window to integer scale", "", self.resize_to_integer_scale)
         self.maximize_action = self.action(scaling, "Maximize window", "", self.toggle_maximized)
         if self.n64_border_settings is not None:
+            self.automatic_n64_borders_action = self.action(
+                scaling, "Automatic N64 border adjustment", "", self.set_automatic_n64_borders)
+            self.automatic_n64_borders_action.setCheckable(True)
+            self.automatic_n64_borders_action.setChecked(self.automatic_n64_borders)
+            self.automatic_n64_borders_action.setToolTip(
+                "Ignore mostly black scenes, then lock the first settled adjustment "
+                "for this play session. Toggle off and on to recalibrate.")
             self.action(scaling, "Screen borders…", "", self.adjust_n64_borders)
         self.action(menu, "Controls", "F1", self.controls)
         for popup in (menu, *menu.findChildren(QMenu)):
@@ -627,6 +644,7 @@ class Player(QMainWindow):
         dialog.show()
 
     def set_n64_borders(self, settings):
+        self.n64_frame_borders = N64FrameBorders()
         self.n64_border_settings = border_settings(json.dumps(settings))
         self.library.set_setting(self.n64_border_setting, json.dumps(self.n64_border_settings))
 
@@ -636,6 +654,7 @@ class Player(QMainWindow):
             return
         self.refresh_focus_pause()
         self.refresh_game_mode()
+        self.refresh_n64_borders()
         system = self.game['system']
         self.rumble_enabled = self.library.setting("controller_rumble", "1") == "1"
         self.rumble_intensity = self.preference_int("controller_rumble_intensity", 100, 0, 100)
@@ -668,6 +687,19 @@ class Player(QMainWindow):
         self.key_bindings = self.key_bindings_by_player[0]
         self.axis_bindings = self.axis_bindings_by_player[0]
         self.pad = self.pads[0]
+
+    def set_automatic_n64_borders(self, enabled):
+        self.library.set_setting("n64.automatic_borders", "1" if enabled else "0")
+        self.refresh_n64_borders()
+
+    def refresh_n64_borders(self):
+        enabled = self.library.setting("n64.automatic_borders", "1") == "1"
+        if enabled != self.automatic_n64_borders:
+            self.automatic_n64_borders = enabled
+            self.n64_frame_borders = N64FrameBorders()
+        action = getattr(self, "automatic_n64_borders_action", None)
+        if action is not None:
+            action.setChecked(enabled)
 
     def refresh_game_mode(self):
         enabled = (not self.frame_limit
@@ -753,12 +785,39 @@ class Player(QMainWindow):
         self.audio_pending.clear()
         self.setup_audio()
 
+    def drain_audio(self, samples=b''):
+        """Feed queued sound before emulation and costly GPU presentation."""
+        if not self.audio_device or self.fast:
+            return
+        self.audio_pending.extend(samples)
+        max_bytes = self.core.sample_rate * 4 // 8 & ~3
+        if len(self.audio_pending) > max_bytes:
+            del self.audio_pending[:-max_bytes]
+        count = min(len(self.audio_pending), self.audio.bytesFree()) & ~3
+        if count:
+            written = self.audio_device.write(bytes(self.audio_pending[:count]))
+            if written > 0:
+                del self.audio_pending[:written]
+
+    def presentation_due(self, now, period):
+        """Bound software-frame catch-up work without freezing the display."""
+        final_capture = self.frame_limit and self.frames + 1 >= self.frame_limit
+        if (not self.core.hardware and not final_capture
+                and now > self.next_frame + period * .5
+                and self.skipped_presentations < 2):
+            self.skipped_presentations += 1
+            return False
+        self.skipped_presentations = 0
+        return True
+
     def tick(self):
         if self.paused or self.focus_paused:
+            self.diagnostics.reset_frame_clock()
             self.next_frame = time.perf_counter()
             self.fps_sample_started = self.next_frame
             self.fps_sample_frames = 0
             return
+        self.drain_audio()
         now = time.perf_counter()
         if now < self.next_frame:
             return
@@ -786,13 +845,6 @@ class Player(QMainWindow):
             players = [(self.extra_keys[index - 1] | pad_buttons[index], axes[index])
                        for index in range(1, len(self.pads))]
             pixels, audio = self.core.frame(self.keys | pad_buttons[0], axes[0], players)
-            scale = self.rumble_intensity / 100 if self.rumble_enabled else 0
-            for port, pad in enumerate(self.pads):
-                strong, weak = self.core.rumble(port)
-                accepted = pad.set_rumble(strong * scale, weak * scale)
-                if scale and (strong or weak) and pad.pad and not accepted and not self.rumble_unavailable_notified:
-                    self.rumble_unavailable_notified = True
-                    self.notice.show_message("Controller vibration is unavailable")
             if self.core.sample_rate != previous_rate:
                 if self.audio:
                     self.audio.stop()
@@ -800,30 +852,36 @@ class Player(QMainWindow):
                 self.audio = self.audio_device = None
                 self.audio_pending.clear()
                 self.setup_audio()
+            self.drain_audio(audio)
+            scale = self.rumble_intensity / 100 if self.rumble_enabled else 0
+            for port, pad in enumerate(self.pads):
+                strong, weak = self.core.rumble(port)
+                accepted = pad.set_rumble(strong * scale, weak * scale)
+                if scale and (strong or weak) and pad.pad and not accepted and not self.rumble_unavailable_notified:
+                    self.rumble_unavailable_notified = True
+                    self.notice.show_message("Controller vibration is unavailable")
             self.screen.frame = (pixels if isinstance(pixels, QImage) else
                 QImage(pixels, self.core.width, self.core.height,
                        self.core.width * 4, QImage.Format_RGB32).copy())
+            if (self.n64_border_settings is not None
+                    and self.automatic_n64_borders
+                    and self.n64_border_settings["automatic"]
+                    and not self.n64_border_settings["enabled"]):
+                self.screen.frame = self.n64_frame_borders.apply(self.screen.frame)
             if self.use_system_aspect:
                 self.screen.display_aspect = self.core.aspect
             if abs(self.gameplay_aspect() - self._window_aspect) > 1e-6:
                 self._aspect_resize_axis = 'width'
                 self._window_aspect = self.gameplay_aspect()
                 self.aspect_resize_timer.start(0)
-            self.screen.update()
-            if self.audio_device and not self.fast:
-                self.audio_pending.extend(audio)
-                # Bound latency after underruns, device changes or a slow desktop.
-                max_bytes = self.core.sample_rate * 4 // 8
-                if len(self.audio_pending) > max_bytes:
-                    del self.audio_pending[:-max_bytes]
-                count = min(len(self.audio_pending), self.audio.bytesFree()) & ~3
-                if count:
-                    written = self.audio_device.write(bytes(self.audio_pending[:count]))
-                    if written > 0:
-                        del self.audio_pending[:written]
+            # Drop only a display submission when late, never emulation or audio.
+            # Fullscreen uploads/filters can otherwise consume the catch-up budget.
+            if self.presentation_due(time.perf_counter(), period):
+                self.screen.update()
             self.frames += 1
             self.fps_sample_frames += 1
             sample_now = time.perf_counter()
+            self.diagnostics.record_frame(sample_now, normal_speed=not self.fast)
             elapsed = sample_now - self.fps_sample_started
             if elapsed >= 0.5:
                 self.diagnostics.set_fps(self.fps_sample_frames / elapsed)
@@ -915,7 +973,10 @@ class Player(QMainWindow):
         self.flush_audio()
 
     def screenshot(self):
-        path = self.library.root / "screenshots" / f"{self.game_id[:12]}-{datetime.now():%Y%m%d-%H%M%S}.png"
+        folder = (self.library.game_folder("screenshots", self.game_id) if self.library.console_layout()
+                  else self.library.root / "screenshots")
+        folder.mkdir(parents=True, exist_ok=True)
+        path = folder / f"{self.game_id[:12]}-{datetime.now():%Y%m%d-%H%M%S}.png"
         if self.screen.frame.save(str(path)):
             self.notice.show_message("Screenshot saved")
 

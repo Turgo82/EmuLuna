@@ -1,85 +1,12 @@
+from pathlib import Path
 """Settings surfaces use one palette, including native-style indicators."""
-from PySide6.QtCore import Qt, QSize, QRect
-from PySide6.QtGui import QPainter, QPen, QPalette, QPainterPath, QColor, QFontMetrics, QIcon
+from PySide6.QtCore import Qt, QSize, QRect, QRectF, QEvent
+from PySide6.QtGui import QPainter, QPen, QPalette, QPainterPath, QColor, QFontMetrics, QIcon, QRegion
 from PySide6.QtWidgets import (QCheckBox, QComboBox, QSpinBox, QAbstractSpinBox, QStyle, QStyleOptionButton,
                               QStyleOptionComboBox, QStyleOptionSpinBox, QStylePainter,
                               QStyledItemDelegate, QStyleOptionViewItem, QTabBar, QStyleOptionTab)
 
-SETTINGS_STYLE = """
-QDialog {background:palette(window);color:palette(window-text);}
-QLabel {color:palette(window-text);background:transparent;}
-QLabel#subtle {color:palette(placeholder-text);}
-QLabel#controlTitle {font-weight:600;}
-QLabel#controlGroup {color:palette(placeholder-text);font-weight:600;padding:7px 0 3px;}
-QFrame#settingsCard {background:palette(base);border:1px solid palette(mid);border-radius:8px;}
-QFrame#controllerPreviewCard {background:transparent;border:0;}
-QWidget#controlMappings {background:palette(base);}
-QTabWidget::pane {background:transparent;border:0;}
-QTabWidget::tab-bar {alignment:center;}
-QTabBar {background:palette(alternate-base);outline:0;}
-QTabBar::tab {background:transparent;color:palette(window-text);border:0;border-bottom:3px solid transparent;padding:10px 12px;margin:0 1px;}
-QTabBar::tab:selected {background:palette(button);border-bottom-color:palette(highlight);font-weight:600;}
-QTabBar::tab:!selected:hover {background:palette(midlight);}
-QPushButton {background:palette(button);color:palette(button-text);border:1px solid palette(mid);border-radius:5px;padding:7px 12px;min-height:18px;}
-QPushButton:hover {background:palette(midlight);border-color:palette(placeholder-text);}
-QPushButton:focus {border-color:palette(highlight);}
-QPushButton:pressed,QPushButton:checked {background:palette(highlight);color:palette(highlighted-text);border-color:palette(highlight);}
-QPushButton#controlBinding {padding:5px 8px;text-align:left;}
-QPushButton:disabled {color:palette(disabled-text);background:palette(alternate-base);}
-QComboBox,QLineEdit,QSpinBox {background:palette(base);color:palette(text);border:1px solid palette(mid);border-radius:5px;padding:6px 8px;min-height:18px;selection-background-color:palette(highlight);selection-color:palette(highlighted-text);}
-QComboBox {padding-right:26px;}
-QComboBox:hover,QLineEdit:hover,QSpinBox:hover {border-color:palette(placeholder-text);}
-QComboBox:focus,QLineEdit:focus,QSpinBox:focus {border-color:palette(highlight);}
-QComboBox:disabled,QLineEdit:disabled,QSpinBox:disabled {color:palette(disabled-text);background:palette(alternate-base);}
-QComboBox::drop-down {width:24px;border:0;background:transparent;}
-QComboBox::down-arrow {image:none;}
-QSpinBox {padding-right:30px;}
-QSpinBox::up-button {subcontrol-origin:border;subcontrol-position:top right;width:24px;border:0;border-left:1px solid palette(mid);border-bottom:1px solid palette(mid);border-top-right-radius:5px;background:palette(button);}
-QSpinBox::down-button {subcontrol-origin:border;subcontrol-position:bottom right;width:24px;border:0;border-left:1px solid palette(mid);border-bottom-right-radius:5px;background:palette(button);}
-QSpinBox::up-button:hover,QSpinBox::down-button:hover {background:palette(midlight);}
-QSpinBox::up-arrow,QSpinBox::down-arrow {image:none;}
-QComboBox QAbstractItemView {background:palette(base);color:palette(text);border:1px solid palette(mid);outline:0;selection-background-color:palette(highlight);selection-color:palette(highlighted-text);}
-QCheckBox {color:palette(window-text);background:transparent;spacing:9px;padding:4px 0;}
-QCheckBox:disabled {color:palette(disabled-text);}
-QCheckBox::indicator {width:18px;height:18px;}
-QSlider::groove:horizontal {height:5px;background:palette(mid);border:0;border-radius:2px;}
-QSlider::sub-page:horizontal {background:palette(highlight);border-radius:2px;}
-QSlider::handle:horizontal {background:palette(button);border:2px solid palette(highlight);width:14px;margin:-6px 0;border-radius:8px;}
-QSlider::handle:horizontal:hover,QSlider::handle:horizontal:focus {background:palette(highlight);}
-QSlider::handle:horizontal:disabled {border-color:palette(mid);}
-QTableWidget {background:palette(base);color:palette(text);alternate-background-color:palette(alternate-base);gridline-color:palette(mid);border:1px solid palette(mid);selection-background-color:palette(highlight);selection-color:palette(highlighted-text);}
-QHeaderView::section {background:palette(button);color:palette(button-text);border:0;border-bottom:1px solid palette(mid);padding:8px;}
-QScrollArea {background:transparent;border:0;}
-QScrollBar:vertical {background:palette(base);width:12px;margin:2px;}
-QScrollBar:horizontal {background:palette(base);height:12px;margin:2px;}
-QScrollBar::handle {background:palette(placeholder-text);border:2px solid palette(base);border-radius:5px;}
-QScrollBar::handle:vertical {min-height:28px;}
-QScrollBar::handle:horizontal {min-width:28px;}
-QScrollBar::handle:hover,QScrollBar::handle:pressed {background:palette(highlight);}
-QScrollBar::add-line,QScrollBar::sub-line {width:0;height:0;border:0;background:transparent;}
-QScrollBar::add-page,QScrollBar::sub-page {background:transparent;}
-QMenu {background:palette(window);color:palette(window-text);border:1px solid palette(mid);padding:4px;}
-QMenu::item {padding:6px 22px;border-radius:3px;}
-QMenu::item:selected {background:palette(highlight);color:palette(highlighted-text);}
-QMenu::item:disabled {color:palette(disabled-text);}
-QMenu::separator {height:1px;background:palette(mid);margin:4px;}
-/* Controls uses a single wood surface from the tab strip to the bottom edge. */
-QTabWidget#settingsTabs[woodControls="true"]::pane {background:transparent;border:0;}
-QWidget#woodControlsPage {background:transparent;}
-QWidget#woodControlsPage QLabel {color:#fff5e9;}
-QWidget#woodControlsPage QLabel#subtle,QWidget#woodControlsPage QLabel#controlGroup {color:#ead7bc;}
-QWidget#woodControlsPage QFrame#settingsCard {background:rgba(34,21,13,105);border:1px solid rgba(228,184,116,100);}
-QWidget#woodControlsPage QWidget#controlMappings {background:transparent;}
-QWidget#woodControlsPage QPushButton,QWidget#woodControlsPage QComboBox,
-QPushButton#settingsDone[woodControls="true"] {background:rgba(34,21,13,140);color:#fff5e9;border-color:rgba(228,184,116,150);}
-QWidget#woodControlsPage QPushButton:hover,QWidget#woodControlsPage QComboBox:hover,
-QPushButton#settingsDone[woodControls="true"]:hover {background:rgba(107,69,40,190);border-color:#e4b874;}
-QWidget#woodControlsPage QPushButton:focus,QWidget#woodControlsPage QComboBox:focus,
-QPushButton#settingsDone[woodControls="true"]:focus {border-color:#e4b874;}
-QWidget#woodControlsPage QComboBox QAbstractItemView {background:#302015;color:#fff5e9;border-color:#b48a5b;}
-QWidget#woodControlsPage QScrollBar {background:rgba(34,21,13,105);}
-QWidget#woodControlsPage QScrollBar::handle {background:#c2a17b;border-color:transparent;}
-"""
+SETTINGS_STYLE = (Path(__file__).with_name("data") / "themes/base/settings.qss").read_text(encoding="utf-8")
 
 
 class SettingsTabBar(QTabBar):
@@ -89,7 +16,7 @@ class SettingsTabBar(QTabBar):
         font.setBold(True)
         metrics = QFontMetrics(font)
         return QSize(max(84, metrics.horizontalAdvance(self.tabText(index)) + 24),
-                     self.iconSize().height() + metrics.height() + 29)
+                     self.iconSize().height() + metrics.height() + 21)
 
     def minimumTabSizeHint(self, index):
         return self.tabSizeHint(index)
@@ -103,15 +30,19 @@ class SettingsTabBar(QTabBar):
             rect = self.tabRect(index)
             size = self.iconSize()
             icon_rect = QRect(rect.center().x() - size.width() // 2,
-                              rect.top() + 10, size.width(), size.height())
+                              rect.top() + 6, size.width(), size.height())
             mode = QIcon.Normal if self.isTabEnabled(index) else QIcon.Disabled
             self.tabIcon(index).paint(painter, icon_rect, Qt.AlignCenter, mode)
             font = self.font()
             font.setBold(index == self.currentIndex())
             painter.setFont(font)
             group = QPalette.Active if self.isTabEnabled(index) else QPalette.Disabled
-            painter.setPen(self.window().palette().color(group, QPalette.WindowText))
-            label_rect = QRect(rect.left() + 8, icon_rect.bottom() + 7,
+            text_color = self.window().palette().color(group, QPalette.WindowText)
+            if index == self.currentIndex() and self.isTabEnabled(index):
+                from .theme import theme_color
+                text_color = theme_color('settings-tab-selected-text', text_color.name())
+            painter.setPen(text_color)
+            label_rect = QRect(rect.left() + 8, icon_rect.bottom() + 5,
                                rect.width() - 16, QFontMetrics(font).height())
             painter.drawText(label_rect, Qt.AlignCenter | Qt.TextSingleLine, self.tabText(index))
 
@@ -172,8 +103,8 @@ class SettingsCheckBox(QCheckBox):
         # already be open while the user switches between the OS palette and
         # EmuLuna's palette, so its inherited widget palette can be one event
         # behind the selected theme.
-        from .theme import theme_palette
-        palette = theme_palette()
+        from .theme import theme_palette, on_controls_surface
+        palette = self.palette() if on_controls_surface(self) else theme_palette()
         checked = self.checkState() != Qt.Unchecked
         # Tabs, sliders, selections and checks all use Highlight. Accent can
         # remain tied to the desktop theme even when EmuLuna's theme is active.
@@ -197,6 +128,24 @@ class SettingsCheckBox(QCheckBox):
 
 class SettingsComboBox(QComboBox):
     """The arrow is palette-drawn too; some desktop styles use fixed bitmaps."""
+    def showPopup(self):
+        popup = self.view().window()
+        popup.installEventFilter(self)
+        super().showPopup()
+        self.round_popup(popup)
+
+    def round_popup(self, popup):
+        # The native popup container paints outside the styled list view.
+        # Clip the entire surface so its background cannot leave square corners.
+        path = QPainterPath()
+        path.addRoundedRect(QRectF(popup.rect()), 7, 7)
+        popup.setMask(QRegion(path.toFillPolygon().toPolygon()))
+
+    def eventFilter(self, watched, event):
+        if watched == self.view().window() and event.type() in (QEvent.Resize, QEvent.Show):
+            self.round_popup(watched)
+        return super().eventFilter(watched, event)
+
     def paintEvent(self, event):
         super().paintEvent(event)
         option = QStyleOptionComboBox()

@@ -33,6 +33,7 @@ class FileManagement(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.root = Path(self.tmp.name)
         self.lib = Library(self.root/'library')
+        self.lib.set_setting("storage.layout", "legacy")
         self.source = self.root/'Original filename.nes'; self.source.write_bytes(nes())
         self.game_id = self.lib.import_file(self.source)[0]
         self.rom = self.lib.root/self.lib.get(self.game_id)['rom_path']

@@ -69,17 +69,50 @@ Drag the bottom-right grip to resize game windows in small steps while keeping
 the core's display proportions throughout the drag. Native border resizing is
 locked; Gameplay options → Scaling also provides Maximize / Restore.
 The gameplay background and fullscreen borders are pure black.
-For N64 games, Gameplay options → Scaling → Screen borders can trim the
-core's overscan margins. Software mode can hide them automatically; OpenGL
-mode offers individual edge adjustments. Close and reopen the game to apply
-changes. They are remembered per game and renderer;
-Restore Defaults returns to the complete, uncropped picture.
+Advanced → Show FPS while playing includes a ten-second FPS graph, 1% low,
+current frame interval and peak interval in milliseconds. The 1% low uses the
+slowest 1% of intervals after at least 100 samples. Pauses and fast-forward are
+excluded; these metrics measure core frame pacing, not monitor presentation.
+ParaLLEl N64 trims small, fully black outer margins after they persist for
+three seconds in a sufficiently bright scene, then keeps that adjustment for
+the rest of the play session. Mostly black scenes and fades are ignored during
+detection. Toggle the setting off and on to recalibrate. The core's display
+proportions are preserved.
+The game overlay's Gameplay options → Scaling → Automatic N64 border adjustment
+toggles this immediately and remembers your choice. Screen borders lets you disable it for one game
+or use the renderer's native overscan controls instead. Native crop changes
+require reopening the game. Choices are remembered per game and renderer;
+Restore Defaults enables automatic alignment again.
 
 EmuLuna keeps your library in `~/.local/share/emuluna` by default (or under
 `$XDG_DATA_HOME` when set).
 If an older `openemu-linux` library exists, EmuLuna opens it in place. It
 does not move or rename your games. Use `--data-dir` or `EMULUNA_DATA_DIR`
 to choose another location.
+
+Choose **Settings → Library → Move library…** to store `consoles` on another
+folder or drive. ROMs, saves, states and screenshots move together after an audit
+and verified copy. The library index, settings and cores stay in app data.
+
+On first run, a setup assistant walks through your console folder, appearance,
+import copying and recommended emulator downloads. Dismissing setup leaves it available next launch. Developers can
+try **Advanced → Developer options → Preview onboarding…** without changing
+settings or moving files. Existing libraries skip first-run setup after updates.
+
+## Themes and library folders
+
+Choose **Settings → General → Theme**: Luna (default), Daylight, or Classic.
+Create and reload custom themes there too. Each theme is an independent folder
+with its own colors, styles, fonts and controller background. [Theme guide](docs/THEMES.md).
+
+New libraries use `consoles/<system>/roms`, `saves`, `screenshots` and `states`,
+with a readable `games.json` inventory for each console. Multi-file discs keep
+private track folders; single-file games share the ROM folder. Existing libraries
+can switch with **Settings → Library → Move library…**; a database
+backup is kept during organization, and external files stay where they are.
+Migration checks for missing files and asks before moving anything.
+**Advanced → Library audit** can reconnect original ROMs or remove stale entries
+while keeping saved files. [Storage guide](docs/LIBRARY_STORAGE.md).
 
 ## Cores and graphics
 

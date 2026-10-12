@@ -114,7 +114,7 @@ class LibretroIntegration(unittest.TestCase):
         self.assertTrue(player.core.is_libretro)
         self.assertEqual(player.volume, 0.37)
         self.assertTrue(player.screen.integer_scale)
-        expected = library.root / "states" / game_id / "libretro/snes9x" / record["sha256"]
+        expected = library.game_folder("states", game_id) / "libretro/snes9x" / record["sha256"]
         self.assertEqual(player.state_path("auto.oesavestate").parent, expected)
         self.frames(player.core)
         player.close()

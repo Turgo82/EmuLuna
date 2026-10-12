@@ -47,6 +47,7 @@ class SystemTheme(unittest.TestCase):
         original = self.app.palette()
         with tempfile.TemporaryDirectory() as folder:
             lib = Library(Path(folder))
+            lib.set_setting("appearance.use_system_theme", "1")
             window = Window(lib, auto_artwork=False)
             settings = SettingsDialog(lib, window)
             settings.show_page('gameplay')

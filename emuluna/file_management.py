@@ -4,6 +4,8 @@ import os
 from pathlib import Path
 
 from PySide6.QtCore import QFile, QLockFile
+from .storage_migration import storage_operation
+from .library_paths import storage_contains
 
 
 @contextmanager
@@ -28,10 +30,13 @@ def rom_files(library, game):
     """Use the imported disc inventory; never delete an entire ROM directory."""
     main = library.root / game['rom_path']
     result = {main.absolute()}
-    for row in library.content_rows(game['id']):
+    rows = library.content_rows(game['id'])
+    for row in rows:
         relative = Path(row['path'])
         if relative.is_absolute() or '..' in relative.parts:
             raise ValueError('Invalid disc inventory. Remove the library reference while keeping files instead.')
+        if len(rows) == 1:
+            continue
         candidate = main.parent / relative
         # A replaced directory symlink must not lead us outside the disc set.
         if not candidate.parent.resolve().is_relative_to(main.parent.resolve()):
@@ -45,7 +50,8 @@ def media_files(library, game_ids, kind):
     root = library.root / kind
     if kind == 'states':
         candidates = (path for game_id in selected
-                      for path in (root / game_id).rglob('*')
+                      for folder in library.game_folders('states', game_id)
+                      for path in folder.rglob('*')
                       if path.suffix.lower() in ('.oesavestate','.png'))
     elif kind == 'screenshots':
         # Preserve screenshots with ambiguous legacy 12-character prefixes
@@ -53,11 +59,14 @@ def media_files(library, game_ids, kind):
         remaining = {row['id'][:12] for row in library.db.execute('SELECT id FROM games')
                      if row['id'] not in selected}
         prefixes = {game_id[:12] for game_id in selected} - remaining
-        candidates = (path for path in root.glob('*.png') if path.name.split('-')[0] in prefixes)
+        from itertools import chain
+        candidates = chain((path for path in root.glob('*.png') if path.name.split('-')[0] in prefixes),
+                           (path for game_id in selected for folder in library.game_folders('screenshots', game_id)
+                            for path in folder.glob('*.png')))
     else:
         raise ValueError('Unknown media type.')
     return sorted({path for path in candidates if path.is_file() and not path.is_symlink()
-                   and path.resolve().is_relative_to(root.resolve())})
+                   and storage_contains(library.root, path)})
 
 
 def removal_plan(library, game_ids, *, include_roms=True):
@@ -108,10 +117,13 @@ def clean_empty_game_folders(library, games):
     roms = library.root / 'roms'
     for game in games:
         main = library.root / game['rom_path']
-        for folder in (roms / game['system'] / game['id'], roms / game['id']):
+        from .library_paths import console_folder
+        console_roms = console_folder(library.root, game['system']) / 'roms'
+        extra = (main.parent,) if main.is_relative_to(console_roms) and main.parent != console_roms else ()
+        for folder in (roms / game['system'] / game['id'], roms / game['id'], *extra):
             if not main.is_relative_to(folder) or not folder.is_dir() or folder.is_symlink():
                 continue
-            if not folder.resolve().is_relative_to(roms.resolve()):
+            if not storage_contains(library.root, folder):
                 continue
             # rmdir cannot delete files. Unrelated files, shared tracks and
             # symlinks therefore keep their containing directories intact.
@@ -122,6 +134,7 @@ def clean_empty_game_folders(library, games):
                     pass
 
 
+@storage_operation
 def remove_games(library, game_ids, *, trash_roms=False, states=False, screenshots=False):
     with game_locks(library, game_ids):
         plan = removal_plan(library, game_ids, include_roms=trash_roms)
@@ -138,9 +151,11 @@ def remove_games(library, game_ids, *, trash_roms=False, states=False, screensho
             library.db.executemany('DELETE FROM games WHERE id=?', ids)
         if trash_roms:
             clean_empty_game_folders(library, plan['games'])
+        library.export_inventory({game['system'] for game in plan['games']})
         return plan
 
 
+@storage_operation
 def remove_media(library, entry):
     with game_locks(library, [entry['game_id']]):
         path = Path(entry['path'])

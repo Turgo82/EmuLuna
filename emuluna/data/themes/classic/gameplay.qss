@@ -1,0 +1,20 @@
+QMainWindow,QToolBar,QMenuBar,QMenu {background:palette(window);color:palette(window-text)}
+            QToolBar {spacing:12px;padding:8px}
+            QToolButton {color:palette(button-text);padding:6px;border:1px solid transparent;border-radius:4px}
+            QToolButton:hover,QMenuBar::item:selected,QMenu::item:selected {background:palette(highlight);color:palette(highlighted-text)}
+            QMenu {border:1px solid palette(mid);border-radius:8px;padding:6px}
+            QMenu::item {padding:7px 38px 7px 12px}
+            QMenu::right-arrow {right:10px}
+            QComboBox {padding:5px;background:palette(button);color:palette(button-text);border:1px solid palette(mid)}
+
+QFrame#gameplayHUD {background:palette(window);border:1px solid palette(mid);border-radius:12px;}
+            QToolButton {color:palette(window-text);background:transparent;padding:8px;border:0;border-radius:6px;}
+            QToolButton:hover {background:palette(midlight);}
+            QToolButton#powerButton {background:#b3261e;border:1px solid #7f1d1d;border-radius:6px;padding:8px 12px;}
+            QToolButton#powerButton:hover {background:#d13a32;}
+            QSlider::groove:horizontal {height:5px;background:palette(mid);}
+            QSlider::handle:horizontal {background:palette(highlight);width:13px;margin:-4px 0;border-radius:6px;}
+
+QLabel#gameplayNotice {background:palette(window);color:palette(window-text);border:1px solid palette(mid);border-radius:10px;padding:12px 20px;font-size:16px;font-weight:600;}
+
+QLabel#gameplayDiagnostics {background:rgba(12,13,16,210);color:#f4f4f5;border:1px solid rgba(255,255,255,70);border-radius:6px;padding:5px 8px;font-family:monospace;font-size:12px;}

@@ -320,10 +320,15 @@ class CoreManager:
     def state_build(self, state_path, game_id, system):
         """Resolve the exact retained core encoded by a versioned state path."""
         path = Path(state_path).resolve()
-        root = (self.root / "states" / game_id).resolve()
-        try:
-            parts = path.relative_to(root).parts
-        except ValueError:
+        from .library_paths import state_roots
+        parts = None
+        for root in state_roots(self.root, game_id, system):
+            try:
+                parts = path.relative_to(root.resolve()).parts
+                break
+            except ValueError:
+                continue
+        if parts is None:
             raise CoreError("This save state belongs to a different game.")
         if (len(parts) != 4 or parts[0] != "libretro" or
                 not re.fullmatch(r"[0-9a-f]{64}", parts[2]) or
@@ -345,11 +350,12 @@ class CoreWorker(QThread):
     progress = Signal(str)
     result = Signal(str, bool)
 
-    def __init__(self, root, *, core_id=None, local_file=None, system=None, update_all=False, install_all=False):
+    def __init__(self, root, *, core_id=None, local_file=None, system=None, update_all=False, install_all=False, core_ids=None):
         super().__init__()
         self.root, self.core_id, self.local_file, self.update_all = root, core_id, local_file, update_all
         self.system = system
         self.install_all = install_all
+        self.core_ids = list(dict.fromkeys(core_ids)) if core_ids is not None else None
 
     def run(self):
         try:
@@ -361,7 +367,7 @@ class CoreWorker(QThread):
                 message = "Core imported. Right-click a console in the sidebar to select it."
             else:
                 index = manager.remote_index(downloads)
-                ids = list(CATALOG) if self.install_all else [key for key, value in manager.installed().items() if value["source"] == "buildbot"] if self.update_all else [self.core_id]
+                ids = self.core_ids if self.core_ids is not None else list(CATALOG) if self.install_all else [key for key, value in manager.installed().items() if value["source"] == "buildbot"] if self.update_all else [self.core_id]
                 changed, failures = 0, []
                 for number, core_id in enumerate(ids, 1):
                     downloads.check()

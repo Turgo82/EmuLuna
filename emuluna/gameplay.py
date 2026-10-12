@@ -1,6 +1,11 @@
+from .theme import apply_theme_style
 """Transient gameplay controls; all emulator actions stay in the player API."""
-from PySide6.QtCore import Qt, QEvent, QTimer
-from PySide6.QtGui import QPainter, QPalette, QIcon
+from collections import deque
+import math
+from statistics import median
+
+from PySide6.QtCore import Qt, QEvent, QTimer, QRectF, QPointF
+from PySide6.QtGui import QPainter, QPalette, QIcon, QPainterPath, QColor, QPen
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QSlider, QToolButton, QStyle, QApplication, QLabel
 from .branding import navigation_icon
 
@@ -30,15 +35,7 @@ class GameplayHUD(QFrame):
         self.screen, self.paused, self.hide_cursor = screen, paused, hide_cursor
         self.setObjectName("gameplayHUD")
         self.setCursor(Qt.ArrowCursor)
-        self.setStyleSheet("""
-            QFrame#gameplayHUD {background:palette(window);border:1px solid palette(mid);border-radius:12px;}
-            QToolButton {color:palette(window-text);background:transparent;padding:8px;border:0;border-radius:6px;}
-            QToolButton:hover {background:palette(midlight);}
-            QToolButton#powerButton {background:#b3261e;border:1px solid #7f1d1d;border-radius:6px;padding:8px 12px;}
-            QToolButton#powerButton:hover {background:#d13a32;}
-            QSlider::groove:horizontal {height:5px;background:palette(mid);}
-            QSlider::handle:horizontal {background:palette(highlight);width:13px;margin:-4px 0;border-radius:6px;}
-        """)
+        apply_theme_style(self, "gameplay")
         layout = QHBoxLayout(self)
         layout.setContentsMargins(10, 6, 10, 6)
         layout.setSpacing(4)
@@ -146,7 +143,7 @@ class GameplayNotice(QLabel):
         self.setFocusPolicy(Qt.NoFocus)
         self.setAlignment(Qt.AlignCenter)
         self.setWordWrap(True)
-        self.setStyleSheet('QLabel#gameplayNotice {background:palette(window);color:palette(window-text);border:1px solid palette(mid);border-radius:10px;padding:12px 20px;font-size:16px;font-weight:600;}')
+        apply_theme_style(self, "gameplay")
         self.timer = QTimer(self)
         self.timer.setSingleShot(True)
         self.timer.setInterval(2400)
@@ -181,18 +178,16 @@ class GameplayDiagnostics(QLabel):
         self.show_fps = show_fps
         self.show_renderer = show_renderer
         self.fps = 0.0
+        self.frame_times = deque()
+        self.last_frame_time = None
+        self.last_graph_refresh = 0.0
         self.core_renderer = "Software"
         self.display_renderer = screen.backend
         self.setObjectName('gameplayDiagnostics')
         self.setAttribute(Qt.WA_TransparentForMouseEvents)
         self.setFocusPolicy(Qt.NoFocus)
-        self.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-        self.setStyleSheet(
-            'QLabel#gameplayDiagnostics {'
-            'background:rgba(12,13,16,210);color:#f4f4f5;'
-            'border:1px solid rgba(255,255,255,70);border-radius:6px;'
-            'padding:5px 8px;font-family:monospace;font-size:12px;}'
-        )
+        self.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+        apply_theme_style(self, "gameplay")
         screen.installEventFilter(self)
         screen.backend_changed.connect(self.set_display_renderer)
         self.refresh()
@@ -205,6 +200,36 @@ class GameplayDiagnostics(QLabel):
         self.core_renderer = renderer
         self.refresh()
 
+    def reset_frame_clock(self):
+        # Pauses and fast-forward are not normal-speed frame pacing samples.
+        self.last_frame_time = None
+
+    def record_frame(self, now, *, normal_speed=True):
+        if not self.show_fps or not normal_speed:
+            self.reset_frame_clock()
+            return
+        previous = self.last_frame_time
+        self.last_frame_time = now
+        if previous is not None and now > previous:
+            self.frame_times.append((now, now - previous))
+        while self.frame_times and self.frame_times[0][0] < now - 10:
+            self.frame_times.popleft()
+        if now - self.last_graph_refresh >= 0.1:
+            self.last_graph_refresh = now
+            self.refresh()
+
+    def frame_statistics(self):
+        intervals = [interval for _, interval in self.frame_times]
+        if not intervals:
+            return None
+        # 1% low = FPS corresponding to the mean of the slowest 1% of
+        # frame intervals, rather than the lowest individual FPS sample.
+        low = None
+        if len(intervals) >= 100:
+            slowest = sorted(intervals, reverse=True)[:math.ceil(len(intervals) * .01)]
+            low = len(slowest) / sum(slowest)
+        return low, intervals[-1] * 1000, max(intervals) * 1000
+
     def set_fps(self, fps):
         self.fps = max(0.0, float(fps))
         self.refresh()
@@ -213,13 +238,66 @@ class GameplayDiagnostics(QLabel):
         details = []
         if self.show_fps:
             details.append(f'{self.fps:0.1f} FPS')
+            stats = self.frame_statistics()
+            low = f'{stats[0]:.1f} FPS' if stats and stats[0] is not None else '—'
+            details.append(f'1% low: {low}')
+            if stats:
+                details.append(f'Frame: {stats[1]:.1f} ms · peak: {stats[2]:.1f} ms')
+            else:
+                details.append('Frame: — ms · peak: — ms')
         if self.show_renderer:
             display = self.display_renderer.replace('Hardware acceleration · ', '')
             display = display.split(' (', 1)[0]
             details.extend((f'Core: {self.core_renderer}', f'Display: {display}'))
+        self.setContentsMargins(0, 0, 0, 82 if self.show_fps else 0)
+        self.setMinimumWidth(min(320, max(120, self.screen.width() - 24)) if self.show_fps else 0)
         self.setText('\n'.join(details))
         self.setVisible(bool(details))
         self.position()
+
+    def paintEvent(self, event):
+        super().paintEvent(event)
+        if not self.show_fps:
+            return
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        graph = QRectF(12, self.height() - 76, max(1, self.width() - 24), 48)
+        painter.setPen(QColor(255, 255, 255, 45))
+        painter.drawRect(graph)
+        ceiling = max(60.0, self.fps * 1.15)
+        painter.setPen(QPen(QColor(255, 255, 255, 35), 1, Qt.DashLine))
+        painter.drawLine(QPointF(graph.left(), graph.center().y()),
+                         QPointF(graph.right(), graph.center().y()))
+        if self.frame_times:
+            newest = self.frame_times[-1][0]
+            path = QPainterPath()
+            # Average short buckets to suppress catch-up spikes while preserving
+            # brief drops; the 1% low and peak retain every individual interval.
+            buckets = {}
+            for timestamp, interval in self.frame_times:
+                index = int((timestamp - newest + 10) * 10)
+                bucket = buckets.setdefault(index, [0.0, 0])
+                bucket[0] += interval
+                bucket[1] += 1
+            baseline = median(count / total for total, count in buckets.values())
+            for index, (total, count) in sorted(buckets.items()):
+                x = graph.left() + min(100, max(0, index)) / 100 * graph.width()
+                fps = count / total
+                # A small visual deadband steadies timer noise without smoothing
+                # real drops; raw intervals still drive 1% low and peak metrics.
+                if abs(fps - baseline) <= baseline * .02:
+                    fps = baseline
+                y = graph.bottom() - min(1, fps / ceiling) * graph.height()
+                if path.elementCount() == 0:
+                    path.moveTo(x, y)
+                else:
+                    path.lineTo(x, y)
+            painter.setPen(QPen(QColor('#b6e878'), 1.5))
+            painter.drawPath(path)
+        painter.setPen(QColor('#bfc3cc'))
+        painter.drawText(QRectF(12, self.height() - 24, self.width() - 24, 18),
+                         Qt.AlignLeft, f'FPS trend · last 10 s · 0–{ceiling:.0f}')
+        painter.end()
 
     def position(self):
         self.setMaximumWidth(max(120, self.screen.width() - 24))

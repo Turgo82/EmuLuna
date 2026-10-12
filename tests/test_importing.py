@@ -52,7 +52,7 @@ class ImportingTests(unittest.TestCase):
         self.library.rate([key], 5)
         self.assertTrue(self.library.consolidate(key))
         row = self.library.get(key)
-        self.assertEqual(Path(row["rom_path"]).parts, ("roms", "snes", key, self.rom.name))
+        self.assertEqual(Path(row["rom_path"]).parts, ("consoles", "snes", "roms", self.rom.name))
         self.assertEqual((self.library.root / row["rom_path"]).read_bytes(), self.data)
         self.assertEqual(self.rom.read_bytes(), self.data)
         self.assertEqual(row["rating"], 5)

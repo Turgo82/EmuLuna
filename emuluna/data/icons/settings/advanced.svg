@@ -1,14 +1,138 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
-  <defs>
-    <linearGradient id="glass" x2="1" y2="1"><stop stop-color="#f2eaff"/><stop offset=".5" stop-color="#bba8e5"/><stop offset="1" stop-color="#7169ac"/></linearGradient>
-    <linearGradient id="fluid" y2="1" x2="0"><stop stop-color="#89e8ef"/><stop offset="1" stop-color="#2687c8"/></linearGradient>
-    <linearGradient id="rim" y2="1" x2="0"><stop stop-color="#ca9afa"/><stop offset="1" stop-color="#8457b7"/></linearGradient>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   viewBox="0 0 48 48"
+   version="1.1"
+   id="svg11"
+   sodipodi:docname="advanced.svg"
+   inkscape:version="1.4.4 (dcaf3e7d9e, 2026-05-05)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview11"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="18.020833"
+     inkscape:cx="23.972254"
+     inkscape:cy="24"
+     inkscape:window-width="2048"
+     inkscape:window-height="1074"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg11" />
+  <defs
+     id="defs7">
+    <linearGradient
+       id="glass"
+       x2="1"
+       y2="1">
+      <stop
+         stop-color="#f2eaff"
+         id="stop1" />
+      <stop
+         offset=".5"
+         stop-color="#bba8e5"
+         id="stop2" />
+      <stop
+         offset="1"
+         stop-color="#7169ac"
+         id="stop3" />
+    </linearGradient>
+    <linearGradient
+       id="fluid"
+       y2="1"
+       x2="0">
+      <stop
+         stop-color="#89e8ef"
+         id="stop4" />
+      <stop
+         offset="1"
+         stop-color="#2687c8"
+         id="stop5" />
+    </linearGradient>
+    <linearGradient
+       id="rim"
+       y2="1"
+       x2="0">
+      <stop
+         stop-color="#ca9afa"
+         id="stop6" />
+      <stop
+         offset="1"
+         stop-color="#8457b7"
+         id="stop7" />
+    </linearGradient>
   </defs>
-  <ellipse cx="23" cy="43" rx="17" ry="2" fill="#101826" opacity=".22"/>
-  <path d="M17 8H28V21L39 35Q42 41 35 42H11Q4 41 7 35L17 21Z" fill="url(#glass)" stroke="#605686" stroke-width="1.2"/>
-  <path d="M13 30Q19 27 25 30Q30 32 33 30L37 36Q39 39 35 39H11Q8 39 10 36Z" fill="url(#fluid)" stroke="#478eae" stroke-width=".8"/>
-  <rect x="14" y="5" width="17" height="5" rx="2" fill="url(#rim)" stroke="#69508a"/>
-  <path d="M17 6.5H28M19 12V21L10 34" fill="none" stroke="#fff" stroke-width="1.5" opacity=".75" stroke-linecap="round"/>
-  <circle cx="19" cy="33" r="1.8" fill="#dbfcff"/><circle cx="27" cy="35" r="1.1" fill="#c9f4fd"/><circle cx="24" cy="25" r="1.2" fill="#b2eff8"/>
-  <path d="M38 8L39.5 12.5L44 14L39.5 15.5L38 20L36.5 15.5L32 14L36.5 12.5Z" fill="#ffe0a3" stroke="#ba9250" stroke-width=".8" stroke-linejoin="round"/>
+  <ellipse
+     cx="23"
+     cy="43"
+     rx="17"
+     ry="2"
+     fill="#101826"
+     opacity=".22"
+     id="ellipse7" />
+  <path
+     d="m 17,8 h 11 v 13 c 0,0 10,12 11,14 1,2 0.666667,6.333333 -4,7 H 11 C 6.3333333,41.333333 6,37 7,35 8,33 17,21 17,21 Z"
+     fill="url(#glass)"
+     stroke="#605686"
+     stroke-width="1.2"
+     id="path7"
+     sodipodi:nodetypes="ccczcczcc" />
+  <path
+     d="m 13,30 c 4,-2 8,-2 12,0 3.333333,1.333333 5.667052,1.333333 7.667052,0 l 3.889017,4.945665 C 38.041869,36.835156 37.666667,39 35,39 H 11 C 9,39 8.6111753,36.501734 9.9445087,34.501734 Z"
+     fill="url(#fluid)"
+     stroke="#478eae"
+     stroke-width="0.8"
+     id="path8"
+     sodipodi:nodetypes="cccssscc" />
+  <rect
+     x="14"
+     y="5"
+     width="17"
+     height="5"
+     rx="2"
+     fill="url(#rim)"
+     stroke="#69508a"
+     id="rect8" />
+  <path
+     d="M 17,6.5 H 28 M 19,12 v 9.610405 L 10,34"
+     fill="none"
+     stroke="#ffffff"
+     stroke-width="1.5"
+     opacity="0.75"
+     stroke-linecap="round"
+     id="path9"
+     sodipodi:nodetypes="ccccc" />
+  <circle
+     cx="19"
+     cy="33"
+     r="1.8"
+     fill="#dbfcff"
+     id="circle9" />
+  <circle
+     cx="27"
+     cy="35"
+     r="1.1"
+     fill="#c9f4fd"
+     id="circle10" />
+  <circle
+     cx="24"
+     cy="25"
+     r="1.2"
+     fill="#b2eff8"
+     id="circle11" />
+  <path
+     d="M38 8L39.5 12.5L44 14L39.5 15.5L38 20L36.5 15.5L32 14L36.5 12.5Z"
+     fill="#ffe0a3"
+     stroke="#ba9250"
+     stroke-width=".8"
+     stroke-linejoin="round"
+     id="path11" />
 </svg>

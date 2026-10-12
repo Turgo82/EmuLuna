@@ -6,33 +6,47 @@ from PySide6.QtGui import QIcon, QPixmap, QDesktopServices, QAction, QColor, QPa
 from PySide6.QtWidgets import (QWidget, QVBoxLayout, QStackedWidget, QListWidget,
     QListWidgetItem, QTableWidget, QAbstractItemView, QHeaderView, QLabel, QStyle, QMenu, QTreeWidget, QTreeWidgetItem, QStyledItemDelegate, QMessageBox)
 
+from .smooth_scroll import SmoothScroll
 from .library_widgets import SortItem, date_text
 from .systems import SYSTEMS, CATALOG
 from .theme import paint_thumbnail_highlight
+from .library_paths import storage_contains
 
 
 def media_entries(library, kind, games):
     """Read the existing on-disk layout; never move files or change save identity."""
     result = []
     root = library.root.resolve()
+    def folders(kind, game_id):
+        try:
+            return library.game_folders(kind, game_id)
+        except ValueError:
+            # An unplugged console drive must not prevent browsing local media.
+            return (root / kind / game_id,)
     if kind == 'states':
         candidates = ((path, game) for game in games
-                      for path in (root / 'states' / game['id']).rglob('*.oesavestate'))
+                      for folder in folders('states', game['id'])
+                      for path in folder.rglob('*.oesavestate'))
     else:
         # Older screenshots carry a 12-character game digest, not a database row.
         prefixes = {}
         for game in games:
             prefixes.setdefault(game['id'][:12], []).append(game)
-        candidates = ((path, prefixes[path.name.split('-')[0]][0])
+        legacy = ((path, prefixes[path.name.split('-')[0]][0])
                       for path in (root / 'screenshots').glob('*.png')
                       if len(prefixes.get(path.name.split('-')[0], [])) == 1)
+        from itertools import chain
+        candidates = chain(legacy, ((path, game) for game in games
+                           for folder in folders('screenshots', game['id'])
+                           for path in folder.glob('*.png')))
     for path, game in candidates:
         try:
-            if path.is_symlink() or not path.resolve().is_relative_to(root) or not path.is_file():
+            if path.is_symlink() or not storage_contains(root, path) or not path.is_file():
                 continue
             core = ''
             if kind == 'states':
-                parts = path.relative_to(root / 'states' / game['id']).parts
+                folder = next(folder for folder in folders('states', game['id']) if path.is_relative_to(folder))
+                parts = path.relative_to(folder).parts
                 core_id = parts[1] if len(parts) == 4 and parts[0] == 'libretro' else None
                 core = CATALOG.get(core_id, {}).get('name', core_id or 'Legacy core')
                 label = 'Automatic save' if path.stem == 'auto' else (
@@ -162,6 +176,8 @@ class MediaBrowser(QWidget):
             self.state_tree.setColumnWidth(column, width)
         self.pages.addWidget(self.state_tree)
         for view in (self.grid, self.table, self.state_tree):
+            view.setVerticalScrollMode(QAbstractItemView.ScrollPerPixel)
+            view.smooth_scroll = SmoothScroll(view)
             view.itemSelectionChanged.connect(self.selection_changed.emit)
             view.itemDoubleClicked.connect(lambda *_: self.activated.emit())
             view.setContextMenuPolicy(Qt.CustomContextMenu)

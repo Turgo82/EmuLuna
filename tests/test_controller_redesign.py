@@ -170,7 +170,9 @@ class ControllerRedesign(unittest.TestCase):
                 self.assertGreater(surface.green(),surface.blue())
                 self.assertGreater(surface.alpha(),0)
                 self.assertLess(surface.alpha(),255)
-                self.assertGreater(button.palette().color(QPalette.ButtonText).lightnessF(),.8)
+                # All built-ins now use light wood: regenerated controls need
+                # dark text even when the surrounding application is dark.
+                self.assertLess(button.palette().color(QPalette.ButtonText).lightnessF(),.3)
                 dialog.show_page('gameplay');QTest.qWait(10)
                 box=dialog.focus_pause
                 option=QStyleOptionButton();box.initStyleOption(option)

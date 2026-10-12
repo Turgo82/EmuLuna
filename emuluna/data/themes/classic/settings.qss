@@ -1,0 +1,94 @@
+QDialog {background:palette(window);color:palette(window-text);}
+QLabel {color:palette(window-text);background:transparent;}
+QLabel#subtle {color:palette(placeholder-text);}
+QLabel#controlTitle {font-weight:600;}
+QLabel#controlGroup {color:palette(placeholder-text);font-weight:600;padding:7px 0 3px;}
+QFrame#settingsCard {background:palette(base);border:1px solid palette(mid);border-radius:8px;}
+QFrame#controllerPreviewCard {background:transparent;border:0;}
+QWidget#controlMappings {background:palette(base);}
+QTabWidget::pane {background:transparent;border:0;}
+QTabWidget::tab-bar {alignment:center;}
+QTabBar {background:palette(alternate-base);outline:0;}
+QTabBar::tab {background:transparent;color:palette(window-text);border:0;border-bottom:3px solid transparent;padding:10px 12px;margin:0 1px;}
+QTabBar::tab:selected {background:palette(button);border-bottom-color:palette(highlight);font-weight:600;}
+QTabBar::tab:!selected:hover {background:palette(midlight);}
+QPushButton {background:palette(button);color:palette(button-text);border:1px solid palette(mid);border-radius:5px;padding:7px 12px;min-height:18px;}
+QPushButton:hover {background:palette(midlight);border-color:palette(placeholder-text);}
+QPushButton:focus {border-color:palette(highlight);}
+QPushButton:pressed,QPushButton:checked {background:palette(highlight);color:palette(highlighted-text);border-color:palette(highlight);}
+QPushButton#controlBinding {padding:5px 8px;text-align:left;}
+QPushButton:disabled {color:palette(disabled-text);background:palette(alternate-base);}
+QComboBox,QLineEdit,QSpinBox {background:palette(base);color:palette(text);border:1px solid palette(mid);border-radius:5px;padding:6px 8px;min-height:18px;selection-background-color:palette(highlight);selection-color:palette(highlighted-text);}
+QComboBox {padding-right:26px;}
+QComboBox:hover,QLineEdit:hover,QSpinBox:hover {border-color:palette(placeholder-text);}
+QComboBox:focus,QLineEdit:focus,QSpinBox:focus {border-color:palette(highlight);}
+QComboBox:disabled,QLineEdit:disabled,QSpinBox:disabled {color:palette(disabled-text);background:palette(alternate-base);}
+QComboBox::drop-down {width:24px;border:0;background:transparent;}
+QComboBox::down-arrow {image:none;}
+QSpinBox {padding-right:30px;}
+QSpinBox::up-button {subcontrol-origin:border;subcontrol-position:top right;width:24px;border:0;border-left:1px solid palette(mid);border-bottom:1px solid palette(mid);border-top-right-radius:5px;background:palette(button);}
+QSpinBox::down-button {subcontrol-origin:border;subcontrol-position:bottom right;width:24px;border:0;border-left:1px solid palette(mid);border-bottom-right-radius:5px;background:palette(button);}
+QSpinBox::up-button:hover,QSpinBox::down-button:hover {background:palette(midlight);}
+QSpinBox::up-arrow,QSpinBox::down-arrow {image:none;}
+QComboBox QAbstractItemView {border-radius:7px;padding:3px;background:palette(base);color:palette(text);border:1px solid palette(mid);outline:0;selection-background-color:palette(highlight);selection-color:palette(highlighted-text);}
+QCheckBox {color:palette(window-text);background:transparent;spacing:9px;padding:4px 0;}
+QCheckBox:disabled {color:palette(disabled-text);}
+QCheckBox::indicator {width:18px;height:18px;}
+QSlider::groove:horizontal {height:5px;background:palette(mid);border:0;border-radius:2px;}
+QSlider::sub-page:horizontal {background:palette(highlight);border-radius:2px;}
+QSlider::handle:horizontal {background:palette(button);border:2px solid palette(highlight);width:14px;margin:-6px 0;border-radius:8px;}
+QSlider::handle:horizontal:hover,QSlider::handle:horizontal:focus {background:palette(highlight);}
+QSlider::handle:horizontal:disabled {border-color:palette(mid);}
+QTableWidget {background:palette(base);color:palette(text);alternate-background-color:palette(alternate-base);gridline-color:palette(mid);border:1px solid palette(mid);selection-background-color:palette(highlight);selection-color:palette(highlighted-text);}
+QHeaderView::section {background:palette(button);color:palette(button-text);border:0;border-bottom:1px solid palette(mid);padding:8px;}
+QScrollArea {background:transparent;border:0;}
+QScrollBar:vertical {background:palette(base);width:12px;margin:2px;}
+QScrollBar:horizontal {background:palette(base);height:12px;margin:2px;}
+QScrollBar::handle {background:palette(placeholder-text);border:2px solid palette(base);border-radius:5px;}
+QScrollBar::handle:vertical {min-height:28px;}
+QScrollBar::handle:horizontal {min-width:28px;}
+QScrollBar::handle:hover,QScrollBar::handle:pressed {background:palette(highlight);}
+QScrollBar::add-line,QScrollBar::sub-line {width:0;height:0;border:0;background:transparent;}
+QScrollBar::add-page,QScrollBar::sub-page {background:transparent;}
+QMenu {background:palette(window);color:palette(window-text);border:1px solid palette(mid);padding:4px;}
+QMenu::item {padding:6px 22px;border-radius:3px;}
+QMenu::item:selected {background:palette(highlight);color:palette(highlighted-text);}
+QMenu::item:disabled {color:palette(disabled-text);}
+QMenu::separator {height:1px;background:palette(mid);margin:4px;}
+/* Controls uses a single wood surface from the tab strip to the bottom edge. */
+QTabWidget#settingsTabs[woodControls="true"]::pane {background:transparent;border:0;}
+QWidget#woodControlsPage {background:transparent;}
+QWidget#woodControlsPage QLabel {color:theme(controls-text);}
+QWidget#woodControlsPage QLabel#subtle,QWidget#woodControlsPage QLabel#controlGroup {color:theme(controls-subtle);}
+QWidget#woodControlsPage QFrame#settingsCard {background:rgba(34,21,13,105);border:1px solid rgba(228,184,116,100);}
+QWidget#woodControlsPage QWidget#controlMappings {background:transparent;}
+QWidget#woodControlsPage QPushButton,QWidget#woodControlsPage QComboBox,
+QPushButton#settingsDone[woodControls="true"] {background:rgba(34,21,13,140);color:theme(controls-text);border-color:rgba(228,184,116,150);}
+QWidget#woodControlsPage QPushButton:hover,QWidget#woodControlsPage QComboBox:hover,
+QPushButton#settingsDone[woodControls="true"]:hover {background:rgba(107,69,40,190);border-color:theme(controls-accent);}
+QWidget#woodControlsPage QPushButton:focus,QWidget#woodControlsPage QComboBox:focus,
+QPushButton#settingsDone[woodControls="true"]:focus {border-color:theme(controls-accent);}
+QWidget#woodControlsPage QComboBox QAbstractItemView {background:theme(controls-popup);color:theme(controls-text);border-color:theme(controls-border);}
+QWidget#woodControlsPage QScrollBar {background:rgba(34,21,13,105);}
+QWidget#woodControlsPage QScrollBar::handle {background:theme(controls-scrollbar);border-color:transparent;}
+
+/* Labels of custom and editable inputs also need the Controls foreground. */
+QWidget#woodControlsPage QCheckBox,QWidget#woodControlsPage QRadioButton,
+QWidget#woodControlsPage QLineEdit,QWidget#woodControlsPage QSpinBox,
+QWidget#woodControlsPage QTextEdit,QWidget#woodControlsPage QPlainTextEdit {color:theme(controls-text);}
+QWidget#woodControlsPage QCheckBox:disabled,QWidget#woodControlsPage QRadioButton:disabled,
+QWidget#woodControlsPage QPushButton:disabled,QWidget#woodControlsPage QComboBox:disabled,
+QWidget#woodControlsPage QLineEdit:disabled {color:theme(controls-subtle);}
+QWidget#woodControlsPage QMenu {background:theme(controls-popup);color:theme(controls-text);border-color:theme(controls-border);}
+
+
+/* Light maple Controls and native-style charcoal preferences. */
+QWidget#woodControlsPage QFrame#settingsCard {background:rgba(255,243,217,80);border:1px solid rgba(101,70,34,140);}
+QWidget#woodControlsPage QPushButton,QWidget#woodControlsPage QComboBox,
+QPushButton#settingsDone[woodControls="true"] {background:rgba(255,243,217,140);color:theme(controls-text);border-color:rgba(101,70,34,150);}
+QWidget#woodControlsPage QPushButton:hover,QWidget#woodControlsPage QComboBox:hover,
+QPushButton#settingsDone[woodControls="true"]:hover {background:rgba(240,209,159,200);border-color:theme(controls-accent);}
+QWidget#woodControlsPage QScrollBar {background:rgba(255,243,217,80);}
+
+QTabBar::tab:selected {background:palette(midlight);border-bottom-color:transparent;border-radius:6px;}
+QTabBar::tab:!selected:hover {border-radius:6px;}

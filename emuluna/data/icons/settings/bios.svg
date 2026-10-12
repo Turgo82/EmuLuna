@@ -1,17 +1,143 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
-  <defs>
-    <linearGradient id="board" x2="1" y2="1"><stop stop-color="#3f88b3"/><stop offset=".5" stop-color="#285379"/><stop offset="1" stop-color="#193451"/></linearGradient>
-    <linearGradient id="chip" y2="1" x2="0"><stop stop-color="#536784"/><stop offset="1" stop-color="#182b45"/></linearGradient>
-    <linearGradient id="label" y2="1" x2="0"><stop stop-color="#ff8c79"/><stop offset="1" stop-color="#c44753"/></linearGradient>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   viewBox="0 0 48 48"
+   version="1.1"
+   id="svg12"
+   sodipodi:docname="bios.svg"
+   inkscape:version="1.4.4 (dcaf3e7d9e, 2026-05-05)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview12"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="3.1856634"
+     inkscape:cx="61.839553"
+     inkscape:cy="37.825717"
+     inkscape:window-width="2048"
+     inkscape:window-height="1074"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg12" />
+  <defs
+     id="defs7">
+    <linearGradient
+       id="board"
+       x2="1"
+       y2="1">
+      <stop
+         stop-color="#3f88b3"
+         id="stop1" />
+      <stop
+         offset=".5"
+         stop-color="#285379"
+         id="stop2" />
+      <stop
+         offset="1"
+         stop-color="#193451"
+         id="stop3" />
+    </linearGradient>
+    <linearGradient
+       id="chip"
+       y2="1"
+       x2="0">
+      <stop
+         stop-color="#536784"
+         id="stop4" />
+      <stop
+         offset="1"
+         stop-color="#182b45"
+         id="stop5" />
+    </linearGradient>
+    <linearGradient
+       id="label"
+       y2="58.153808"
+       x2="4.7073444"
+       gradientTransform="matrix(1.593255,0,0,0.62764591,0,-2)"
+       x1="4.7073444"
+       y1="37.441493"
+       gradientUnits="userSpaceOnUse">
+      <stop
+         stop-color="#ff8c79"
+         id="stop6" />
+      <stop
+         offset="1"
+         stop-color="#c44753"
+         id="stop7" />
+    </linearGradient>
   </defs>
-  <ellipse cx="24" cy="43" rx="16" ry="2" fill="#101826" opacity=".22"/>
-  <path d="M11 4H30L38 12V41H11Z" fill="url(#board)" stroke="#16324d" stroke-width="1.2" stroke-linejoin="round"/>
-  <path d="M30 4V12H38" fill="#70a7c9" stroke="#16324d"/>
-  <path d="M14 7H26M14 10H26M14 13H23M15 17H20V22M34 16H29V22M15 37H21V34M34 37H29V34" fill="none" stroke="#60b7ce" stroke-width="1.1" opacity=".8"/>
-  <path d="M18 18V23M23 18V23M28 18V23M33 18V23M18 32V37M23 32V37M28 32V37M33 32V37" stroke="#ebce86" stroke-width="2"/>
-  <rect x="15" y="21" width="21" height="14" rx="2" fill="url(#chip)" stroke="#11243e"/>
-  <rect x="8" y="24" width="32" height="12" rx="2" fill="url(#label)" stroke="#943c47"/>
-  <path d="M11 25.5H37" stroke="#ffd1bf" stroke-linecap="round" opacity=".6"/>
+  <ellipse
+     cx="24"
+     cy="43"
+     rx="16"
+     ry="2"
+     fill="#101826"
+     opacity=".22"
+     id="ellipse7" />
+  <path
+     d="M11 4H30L38 12V41H11Z"
+     fill="url(#board)"
+     stroke="#16324d"
+     stroke-width="1.2"
+     stroke-linejoin="round"
+     id="path7" />
+  <path
+     d="M30 4V12H38"
+     fill="#70a7c9"
+     stroke="#16324d"
+     id="path8" />
+  <path
+     d="M14 7H26M14 10H26M14 13H23M15 17H20V22M34 16H29V22M15 37H21V34M34 37H29V34"
+     fill="none"
+     stroke="#60b7ce"
+     stroke-width="1.1"
+     opacity=".8"
+     id="path9" />
+  <path
+     d="M18 18V23M23 18V23M28 18V23M33 18V23M18 32V37M23 32V37M28 32V37M33 32V37"
+     stroke="#ebce86"
+     stroke-width="2"
+     id="path10" />
+  <rect
+     x="15"
+     y="21"
+     width="21"
+     height="14"
+     rx="2"
+     fill="url(#chip)"
+     stroke="#11243e"
+     id="rect10" />
+  <rect
+     x="8"
+     y="22"
+     width="32"
+     height="12"
+     rx="2"
+     fill="url(#label)"
+     stroke="#943c47"
+     id="rect11"
+     style="fill:url(#label)" />
+  <path
+     d="M 11,23.5 H 37"
+     stroke="#ffd1bf"
+     stroke-linecap="round"
+     opacity="0.6"
+     id="path11" />
   <!-- Letterforms are vector paths so no installed font is needed. -->
-  <path d="M12 28V33H14Q16 33 16 31.7Q16 30.5 14 30.5H12M14 30.5Q15.5 30.5 15.5 29.3Q15.5 28 14 28H12M19 28V33M22 29Q22 28 24 28Q26 28 26 29V32Q26 33 24 33Q22 33 22 32ZM34 28H31Q29 28 29 29.2Q29 30.5 31.5 30.5Q34 30.5 34 31.7Q34 33 32 33H29" fill="none" stroke="#fff4ea" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
+  <path
+     d="m 12.887856,26 v 5 h 2 q 2,0 2,-1.3 0,-1.2 -2,-1.2 h -2 m 2,0 q 1.5,0 1.5,-1.2 0,-1.3 -1.5,-1.3 h -2 m 7,0 v 5 m 3,-4 q 0,-1 2,-1 2,0 2,1 v 3 q 0,1 -2,1 -2,0 -2,-1 z m 12,-1 h -3 q -2,0 -2,1.2 0,1.3 2.5,1.3 2.5,0 2.5,1.2 0,1.3 -2,1.3 h -3"
+     fill="none"
+     stroke="#fff4ea"
+     stroke-width="1.1"
+     stroke-linecap="round"
+     stroke-linejoin="round"
+     id="path12" />
 </svg>

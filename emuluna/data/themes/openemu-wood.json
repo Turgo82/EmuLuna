@@ -1,0 +1,11 @@
+{
+  "source": "https://github.com/OpenEmu/OpenEmu/blob/master/OpenEmu/Graphics.xcassets/Preferences/controls_background.imageset/controls_background%402x.jpg",
+  "upstream_path": "OpenEmu/Graphics.xcassets/Preferences/controls_background.imageset/controls_background@2x.jpg",
+  "sha256": "0830e7b8eddd306f29fe4341116b6bf2aea0aa718429a92e91e6b60d30f4f900",
+  "processing": "Copied unchanged from the local OpenEmu source archive, using its original 2x JPEG.",
+  "files": [
+    "light/openemu-controls@2x.jpg",
+    "openemu/openemu-controls@2x.jpg"
+  ],
+  "credit": "OpenEmu and its contributors; ownership remains with the original creators."
+}

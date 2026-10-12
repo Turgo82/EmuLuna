@@ -8,7 +8,7 @@ from PySide6.QtWidgets import (QApplication, QDialog, QVBoxLayout, QHBoxLayout, 
     QLabel, QSlider, QLineEdit, QPushButton, QFileDialog, QTableWidget,
     QTableWidgetItem, QHeaderView, QAbstractItemView, QScrollArea, QMessageBox, QInputDialog)
 
-from .theme import set_system_theme, follow_system_theme, theme_palette
+from .theme import set_system_theme, follow_system_theme, theme_palette, apply_theme_style, select_theme, reload_themes
 from .bios import bios_status, checklist, import_bios
 from .core import CoreError
 from .core_manager import CATALOG, CoreManager, CoreWorker
@@ -17,7 +17,7 @@ from .video_filters import ALL_FILTERS, valid_filter
 from .controller_settings import ControlsPage, paint_controller_wood
 from .branding import navigation_icon, settings_icon
 from .gamepad import Gamepad
-from .settings_style import (SETTINGS_STYLE, SettingsCheckBox as QCheckBox,
+from .settings_style import (SettingsCheckBox as QCheckBox,
                              SettingsComboBox as QComboBox, SettingsSpinBox as QSpinBox,
                              SystemFileDelegate, SettingsTabBar)
 
@@ -36,18 +36,19 @@ class SettingsDialog(QDialog):
         self.setPalette(theme_palette())
         self.manager = CoreManager(library.root)
         self.worker = None
+        self.storage_worker = None
         self.close_pending = False
         self.refreshing = False
         self.setWindowTitle("Settings — EmuLuna")
         self.resize(840, 620)
         self.setMinimumSize(740, 550)
-        self.setStyleSheet(SETTINGS_STYLE)
+        apply_theme_style(self, "settings")
         layout = QVBoxLayout(self)
         layout.setContentsMargins(16, 16, 16, 14)
         self.tabs = QTabWidget()
         self.tabs.setTabBar(SettingsTabBar())
         self.tabs.setObjectName('settingsTabs')
-        self.tabs.setIconSize(QSize(30, 30))
+        self.tabs.setIconSize(QSize(44, 44))
         self.tabs.setDocumentMode(False)
         self.tabs.tabBar().setExpanding(False)
         self.tabs.tabBar().setDrawBase(False)
@@ -103,6 +104,13 @@ class SettingsDialog(QDialog):
             widget.style().unpolish(widget)
             widget.style().polish(widget)
             widget.update()
+        from .theme import controls_palette
+        if hasattr(self, 'controls_page'):
+            palette = controls_palette()
+            self.controls_page.setPalette(palette)
+            for child in self.controls_page.findChildren(QWidget):
+                child.setPalette(palette)
+        self.done_button.setPalette(controls_palette() if wood else theme_palette())
         self.update()
 
     def paintEvent(self, event):
@@ -193,9 +201,22 @@ class SettingsDialog(QDialog):
         form = QFormLayout(page)
         form.setContentsMargins(20, 22, 20, 20)
         form.setSpacing(14)
-        self.use_system_theme = self.checkbox(form, "Use system theme colors", "appearance.use_system_theme", "1")
-        self.use_system_theme.setToolTip("Follow OS colors and selection accents. Turn off to use EmuLuna’s dark theme.")
+        self.use_system_theme = self.checkbox(form, "Use system theme colors", "appearance.use_system_theme", "0")
+        self.use_system_theme.setToolTip("Follow OS colors and selection accents. Turn off to use the selected theme.")
         self.use_system_theme.toggled.connect(set_system_theme)
+        from .theme_files import ThemeRegistry
+        self.theme_registry = ThemeRegistry(self.library.root)
+        self.theme_choice = QComboBox()
+        self.fill_themes()
+        self.theme_choice.currentIndexChanged.connect(self.change_theme)
+        form.addRow("Theme", self.theme_choice)
+        tools = QHBoxLayout()
+        for title, action in (("Create theme…", self.create_theme), ("Open themes folder", self.open_themes),
+                              ("Reload themes", self.reload_theme_choices)):
+            button = QPushButton(title)
+            button.clicked.connect(action)
+            tools.addWidget(button)
+        form.addRow(tools)
         self.volume = QSlider(Qt.Horizontal)
         self.volume.setMinimumWidth(240)
         self.volume.setMaximumWidth(360)
@@ -204,6 +225,44 @@ class SettingsDialog(QDialog):
         self.volume.valueChanged.connect(lambda value: self.set_setting("volume", value))
         form.addRow("Game volume", self.volume)
         self.tabs.addTab(page, "General")
+
+    def fill_themes(self):
+        self.theme_choice.blockSignals(True)
+        self.theme_choice.clear()
+        for theme in self.theme_registry.themes.values():
+            self.theme_choice.addItem(theme.name, theme.id)
+        selected = self.theme_registry.get(self.library.setting('appearance.theme', 'luna')).id
+        self.theme_choice.setCurrentIndex(max(0, self.theme_choice.findData(selected)))
+        self.theme_choice.blockSignals(False)
+
+    def change_theme(self):
+        theme_id = self.theme_choice.currentData()
+        if theme_id:
+            self.use_system_theme.setChecked(False)
+            select_theme(self.library, theme_id)
+            self.changed.emit()
+
+    def reload_theme_choices(self):
+        self.theme_registry = reload_themes(self.library)
+        self.fill_themes()
+        if self.theme_registry.errors:
+            QMessageBox.warning(self, "Some themes could not be loaded", "\n".join(self.theme_registry.errors))
+
+    def open_themes(self):
+        folder = self.library.root / 'themes'
+        folder.mkdir(parents=True, exist_ok=True)
+        QDesktopServices.openUrl(QUrl.fromLocalFile(str(folder)))
+
+    def create_theme(self):
+        name, accepted = QInputDialog.getText(self, "Create theme", "Theme name")
+        if accepted and name.strip():
+            try:
+                theme_id = self.theme_registry.create(name, self.theme_choice.currentData())
+                self.reload_theme_choices()
+                self.theme_choice.setCurrentIndex(self.theme_choice.findData(theme_id))
+                QDesktopServices.openUrl(QUrl.fromLocalFile(str(self.library.root / 'themes' / theme_id)))
+            except (OSError, ValueError) as error:
+                QMessageBox.warning(self, "Theme could not be created", str(error))
 
     def choose_bios(self):
         path = QFileDialog.getExistingDirectory(self, "Choose BIOS / system folder", self.bios_path.text())
@@ -384,6 +443,15 @@ class SettingsDialog(QDialog):
         self.show_renderer_debug.setToolTip(
             "Show the core renderer and EmuLuna display renderer while a game is running."
         )
+        audit_label = QLabel("Library audit")
+        audit_label.setObjectName("controlGroup")
+        form.addRow(audit_label)
+        audit_note = QLabel("Find missing ROMs, incomplete disc sets and changed files. Reconnect originals or remove missing entries while keeping saves.")
+        audit_note.setWordWrap(True)
+        form.addRow(audit_note)
+        self.audit_library_button = QPushButton("Audit library…")
+        self.audit_library_button.clicked.connect(self.open_library_audit)
+        form.addRow(self.audit_library_button)
         cache_label = QLabel("Cover previews")
         cache_label.setObjectName("controlGroup")
         form.addRow(cache_label)
@@ -396,6 +464,9 @@ class SettingsDialog(QDialog):
         developer_label = QLabel('Developer options')
         developer_label.setObjectName('controlGroup')
         form.addRow(developer_label)
+        self.preview_onboarding_button = QPushButton('Preview onboarding…')
+        self.preview_onboarding_button.clicked.connect(self.preview_onboarding)
+        form.addRow(self.preview_onboarding_button)
         from .artwork import webp_quality
         self.webp_quality = QComboBox()
         for label, value in [('75 — Smaller files', 75), ('85 — Balanced (recommended)', 85),
@@ -510,7 +581,12 @@ class SettingsDialog(QDialog):
         location = QLineEdit(str(self.library.root))
         location.setReadOnly(True)
         location.setCursorPosition(0)
-        form.addRow("Library location", location)
+        form.addRow("Library index", location)
+        from .library_paths import console_root
+        self.console_path = QLineEdit(str(console_root(self.library.root).resolve()))
+        self.console_path.setReadOnly(True)
+        self.console_path.setCursorPosition(0)
+        form.addRow("Console files", self.console_path)
         self.show_alphabet_index = self.checkbox(form, "Show alphabet index", "library.show_alphabet_index", "1")
         self.show_alphabet_index.setToolTip("Show the #–Z shortcuts beside the game library.")
         self.hide_empty_consoles = self.checkbox(form, "Hide consoles with no games", "library.hide_empty_consoles", "0")
@@ -536,7 +612,91 @@ class SettingsDialog(QDialog):
         note = QLabel("When enabled, copies are organized by system and keep their original filenames.\n\nWhen disabled, games stay in their current folders. Keep those files and drives available to play. ZIP imports always extract a managed copy.\n\nThis setting applies to new imports. To copy an existing external game, right-click it and choose Consolidate files into library. Originals are never moved or deleted.")
         note.setWordWrap(True)
         form.addRow(note)
-        self.tabs.addTab(page, "Library")
+        self.organize_storage = QPushButton("Move library…")
+        self.organize_storage.clicked.connect(self.start_storage_migration)
+        form.addRow(self.organize_storage)
+        move_note = QLabel("Choose a folder or drive for your consoles folder. ROMs, saves, states and screenshots move together; the library index, settings and cores stay here.")
+        move_note.setWordWrap(True)
+        form.addRow(move_note)
+        inventory = QPushButton("Rebuild game inventories")
+        inventory.clicked.connect(self.rebuild_inventories)
+        form.addRow(inventory)
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QScrollArea.NoFrame)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        scroll.setWidget(page)
+        self.tabs.addTab(scroll, "Library")
+
+    def rebuild_inventories(self):
+        try:
+            self.library.export_inventory()
+            self.set_status("Game inventories updated in the consoles folder.")
+        except (OSError, ValueError) as error:
+            self.set_status("Inventories could not be updated: " + str(error))
+
+    def preview_onboarding(self):
+        from .onboarding import OnboardingDialog
+        dialog = OnboardingDialog(self.library, self, preview=True)
+        dialog.exec()
+        dialog.deleteLater()
+
+    def open_library_audit(self):
+        from .library_audit import LibraryAuditDialog
+        dialog = LibraryAuditDialog(self.library, self)
+        dialog.changed.connect(self.changed)
+        dialog.exec()
+        dialog.deleteLater()
+
+    def start_storage_migration(self):
+        if self.storage_worker:
+            return
+        destination = QFileDialog.getExistingDirectory(self, "Choose where to store the consoles folder")
+        if not destination:
+            return
+        from .library_audit import LibraryAuditDialog
+        dialog = LibraryAuditDialog(self.library, self, migration=True, operation="move")
+        dialog.changed.connect(self.changed)
+        accepted = dialog.exec() == QDialog.Accepted
+        dialog.deleteLater()
+        if not accepted:
+            return
+        answer = QMessageBox.question(self, "Move library?",
+            "Move your consoles folder to:\n" + str(Path(destination) / "consoles") + "\n\n"
+            "ROMs, saves, states and screenshots move together. Every copied file is verified before switching locations. "
+            "The library index, settings and cores stay in their current location.\n\n"
+            "Older libraries will also be organized by console. Original downloads and external ROMs stay in place. "
+            "Close running games before continuing.",
+            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        if answer == QMessageBox.Yes:
+            self._begin_storage_migration(destination)
+
+    def _begin_storage_migration(self, destination=None):
+        if self.storage_worker:
+            return
+        from .storage_migration import StorageWorker
+        self.organize_storage.setEnabled(False)
+        if destination is None:
+            self.storage_worker = StorageWorker(self.library.root, self)
+        else:
+            from .library_move import LibraryMoveWorker
+            self.storage_worker = LibraryMoveWorker(self.library.root, destination, self)
+        self.storage_worker.progress.connect(self.set_status)
+        self.storage_worker.result.connect(self.set_status)
+        self.storage_worker.finished.connect(self.storage_finished)
+        self.set_status("Moving the library…" if destination else "Organizing the library…")
+        self.storage_worker.start()
+
+    def storage_finished(self):
+        self.storage_worker.deleteLater()
+        self.storage_worker = None
+        self.organize_storage.setEnabled(True)
+        from .library_paths import console_root
+        self.console_path.setText(str(console_root(self.library.root).resolve()))
+        self.console_path.setCursorPosition(0)
+        self.changed.emit()
+        if self.close_pending:
+            self.done(QDialog.Accepted)
 
     def downloads_tab(self):
         page = QWidget()
@@ -889,6 +1049,10 @@ class SettingsDialog(QDialog):
             self.done(QDialog.Accepted)
 
     def done(self, result):
+        if self.storage_worker:
+            self.close_pending = True
+            self.set_status("Finishing library organization before closing…")
+            return
         if self.worker:
             self.close_pending = True
             self.worker.requestInterruption()

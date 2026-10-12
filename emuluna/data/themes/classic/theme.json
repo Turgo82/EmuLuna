@@ -1,0 +1,56 @@
+{
+  "format": 1,
+  "id": "classic",
+  "name": "Classic",
+  "palette": {
+    "window": "#262626",
+    "window-text": "#eeeeee",
+    "base": "#262626",
+    "alternate-base": "#202020",
+    "text": "#eeeeee",
+    "button": "#414141",
+    "button-text": "#eeeeee",
+    "highlight": "#d12733",
+    "accent": "#d12733",
+    "highlighted-text": "#ffffff",
+    "placeholder-text": "#929292",
+    "tooltip-base": "#333333",
+    "tooltip-text": "#eeeeee",
+    "mid": "#4a4a4a",
+    "midlight": "#363636",
+    "light": "#626262",
+    "dark": "#181818",
+    "link": "#e44952",
+    "link-visited": "#dd777d",
+    "disabled-text": "#767676"
+  },
+  "colors": {
+    "rating-filled": "#d12733",
+    "rating-empty": "#4a3537",
+    "controls-surface": "#d6a04a",
+    "controls-text": "#24170b",
+    "controls-subtle": "#493017",
+    "controls-accent": "#634016",
+    "controls-popup": "#f2d29b",
+    "controls-border": "#765123",
+    "controls-scrollbar": "#795521",
+    "sidebar-background": "#242424",
+    "sidebar-selected-background": "#484848",
+    "sidebar-selected-text": "#ef3340",
+    "navigation-background": "#272727",
+    "navigation-selected-background": "#4a4a4a",
+    "settings-tab-selected-text": "#0a84ff"
+  },
+  "fonts": {
+    "game-title-weight": 400
+  },
+  "assets": {
+    "controls-background": "controls-wood.jpg"
+  },
+  "styles": {
+    "library": "library.qss",
+    "settings": "settings.qss",
+    "gameplay": "gameplay.qss",
+    "onboarding": "onboarding.qss"
+  }
+}

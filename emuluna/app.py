@@ -40,7 +40,7 @@ from .library_widgets import (GameGrid, GameTable, CoverDelegate, LibrarySidebar
                               GameInfoDialog, date_text, AlphabetIndex, title_initial, LibraryScrollBar, ExpandableSearch,
                               SIDEBAR_COUNT_ROLE)
 
-from .theme import LIBRARY_STYLE as STYLE, follow_system_theme, theme_palette
+from .theme import apply_theme_style, follow_system_theme, theme_palette
 
 
 class AboutLogo(QToolButton):
@@ -258,7 +258,7 @@ class Window(QMainWindow):
         self.setAcceptDrops(True)
         follow_system_theme(library)
         self.setPalette(theme_palette())
-        self.setStyleSheet(STYLE)
+        apply_theme_style(self, "library")
         outer = QWidget()
         self.setCentralWidget(outer)
         layout = QHBoxLayout(outer)
@@ -382,9 +382,9 @@ class Window(QMainWindow):
         self.games.setObjectName("games")
         self.prefetch_timer = QTimer(self)
         self.prefetch_timer.setSingleShot(True)
-        self.prefetch_timer.setInterval(16)
+        self.prefetch_timer.setInterval(40)
         self.prefetch_timer.timeout.connect(self.prefetch_covers)
-        self.games.viewport_changed.connect(lambda: self.prefetch_timer.start())
+        self.games.viewport_changed.connect(self.queue_cover_prefetch)
         self.games.action_info = lambda key: (self.automatic_state(key) is not None, key in self.processes)
         self.games.play_requested.connect(self.play_game)
         self.games.restart_requested.connect(self.restart_game)
@@ -508,6 +508,15 @@ class Window(QMainWindow):
         if self.library.needs_filename_restore():
             QTimer.singleShot(0, lambda: self.import_paths([], restore_names=True))
         restore_window_size(self, library, 'window.library.size')
+
+    def show_onboarding(self):
+        from .onboarding import OnboardingDialog, needs_onboarding
+        if not needs_onboarding(self.library):
+            return
+        dialog = OnboardingDialog(self.library, self)
+        dialog.exec()
+        dialog.deleteLater()
+        self.refresh()
 
     def setup_menu(self):
         self.application_menu = QMenu(self)
@@ -789,6 +798,8 @@ class Window(QMainWindow):
 
     def startup_lookups(self):
         """Run the one-time startup jobs selected in Library settings."""
+        if self.closing:
+            return
         self.start_metadata()
         if (self.startup_artwork_enabled
                 and self.library.setting("artwork_check_at_startup", "1") == "1"):
@@ -890,6 +901,11 @@ class Window(QMainWindow):
         self.layout_cards()
         self.thumbnail_ready(game_id)
 
+    def queue_cover_prefetch(self):
+        # Coalesce scroll events without restarting the timer every frame.
+        if not self.prefetch_timer.isActive():
+            self.prefetch_timer.start()
+
     def prefetch_covers(self):
         if self.closing or self.library_tab != "library" or self.view_mode != "grid" or not self.games.isVisible():
             return
@@ -899,9 +915,23 @@ class Window(QMainWindow):
         margin = (self.games.cover_height + 82) * 2
         nearby = viewport.adjusted(0, -margin, 0, margin)
         candidates = []
-        for key, item in self.game_items.items():
+        # Rows share a height and stay in model order. Find the first nearby
+        # card without walking thousands of offscreen item rectangles.
+        low, high = 0, self.games.count()
+        while low < high:
+            middle = (low + high) // 2
+            rect = self.games.visualItemRect(self.games.item(middle))
+            if rect.bottom() < nearby.top():
+                low = middle + 1
+            else:
+                high = middle
+        for index in range(low, self.games.count()):
+            item = self.games.item(index)
             rect = self.games.visualItemRect(item)
+            if rect.top() > nearby.bottom():
+                break
             if rect.intersects(nearby):
+                key = item.data(Qt.UserRole)
                 distance = max(0, viewport.top() - rect.bottom(), rect.top() - viewport.bottom())
                 candidates.append((distance, key))
         for _, key in sorted(candidates)[:160]:
@@ -1354,6 +1384,10 @@ class Window(QMainWindow):
                       (core_name, None), ("Available" if (self.library.root / row["rom_path"]).is_file() else "Missing", None)]
             for column, (text, order) in enumerate(values):
                 cell = SortItem(text, row["id"], order)
+                if column == 0:
+                    font = cell.font()
+                    font.setBold(True)
+                    cell.setFont(font)
                 cell.setToolTip(self.game_items[row["id"]].toolTip())
                 self.table.setItem(row_index, column, cell)
         self.table.setSortingEnabled(True)
@@ -1474,10 +1508,12 @@ class Window(QMainWindow):
         try:
             manager = CoreManager(self.library.root)
             selected = manager.choice(self.library, game['system'])
-            path = self.library.root / 'states' / game_id / 'libretro' / selected['id'] / selected['sha256'] / 'auto.oesavestate'
-            if path.is_file():
-                return path
-            candidates = sorted((self.library.root / 'states' / game_id / 'libretro').glob('*/*/auto.oesavestate'),
+            roots = self.library.game_folders('states', game_id)
+            for root in roots:
+                path = root / 'libretro' / selected['id'] / selected['sha256'] / 'auto.oesavestate'
+                if path.is_file():
+                    return path
+            candidates = sorted((path for root in roots for path in (root / 'libretro').glob('*/*/auto.oesavestate')),
                                 key=lambda candidate: candidate.stat().st_mtime, reverse=True)
             for candidate in candidates:
                 try:
@@ -1826,6 +1862,9 @@ def main():
     configure_application(app)
     window = Window(Library(args.data_dir), auto_artwork=not args.screenshot)
     window.show()
+    from .onboarding import needs_onboarding
+    if not args.screenshot and needs_onboarding(window.library):
+        QTimer.singleShot(0, window.show_onboarding)
     if args.roms: window.import_paths(args.roms)
     if args.screenshot:
         def capture():

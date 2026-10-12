@@ -1,3 +1,4 @@
+from pathlib import Path
 """Friendly per-console controller setup, backed by persistent input profiles."""
 import time
 from functools import lru_cache
@@ -15,16 +16,19 @@ from .gamepad import Gamepad
 from .systems import SYSTEMS, DATA
 
 
-@lru_cache(maxsize=1)
-def controller_wood_texture():
-    return QPixmap(str(DATA / 'textures' / 'controller-walnut.png'))
+@lru_cache(maxsize=8)
+def controller_wood_texture(path=None, revision=0):
+    return QPixmap(path) if path else QPixmap()
 
 
 def paint_controller_wood(painter, bounds):
     """One continuous surface beneath the Controls navigation and widgets."""
-    texture = controller_wood_texture()
+    from .theme import theme_asset, theme_color
+    path = theme_asset('controls-background')
+    revision = Path(path).stat().st_mtime_ns if path and Path(path).is_file() else 0
+    texture = controller_wood_texture(path, revision)
     painter.setRenderHint(QPainter.SmoothPixmapTransform)
-    painter.fillRect(bounds, QColor('#52331f'))
+    painter.fillRect(bounds, theme_color('controls-surface', '#52331f'))
     if not texture.isNull() and not bounds.isEmpty():
         scale = max(bounds.width() / texture.width(), bounds.height() / texture.height())
         width, height = bounds.width() / scale, bounds.height() / scale
@@ -340,7 +344,6 @@ class ControlsPage(QWidget):
 
     def add_binding_row(self, action, label, source):
         button = KeyBindingButton() if source == 'keyboard' else ControllerBindingButton()
-        button.setPalette(self.palette())
         button.setAccessibleName(f'{label} binding')
         button.highlighted.connect(lambda: self.highlight_control(action))
         if source == 'keyboard':

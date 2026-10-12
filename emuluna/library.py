@@ -24,6 +24,8 @@ class ImportProblem(ValueError):
 from .systems import SYSTEMS, EXTENSIONS, EXTENSION_SYSTEMS
 from .content import DISC_FILES, inventory, content_id, copy_content
 from .disc_detection import companion_cue, detect_disc, probe_track
+from .library_paths import console_folder, game_folders, unique_rom_path
+from .storage_migration import storage_operation
 
 
 def default_data_dir():
@@ -39,6 +41,7 @@ def default_data_dir():
 class Library:
     def __init__(self, root=None):
         self.root = Path(root or os.environ.get("EMULUNA_DATA_DIR") or os.environ.get("OPENEMU_DATA_DIR") or default_data_dir()).resolve()
+        new_library = not (self.root / "library.sqlite3").exists()
         for folder in ["roms", "saves", "states", "covers", "screenshots"]:
             (self.root / folder).mkdir(parents=True, exist_ok=True)
         self.db = sqlite3.connect(self.root / "library.sqlite3", timeout=10)
@@ -62,6 +65,90 @@ class Library:
         self.db.execute("CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)")
         self.db.commit()
         self.migrate()
+        if new_library:
+            self.set_setting("storage.layout", "consoles")
+            self.set_setting("onboarding.complete", "0")
+        from .library_move import recover_console_move
+        recover_console_move(self)
+        from .storage_migration import recover_storage_migration
+        recover_storage_migration(self)
+
+    def console_layout(self):
+        return self.setting("storage.layout", "legacy") == "consoles"
+
+    def game_folder(self, kind, game_id):
+        game = self.get(game_id)
+        if not game:
+            raise ValueError("The game is no longer in the library.")
+        folders = game_folders(self.root, kind, game_id, game["system"])
+        return folders[0 if self.console_layout() else 1]
+
+    def game_folders(self, kind, game_id):
+        game = self.get(game_id)
+        if not game:
+            return ()
+        return game_folders(self.root, kind, game_id, game["system"])
+
+    def rom_folder(self, system, digest, name):
+        if self.console_layout():
+            folder = console_folder(self.root, system) / "roms"
+            folder.mkdir(parents=True, exist_ok=True)
+            return unique_rom_path(folder, Path(name).stem, digest)
+        return self.root / "roms" / system / digest
+
+    def copy_disc(self, source, system, digest, rows):
+        if self.console_layout() and len(rows) == 1:
+            folder = console_folder(self.root, system) / "roms"
+            folder.mkdir(parents=True, exist_ok=True)
+            target = unique_rom_path(folder, source.name, digest)
+            with tempfile.TemporaryDirectory(prefix=".import-", dir=folder) as tmp:
+                staged = Path(tmp) / "content"
+                shutil.copyfile(source, staged)
+                with staged.open("rb") as file:
+                    if file_hexdigest(file, "sha256") != rows[0]["sha256"]:
+                        raise ValueError("The disc changed while copying. Try again.")
+                os.link(staged, target)
+            return target
+        return copy_content(source, self.rom_folder(system, digest, source.name), rows)
+
+    def matching_content(self, path, rows):
+        actual = inventory(path)
+        if len(actual) == len(rows) == 1:
+            return all(actual[0][key] == rows[0][key] for key in ("sha256", "size"))
+        return sorted(actual, key=lambda row: row["path"]) == sorted(rows, key=lambda row: row["path"])
+
+    def export_inventory(self, systems=None):
+        """Readable audit snapshots; SQLite remains the authoritative index."""
+        from .storage_migration import write_json
+        from .library_paths import console_root
+        selected = console_root(self.root)
+        if selected.is_symlink() and not selected.is_dir():
+            # Keep the local index usable without recreating an unplugged drive.
+            return
+        games = self.games()
+        systems = set(systems if systems is not None else (game["system"] for game in games))
+        for system in sorted(systems):
+            console = console_folder(self.root, system)
+            if self.console_layout():
+                for kind in ("roms", "saves", "screenshots", "states"):
+                    (console / kind).mkdir(parents=True, exist_ok=True)
+            records = []
+            for game in games:
+                if game["system"] != system:
+                    continue
+                path = self.root / game["rom_path"]
+                files = self.content_rows(game["id"])
+                if not files:
+                    files = [{"path": path.name, "sha256": game["id"],
+                              "size": path.stat().st_size if path.is_file() else None}]
+                elif len(files) == 1:
+                    files = [{**files[0], "path": path.name}]
+                records.append({"id": game["id"], "title": game["title"],
+                    "rom": game["rom_path"], "external": Path(game["rom_path"]).is_absolute(),
+                    "files": files, **{kind: str(self.game_folder(kind, game["id"]).relative_to(self.root))
+                                      for kind in ("saves", "states", "screenshots")}})
+            write_json(console_folder(self.root, system) / "games.json",
+                       {"format": 1, "system": system, "games": records})
 
     def migrate(self):
         """Additive, transactional migrations; existing ROMs and saves stay in place."""
@@ -105,6 +192,7 @@ class Library:
             self.db.rollback()
             raise
 
+    @storage_operation
     def import_file(self, path, system_override=None):
         requested = Path(path).expanduser().absolute()
         name = requested.name
@@ -167,6 +255,7 @@ class Library:
         return [self._import_bytes(name, data, str(requested), system=system_override,
                                   external=self.setting("copy_games", "1") != "1")]
 
+    @storage_operation
     def import_content(self, source, system):
         try:
             rows = inventory(source)
@@ -176,18 +265,20 @@ class Library:
         if self.get(digest):
             return digest
         managed = self.setting('copy_games', '1') == '1'
-        target = copy_content(source, self.root / 'roms' / system / digest, rows) if managed else source
+        target = self.copy_disc(source, system, digest, rows) if managed else source
         stored = str(target.relative_to(self.root)) if managed else str(target)
         with self.db:
             self.db.execute("INSERT OR IGNORE INTO games (id,title,system,rom_path,source,added,original_filename) VALUES(?,?,?,?,?,?,?)",
                 (digest, source.stem, system, stored, str(source), time.time(), source.name))
             self.db.executemany("INSERT OR IGNORE INTO game_files VALUES(?,?,?,?)",
                 [(digest, row['path'], row['sha256'], row['size']) for row in rows])
+        self.export_inventory([system])
         return digest
 
     def content_rows(self, game_id):
         return [dict(row) for row in self.db.execute('SELECT path,sha256,size FROM game_files WHERE game_id=?', (game_id,))]
 
+    @storage_operation
     def _import_bytes(self, name, data, source, *, system=None, external=False):
         suffix = Path(name).suffix.lower()
         system = system or EXTENSIONS.get(suffix)
@@ -214,24 +305,32 @@ class Library:
             self.db.execute("INSERT OR IGNORE INTO rom_hashes VALUES(?,?,?,?)",
                 (digest, hashlib.md5(data, usedforsecurity=False).hexdigest(),
                  hashlib.sha1(data, usedforsecurity=False).hexdigest(), f"{zlib.crc32(data):08x}"))
+        self.export_inventory([system])
         return digest
 
     def write_rom(self, digest, name, data, *, system=None):
         if not name or Path(name).name != name or name in (".", ".."):
             raise ValueError("Invalid ROM filename")
-        # The folder is content-addressed; the filename itself stays unchanged.
-        folder = self.root / "roms"
-        if system:
-            if system not in SYSTEMS:
-                raise ValueError("Unknown system")
-            folder /= system
-        dest = folder / digest / name
+        if system and system not in SYSTEMS:
+            raise ValueError("Unknown system")
+        if self.console_layout() and system:
+            folder = console_folder(self.root, system) / 'roms'
+            folder.mkdir(parents=True, exist_ok=True)
+            dest = unique_rom_path(folder, name, digest)
+        else:
+            folder = self.root / 'roms'
+            if system:
+                folder /= system
+            dest = folder / digest / name
         dest.parent.mkdir(parents=True, exist_ok=True)
         fd, tmp = tempfile.mkstemp(dir=dest.parent)
         try:
             with os.fdopen(fd, "wb") as f:
                 f.write(data)
-            os.replace(tmp, dest)
+            if self.console_layout():
+                os.link(tmp, dest)
+            else:
+                os.replace(tmp, dest)
         finally:
             Path(tmp).unlink(missing_ok=True)
         return dest
@@ -255,6 +354,7 @@ class Library:
         # Retain the old copy: a running core or artwork worker may still use it.
         return bool(count)
 
+    @storage_operation
     def restore_filenames(self):
         restored, unavailable = 0, 0
         for game in self.games():
@@ -323,8 +423,7 @@ class Library:
         if not path.is_file():
             raise ValueError("The ROM file is missing. Right-click the game and choose Locate missing ROM to reconnect it.")
         if rows := self.content_rows(game_id):
-            expected = sorted(rows, key=lambda row: row['path'])
-            if sorted(inventory(path), key=lambda row: row['path']) != expected:
+            if not self.matching_content(path, rows):
                 raise ValueError('A disc file changed since import. Restore the original disc set before playing.')
             return path
         with path.open("rb") as file:
@@ -333,15 +432,17 @@ class Library:
             raise ValueError("The ROM file has changed since import. Locate the original ROM, or import the changed file as a separate game.")
         return path
 
+    @storage_operation
     def consolidate(self, game_id):
         game = self.get(game_id)
         source = self.validate_game(game_id)
         if not Path(game["rom_path"]).is_absolute():
             return False
         if rows := self.content_rows(game_id):
-            target = copy_content(source, self.root / 'roms' / game['system'] / game_id, rows)
+            target = self.copy_disc(source, game['system'], game_id, rows)
             with self.db:
                 self.db.execute('UPDATE games SET rom_path=? WHERE id=?', (str(target.relative_to(self.root)), game_id))
+            self.export_inventory([game['system']])
             return True
         with source.open("rb") as file:
             data = file.read(MAX_ROM + 1)
@@ -351,20 +452,25 @@ class Library:
         with self.db:
             self.db.execute("UPDATE games SET rom_path=? WHERE id=? AND rom_path=?",
                             (str(target.relative_to(self.root)), game_id, game["rom_path"]))
+        self.export_inventory([game['system']])
         return True
 
+    @storage_operation
     def relink(self, game_id, path):
         game = self.get(game_id)
         if game is None:
             raise ValueError("This game is no longer in the library.")
         requested = Path(path).expanduser().absolute()
         if rows := self.content_rows(game_id):
-            if sorted(inventory(requested), key=lambda row: row['path']) != sorted(rows, key=lambda row: row['path']):
+            if not self.matching_content(requested, rows):
                 raise ValueError('Choose the original disc set with matching filenames and hashes.')
-            target = requested if Path(game['rom_path']).is_absolute() else copy_content(requested, self.root / 'roms' / game['system'] / game_id, rows)
+            target = (requested if Path(game['rom_path']).is_absolute() else
+                      copy_content(requested, (self.root / game['rom_path']).parent, rows) if len(rows) > 1 else
+                      self.copy_disc(requested, game['system'], game_id, rows))
             stored = str(target) if Path(game['rom_path']).is_absolute() else str(target.relative_to(self.root))
             with self.db:
                 self.db.execute('UPDATE games SET rom_path=?,source=? WHERE id=?', (stored, str(requested), game_id))
+            self.export_inventory([game['system']])
             return
         with requested.open("rb") as file:
             data = file.read(MAX_ROM + 1)
@@ -372,7 +478,8 @@ class Library:
             raise ValueError("This file is a different ROM. Choose the original game's file; its SHA-256 must match to preserve saves safely.")
         # Finish an older naming transition before starting another one. Keep
         # every old copy and never overwrite a newer, already named save.
-        self.prepare_save_filenames(game, self.root / "saves" / game_id)
+        for folder in self.game_folders("saves", game_id):
+            self.prepare_save_filenames(game, folder)
         if Path(game["rom_path"]).is_absolute():
             stored = str(requested)
         else:
@@ -380,6 +487,7 @@ class Library:
         with self.db:
             self.db.execute("UPDATE games SET rom_path=?,source=?,original_filename=?,previous_rom_stem=? WHERE id=?",
                 (stored, str(requested), requested.name, Path(game["rom_path"]).stem, game_id))
+        self.export_inventory([game["system"]])
 
     def record_import_issue(self, path, code, message, system=None):
         now = time.time()
@@ -617,19 +725,26 @@ class Library:
         with self.db:
             self.db.execute("UPDATE games SET favorite=1-favorite WHERE id=?", (game_id,))
 
+    @storage_operation
     def rename(self, game_id, title):
         if title.strip():
             with self.db:
                 self.db.execute("UPDATE games SET title=? WHERE id=?", (title.strip(), game_id))
                 self.db.execute("INSERT OR IGNORE INTO metadata_overrides VALUES(?, 'title')", (game_id,))
+            self.export_inventory([self.get(game_id)['system']])
 
+    @storage_operation
     def remove(self, game_id):
         # Removing a library entry preserves the ROM, battery saves and states.
+        game = self.get(game_id)
         with self.db:
             self.db.execute("DELETE FROM games WHERE id=?", (game_id,))
             self.db.execute("DELETE FROM artwork WHERE game_id=?", (game_id,))
             self.db.execute("DELETE FROM settings WHERE key LIKE ? ESCAPE '\\'",
                             ("core\\_option." + game_id + ".%",))
+
+        if game:
+            self.export_inventory([game["system"]])
 
     def setting(self, key, default=""):
         row = self.db.execute("SELECT value FROM settings WHERE key=?", (key,)).fetchone()

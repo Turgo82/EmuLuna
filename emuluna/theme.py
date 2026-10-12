@@ -2,6 +2,7 @@
 import re
 from pathlib import Path
 from weakref import WeakSet
+from .theme_files import ThemeRegistry, ROLE_NAMES
 from shiboken6 import isValid
 from PySide6.QtCore import Qt, QObject, QTimer, QEvent
 from PySide6.QtGui import QPalette, QPen, QColor
@@ -10,60 +11,7 @@ from PySide6.QtWidgets import QStyle, QApplication, QWidget
 EMULUNA_COLOR_SCHEME = Path(__file__).with_name('data') / 'EmuLuna.colors'
 EMULUNA_WINDOW_COLOR_SCHEME = Path(__file__).with_name('data') / 'EmuLuna-Window.colors'
 
-LIBRARY_STYLE = """
-QMainWindow {background:palette(window); color:palette(window-text);}
-QWidget#sidebar {background:palette(alternate-base); border:0;}
-QWidget#libraryNavigation {background:palette(mid);border:0;border-radius:8px;}
-QToolButton#applicationMenuButton {background:transparent; border:0; border-radius:5px; padding:5px;}
-QToolButton#applicationMenuButton:hover, QToolButton#applicationMenuButton:pressed {background:palette(midlight);}
-QToolButton#applicationMenuButton::menu-indicator {image:none;}
-QToolButton#sidebarAddButton {background:transparent;border:0;border-radius:5px;padding:5px;}
-QToolButton#sidebarAddButton:hover,QToolButton#sidebarAddButton:pressed {background:palette(midlight);}
-QToolButton#sidebarAddButton::menu-indicator {image:none;}
-QLabel#sidebarActivityTitle {font-weight:600;color:palette(window-text);background:transparent;}
-QLabel#sidebarActivityDetail {font-size:11px;color:palette(placeholder-text);background:transparent;}
-QProgressBar#sidebarProgress {background:palette(window);border:1px solid palette(mid);border-radius:4px;}
-QProgressBar#sidebarProgress::chunk {background:palette(highlight);border-radius:3px;}
-QToolButton#sidebarCancelButton {background:transparent;color:palette(window-text);border:0;border-radius:4px;font-size:17px;padding:0;}
-QToolButton#sidebarCancelButton:hover {background:palette(midlight);}
-QToolButton#searchButton {background:transparent;border:0;border-radius:5px;padding:5px;}
-QToolButton#searchButton:hover,QToolButton#searchButton:focus {background:palette(midlight);}
-QToolButton#aboutLogoButton {background:transparent;border:0;padding:0;}
-QToolButton#aboutLogoButton:hover,QToolButton#aboutLogoButton:pressed {background:transparent;}
-QLineEdit#librarySearch {background:palette(window);color:palette(text);placeholder-text-color:palette(placeholder-text);border:1px solid palette(mid);border-radius:7px;padding:3px 8px;selection-background-color:palette(highlight);selection-color:palette(highlighted-text);}
-QLineEdit#librarySearch:focus {border-color:palette(highlight);}
-QPushButton#sectionNavigation {background:palette(window);color:palette(window-text);border:1px solid transparent;border-radius:0;padding:4px 18px;}
-QPushButton#sectionNavigation[segment="first"] {border-top-left-radius:7px;border-bottom-left-radius:7px;}
-QPushButton#sectionNavigation[segment="last"] {border-top-right-radius:7px;border-bottom-right-radius:7px;}
-QPushButton#sectionNavigation:hover {background:palette(midlight);}
-QPushButton#sectionNavigation:focus {border-color:palette(highlight);}
-QPushButton#sectionNavigation:checked {background:palette(highlight); color:palette(highlighted-text); border-color:palette(highlight);}
-QPushButton#viewControl {background:transparent; border:0; padding:5px; border-radius:4px;}
-QPushButton#viewControl:hover {background:palette(alternate-base);}
-QPushButton#viewControl:checked {background:palette(highlight);}
-QLabel#subtle {color:palette(placeholder-text); background:transparent;}
-QListWidget {border:0; outline:0; background:transparent;}
-QListWidget#nav::item {height:28px; border-radius:6px; padding-left:18px; margin:1px 8px;}
-QListWidget#nav::item:hover {background:palette(midlight);}
-QListWidget#nav::item:selected {background:palette(highlight); color:palette(highlighted-text);}
-QTableWidget, QTreeWidget {background:palette(base); alternate-background-color:palette(alternate-base); border:0; gridline-color:palette(mid); selection-background-color:palette(highlight); selection-color:palette(highlighted-text);}
-QHeaderView::section {padding:8px;}
-QPushButton#primary {font-weight:700; padding:9px 17px;}
-QLineEdit {padding:6px 10px;}
-QScrollBar:vertical {background:palette(alternate-base); width:14px; margin:0;}
-QScrollBar:horizontal {background:palette(alternate-base); height:14px; margin:0;}
-QScrollBar::handle {background:palette(placeholder-text); border:2px solid palette(alternate-base); border-radius:6px;}
-QScrollBar::handle:vertical {min-height:36px;}
-QScrollBar::handle:horizontal {min-width:36px;}
-QScrollBar::handle:hover, QScrollBar::handle:pressed {background:palette(highlight);}
-QScrollBar::add-line, QScrollBar::sub-line {width:0; height:0; border:0; background:transparent;}
-QScrollBar::add-page, QScrollBar::sub-page {background:transparent;}
-QMenu {background:palette(window);color:palette(window-text);border:1px solid palette(mid);border-radius:7px;padding:4px;}
-QMenu::item {padding:6px 28px 6px 14px;border-radius:4px;}
-QMenu::item:selected {background:palette(highlight);color:palette(highlighted-text);}
-QMenu::item:disabled {color:palette(disabled-text);}
-QMenu::separator {height:1px;background:palette(mid);margin:4px 8px;}
-"""
+LIBRARY_STYLE = (Path(__file__).with_name("data") / "themes/base/library.qss").read_text(encoding="utf-8")
 
 
 def paint_thumbnail_highlight(painter, art_rect, option):
@@ -90,7 +38,9 @@ class SystemThemeBinding(QObject):
     def __init__(self, app):
         super().__init__(app)
         self.app = app
-        self.use_system = True
+        self.use_system = False
+        self.registry = ThemeRegistry()
+        self.theme_id = "luna"
         from .native_decoration import native_decoration_binding
         self.decoration = native_decoration_binding(app)
         self.timer = QTimer(self)
@@ -129,7 +79,13 @@ class SystemThemeBinding(QObject):
         widgets = self.app.allWidgets() if widgets is None else widgets
         styled = []
         for widget in widgets:
+            component = widget.property('_emuluna_theme_component')
             current = widget.styleSheet()
+            if component:
+                template = self.registry.get(self.theme_id).stylesheet(component)
+                styled.append((widget, template))
+                widget.setStyleSheet('')
+                continue
             if not current:
                 continue
             template = widget.property('_emuluna_theme_template')
@@ -141,11 +97,11 @@ class SystemThemeBinding(QObject):
         # Stylesheet-polished children can retain explicit native palette roles.
         # Update them too, especially when starting directly in the dark theme.
         for widget in widgets:
-            widget.setPalette(palette)
+            widget.setPalette(controls_palette(palette) if on_controls_surface(widget) else palette)
             if self.decoration and widget.isWindow():
-                scheme = (EMULUNA_COLOR_SCHEME if (widget.property('emuluna.library_window')
+                scheme = (native_scheme(True) if (widget.property('emuluna.library_window')
                                                    or widget.property('emuluna.library_header'))
-                          else EMULUNA_WINDOW_COLOR_SCHEME)
+                          else native_scheme(False))
                 self.decoration.apply(widget, '' if self.use_system else str(scheme))
         # QSS resolves palette() through the application palette on some Qt
         # styles. Resolve explicitly for the optional local dark theme, without
@@ -158,9 +114,11 @@ class SystemThemeBinding(QObject):
                  'midlight': QPalette.Midlight, 'placeholder-text': QPalette.PlaceholderText}
         colors = {name: palette.color(role).name() for name, role in roles.items()}
         colors['disabled-text'] = palette.color(QPalette.Disabled, QPalette.WindowText).name()
+        colors.update(self.registry.get(self.theme_id).colors)
         for widget, template in styled:
             applied = re.sub(r'palette\(([-a-z]+)\)',
                              lambda match: colors.get(match[1], match[0]), template)
+            applied = re.sub(r'theme\(([-a-z]+)\)', lambda match: colors.get(match[1], match[0]), applied)
             widget.setStyleSheet(applied)
             widget.setProperty('_emuluna_theme_template', template)
             widget.setProperty('_emuluna_theme_applied', applied)
@@ -172,10 +130,18 @@ def follow_system_theme(library=None):
         app._emuluna_system_theme = SystemThemeBinding(app)
     if library is not None:
         binding = app._emuluna_system_theme
-        enabled = library.setting('appearance.use_system_theme', '1') == '1'
+        registry = ThemeRegistry(library.root)
+        saved_id = library.setting('appearance.theme', 'luna')
+        theme_id = registry.get(saved_id).id
+        if saved_id in ('purple', 'light', 'openemu'):
+            library.set_setting('appearance.theme', theme_id)
+        changed = binding.theme_id != theme_id or binding.registry.folder != registry.folder
+        binding.registry = registry
+        binding.theme_id = theme_id
+        enabled = library.setting('appearance.use_system_theme', '0') == '1'
         # Opening another dialog does not change the theme. Its Show event
         # styles that window alone; only a real theme change touches the app.
-        if binding.use_system != enabled:
+        if binding.use_system != enabled or changed:
             binding.use_system = enabled
             _sync_native_decoration(app, enabled)
             binding.timer.start(0)
@@ -191,7 +157,7 @@ def set_system_theme(enabled):
 
 def _sync_native_decoration(app, use_system):
     """Let KDE/Wayland decorate native title bars with the selected theme."""
-    app.setProperty('KDE_COLOR_SCHEME_PATH', None if use_system else str(EMULUNA_COLOR_SCHEME))
+    app.setProperty('KDE_COLOR_SCHEME_PATH', None if use_system else str(native_scheme(True)))
 
 
 def theme_palette():
@@ -200,19 +166,113 @@ def theme_palette():
     if binding is None or binding.use_system:
         return app.palette()
     palette = QPalette(app.palette())
-    for role, color in ((QPalette.Window, '#24252b'), (QPalette.WindowText, '#ebeaf0'),
-                        (QPalette.Base, '#24252b'), (QPalette.AlternateBase, '#1b1c21'),
-                        (QPalette.Text, '#ebeaf0'), (QPalette.Button, '#383943'),
-                        (QPalette.ButtonText, '#ebeaf0'), (QPalette.Highlight, '#b6a0e4'),
-                        # Native Qt controls can use Accent independently of
-                        # Highlight; otherwise they retain the OS accent here.
-                        (QPalette.Accent, '#b6a0e4'),
-                        (QPalette.HighlightedText, '#201b2b'), (QPalette.PlaceholderText, '#a4a5b2'),
-                        (QPalette.ToolTipBase, '#303139'), (QPalette.ToolTipText, '#ebeaf0'),
-                        (QPalette.Mid, '#50515c'), (QPalette.Midlight, '#393a43'),
-                        (QPalette.Light, '#555560'), (QPalette.Dark, '#1b1c21'),
-                        (QPalette.Link, '#b6a0e4'), (QPalette.LinkVisited, '#c6b2ee')):
-        palette.setColor(role, QColor(color))
+    roles = (QPalette.Window, QPalette.WindowText, QPalette.Base, QPalette.AlternateBase,
+             QPalette.Text, QPalette.Button, QPalette.ButtonText, QPalette.Highlight,
+             QPalette.Accent, QPalette.HighlightedText, QPalette.PlaceholderText,
+             QPalette.ToolTipBase, QPalette.ToolTipText, QPalette.Mid, QPalette.Midlight,
+             QPalette.Light, QPalette.Dark, QPalette.Link, QPalette.LinkVisited)
+    colors = binding.registry.get(binding.theme_id).palette
+    for name, role in zip(ROLE_NAMES, roles):
+        palette.setColor(role, QColor(colors[name]))
     for role in (QPalette.Text, QPalette.WindowText, QPalette.ButtonText):
-        palette.setColor(QPalette.Disabled, role, QColor('#70717d'))
+        palette.setColor(QPalette.Disabled, role, QColor(colors['disabled-text']))
+    return palette
+
+
+def apply_theme_style(widget, component):
+    follow_system_theme()
+    widget.setProperty('_emuluna_theme_component', component)
+    binding = QApplication.instance()._emuluna_system_theme
+    widget.setStyleSheet(binding.registry.get(binding.theme_id).stylesheet(component))
+    binding.refresh([widget])
+
+
+def theme_color(name, default):
+    binding = getattr(QApplication.instance(), '_emuluna_system_theme', None)
+    return QColor(binding.registry.get(binding.theme_id).colors.get(name, default) if binding else default)
+
+
+def select_theme(library, theme_id):
+    library.set_setting('appearance.theme', theme_id)
+    library.set_setting('appearance.use_system_theme', '0')
+    follow_system_theme(library)
+    QApplication.instance()._emuluna_system_theme.refresh()
+
+
+def reload_themes(library):
+    follow_system_theme(library)
+    binding = QApplication.instance()._emuluna_system_theme
+    binding.refresh()
+    return binding.registry
+
+
+def theme_asset(name):
+    binding = getattr(QApplication.instance(), '_emuluna_system_theme', None)
+    return binding.registry.get(binding.theme_id).assets.get(name) if binding else None
+
+
+def native_scheme(header=True):
+    binding = getattr(QApplication.instance(), '_emuluna_system_theme', None)
+    if binding is None or binding.theme_id == 'luna':
+        return EMULUNA_COLOR_SCHEME if header else EMULUNA_WINDOW_COLOR_SCHEME
+    theme = binding.registry.get(binding.theme_id)
+    # Derive native decoration colors from the same package; no extra hand
+    # maintained color-scheme file is needed when editing a custom theme.
+    import tempfile
+    folder = (binding.registry.folder.parent / 'cache/themes' if binding.registry.folder
+              else Path(tempfile.gettempdir()) / 'emuluna-themes')
+    folder.mkdir(parents=True, exist_ok=True)
+    def rgb(name):
+        color = QColor(theme.palette[name])
+        return f'{color.red()},{color.green()},{color.blue()}'
+    background = rgb('alternate-base' if header else 'window')
+    foreground, inactive = rgb('window-text'), rgb('placeholder-text')
+    value = (f'[General]\nName=EmuLuna {theme.name}\n\n[Colors:Window]\n'
+             f'BackgroundNormal={background}\nForegroundNormal={foreground}\n\n[WM]\n'
+             f'activeBackground={background}\nactiveForeground={foreground}\n'
+             f'inactiveBackground={background}\ninactiveForeground={inactive}\n')
+    path = folder / (theme.id + ('-header' if header else '-window') + '.colors')
+    if not path.exists() or path.read_text(encoding='utf-8') != value:
+        import os
+        fd, temporary = tempfile.mkstemp(dir=folder)
+        try:
+            with os.fdopen(fd, 'w', encoding='utf-8') as file:
+                file.write(value)
+            os.replace(temporary, path)
+        finally:
+            Path(temporary).unlink(missing_ok=True)
+    return path
+
+
+def theme_font(name, default):
+    binding = getattr(QApplication.instance(), '_emuluna_system_theme', None)
+    return binding.registry.get(binding.theme_id).fonts.get(name, default) if binding else default
+
+
+def on_controls_surface(widget):
+    """Include footer buttons and popups owned by the wood Controls page."""
+    if widget.objectName() == 'settingsDone' and widget.property('woodControls'):
+        return True
+    current = widget
+    while current is not None:
+        if current.objectName() == 'woodControlsPage':
+            return True
+        current = current.parentWidget()
+    return False
+
+
+def controls_palette(base=None):
+    """Text and custom-painted widgets must use the wood surface's local palette."""
+    palette = QPalette(base or theme_palette())
+    text = theme_color('controls-text', '#fff5e9')
+    subtle = theme_color('controls-subtle', '#ead7bc')
+    for group in (QPalette.Active, QPalette.Inactive, QPalette.Disabled):
+        foreground = subtle if group == QPalette.Disabled else text
+        for role in (QPalette.WindowText, QPalette.Text, QPalette.ButtonText):
+            palette.setColor(group, role, foreground)
+        palette.setColor(group,QPalette.PlaceholderText,subtle)
+        palette.setColor(group,QPalette.Base,theme_color('controls-popup','#302015'))
+        palette.setColor(group,QPalette.Highlight,theme_color('controls-accent','#e4b874'))
+        palette.setColor(group,QPalette.HighlightedText,theme_color('controls-popup','#302015'))
+        palette.setColor(group,QPalette.Mid,theme_color('controls-border','#b48a5b'))
     return palette

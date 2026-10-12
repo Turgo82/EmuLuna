@@ -148,11 +148,11 @@ class CHDIdentification(unittest.TestCase):
             with patch('emuluna.file_management.move_to_trash',
                        side_effect=lambda file: file.rename(self.root / 'trashed.chd')):
                 remove_games(lib, [key], trash_roms=True)
-            self.assertFalse(managed.parent.exists())
+            self.assertFalse(managed.exists())
             self.assertFalse(managed.exists())
             self.assertTrue(path.is_file())
             # Also recover folders left behind by previous versions.
-            managed.parent.mkdir()
+            managed.parent.mkdir(exist_ok=True)
             lib.record_import_issue(path, 'missing_file', 'Previous failed re-import')
             worker = Importer(lib.root, [path])
             worker.run()

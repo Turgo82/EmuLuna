@@ -340,7 +340,9 @@ class ArtworkTests(unittest.TestCase):
              patch.object(Window, "start_artwork") as artwork:
             window = Window(self.lib)
             try:
-                QTest.qWait(300)
+                deadline = time.monotonic() + 2
+                while not metadata.called and time.monotonic() < deadline:
+                    QTest.qWait(10)
                 metadata.assert_called_once_with()
                 artwork.assert_not_called()
                 self.assertFalse(hasattr(window, "art_timer"))
@@ -353,12 +355,25 @@ class ArtworkTests(unittest.TestCase):
              patch.object(Window, "start_artwork") as artwork:
             window = Window(self.lib)
             try:
-                QTest.qWait(300)
+                deadline = time.monotonic() + 2
+                while not metadata.called and time.monotonic() < deadline:
+                    QTest.qWait(10)
                 metadata.assert_called_once_with()
                 artwork.assert_called_once_with()
                 self.assertFalse(hasattr(window, "art_timer"))
             finally:
                 window.close()
+        self.lib = Library(self.root / "library")
+
+    def test_queued_startup_lookup_is_safe_after_window_closes(self):
+        self.lib.set_setting("core_auto_install", "0")
+        window = Window(self.lib)
+        window.close()
+        # A pending startup callback may arrive after close owns and closes
+        # the database. It must neither read that connection nor start work.
+        window.startup_lookups()
+        self.assertIsNone(window.art_worker)
+        self.assertIsNone(window.metadata_worker)
         self.lib = Library(self.root / "library")
 
     def test_import_starts_artwork_without_waiting_for_restart(self):
