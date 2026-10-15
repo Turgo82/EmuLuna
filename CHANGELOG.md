@@ -2,7 +2,12 @@
 
 This file records user-facing changes to EmuLuna releases.
 
-## [Unreleased]
+## [0.20.1] - 2026-10-14
+
+This release fixes missing damage-blink frames and uneven presentation by using
+OpenGL in Auto display mode and preserving normal-speed frame submissions.
+These frontend fixes apply across all cores; a core's internal renderer remains
+independent of the display mode.
 
 ### Fixed
 
