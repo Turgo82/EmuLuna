@@ -414,7 +414,7 @@ class SettingsDialog(QDialog):
             lambda index: self.set_setting("experimental.frontend_renderer",
                                            self.frontend_renderer.itemData(index)))
         self.frontend_renderer.setToolTip(
-            "Select how EmuLuna displays game frames. Auto tries Vulkan, then OpenGL, then software. "
+            "Select how EmuLuna displays game frames. Auto uses OpenGL, with software fallback. "
             "A core's own hardware context is negotiated separately. Changes apply to new game windows."
         )
         form.addRow("Frontend renderer", self.frontend_renderer)

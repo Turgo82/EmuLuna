@@ -79,17 +79,20 @@ class Screen(QWidget):
         if QApplication.platformName() in ('offscreen','minimal') or self.renderer_mode=='software':
             self.backend='Software presentation'
             print('Video renderer: '+self.backend,flush=True)
-        elif self.renderer_mode in ('auto','vulkan'):
+        elif self.renderer_mode == 'vulkan':
             try:
                 self.canvas=VulkanViewport(self)
             except (RuntimeError,OSError) as error:
                 print('Vulkan initialization failed: '+str(error),flush=True)
                 self.install_opengl()
         else:
+            # QQuickWidget's Vulkan path can present only every second frame
+            # on Wayland, hiding alternating-frame sprites at full core speed.
+            # Auto uses the direct OpenGL widget; explicit Vulkan stays opt-in.
             self.install_opengl()
 
     def install_opengl(self):
-        print('Falling back to OpenGL' if self.renderer_mode in ('auto','vulkan')
+        print('Falling back to OpenGL' if self.renderer_mode == 'vulkan'
               else 'Creating OpenGL display',flush=True)
         self.backend='OpenGL initializes when the game window opens'
         self.canvas=GLViewport(self)

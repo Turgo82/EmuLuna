@@ -39,14 +39,14 @@ class PlaybackPacing(unittest.TestCase):
         self.assertEqual(player.frames,1)
         self.assertFalse(player.screen.frame.isNull())
 
-    def test_late_frames_keep_emulation_audio_and_recent_image(self):
+    def test_late_normal_frames_keep_every_presentation(self):
         player,events=self.harness()
         with patch('emuluna.player.combined_axes',return_value=(0,0,0,0)), \
              patch('emuluna.player.time.perf_counter',side_effect=[100,100.06,100.06,100.06,100.08,100.08,100.08,100.10,100.10]):
             for _ in range(3):Player.tick(player)
         self.assertEqual(player.core.frame.call_count,3)
         self.assertEqual(events.count('audio'),4)
-        self.assertEqual(events.count('present'),1)
+        self.assertEqual(events.count('present'),3)
         self.assertEqual(player.frames,3)
         self.assertFalse(player.screen.frame.isNull())
 
@@ -72,7 +72,33 @@ class PlaybackPacing(unittest.TestCase):
         self.assertTrue(Player.presentation_due(player,102,1/60))
 
     def test_recovered_deadline_resumes_full_presentation(self):
-        player,_=self.harness()
+        player,_=self.harness();player.fast=True
         self.assertFalse(Player.presentation_due(player,101,1/60))
         self.assertTrue(Player.presentation_due(player,100,1/60))
         self.assertEqual(player.skipped_presentations,0)
+
+    def test_normal_speed_keeps_both_phases_of_blinking_sprites(self):
+        player,_=self.harness()
+        visible=QImage(2,2,QImage.Format_RGB32);visible.fill(0xffff0000)
+        invisible=QImage(2,2,QImage.Format_RGB32);invisible.fill(0xff000000)
+        frames=[visible,invisible]*3
+        player.core.frame.side_effect=[(frame,b'abcd') for frame in frames]
+        shown=[]
+        player.screen.update.side_effect=lambda: shown.append(player.screen.frame.pixel(0,0))
+        clock=[100.0]
+        with patch('emuluna.player.combined_axes',return_value=(0,0,0,0)), \
+             patch('emuluna.player.time.perf_counter',side_effect=lambda: clock[0]):
+            for _ in frames:
+                clock[0]+=.06
+                Player.tick(player)
+        self.assertEqual(shown,[frame.pixel(0,0) for frame in frames])
+
+    def test_missed_deadline_does_not_run_a_burst_of_normal_frames(self):
+        player,_=self.harness();player.next_frame=99.94
+        with patch('emuluna.player.combined_axes',return_value=(0,0,0,0)), \
+             patch('emuluna.player.time.perf_counter',return_value=100):
+            Player.tick(player)
+        self.assertAlmostEqual(player.next_frame,100+1/60)
+        with patch('emuluna.player.time.perf_counter',return_value=100.006):
+            Player.tick(player)
+        self.assertEqual(player.core.frame.call_count,1)

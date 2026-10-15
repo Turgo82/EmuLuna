@@ -2,6 +2,17 @@
 
 This file records user-facing changes to EmuLuna releases.
 
+## [Unreleased]
+
+### Fixed
+
+- Use direct OpenGL presentation in Auto mode. Avoid the Qt Quick Vulkan path
+  rendering at half rate on Wayland and hiding one phase of blinking sprites
+  despite full-speed emulation. Keep explicit Vulkan available experimentally.
+- Present every normal-speed frame, preserving alternating-frame effects such
+  as NES damage blinking. Limit late display skipping to fast-forward and reset
+  missed normal-speed deadlines to avoid catch-up bursts and FPS spikes.
+
 ## [0.20.0] - 2026-10-11
 
 This release adds independent themes, an animated Setup Assistant, console-based

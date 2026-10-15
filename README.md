@@ -121,7 +121,9 @@ cores are updated only when you request it, and the previous build is kept for
 rollback. Installed cores, ROMs, saves, and downloaded artwork live in your
 library folder, outside the AppImage.
 
-**Auto** display mode tries Vulkan, then OpenGL, then software presentation.
+**Auto** display mode uses OpenGL, with software fallback. Vulkan presentation
+remains an explicit experimental choice; the Qt Quick path can lose alternating
+frames on Wayland even while the emulator runs at full speed.
 Software-rendered cores can still be displayed through Vulkan or OpenGL.
 Hardware-rendered cores must receive the context they request; EmuLuna
 supports libretro OpenGL contexts and Beetle PSX HW's Vulkan context. Beetle

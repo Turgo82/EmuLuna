@@ -800,9 +800,9 @@ class Player(QMainWindow):
                 del self.audio_pending[:written]
 
     def presentation_due(self, now, period):
-        """Bound software-frame catch-up work without freezing the display."""
+        """Reduce fast-forward uploads without dropping normal-speed effects."""
         final_capture = self.frame_limit and self.frames + 1 >= self.frame_limit
-        if (not self.core.hardware and not final_capture
+        if (self.fast and not self.core.hardware and not final_capture
                 and now > self.next_frame + period * .5
                 and self.skipped_presentations < 2):
             self.skipped_presentations += 1
@@ -822,7 +822,11 @@ class Player(QMainWindow):
         if now < self.next_frame:
             return
         period = 1 / (self.core.fps * (self.fast_speed if self.fast else 1))
-        if now - self.next_frame > 0.15:
+        # Rebase after a missed normal-speed deadline instead of racing through
+        # old deadlines. Qt can merge those rapid updates and repeatedly hide
+        # one phase of alternating-frame sprites (damage blinking, for example).
+        max_lateness = 0.15 if self.fast else period
+        if now - self.next_frame > max_lateness:
             self.next_frame = now
         self.next_frame += period
         try:
@@ -874,8 +878,8 @@ class Player(QMainWindow):
                 self._aspect_resize_axis = 'width'
                 self._window_aspect = self.gameplay_aspect()
                 self.aspect_resize_timer.start(0)
-            # Drop only a display submission when late, never emulation or audio.
-            # Fullscreen uploads/filters can otherwise consume the catch-up budget.
+            # Every normal-speed frame matters for alternating-frame effects.
+            # Only fast-forward can omit uploads; emulation/audio still run.
             if self.presentation_due(time.perf_counter(), period):
                 self.screen.update()
             self.frames += 1
