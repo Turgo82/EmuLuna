@@ -50,7 +50,7 @@ class SmoothScroll(QObject):
         angle = event.angleDelta().y()
         if not angle:
             return False
-        delta = -angle / 120 * max(1, QApplication.wheelScrollLines()) * 40
+        delta = -angle / 120 * max(1, QApplication.wheelScrollLines()) * 50
         running = self.animation.state() == QAbstractAnimation.Running
         current = self.bar.value()
         # Reversing direction should respond immediately, without fighting
