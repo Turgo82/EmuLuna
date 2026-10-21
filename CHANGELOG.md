@@ -2,6 +2,14 @@
 
 This file records user-facing changes to EmuLuna releases.
 
+## [0.20.2] - 2026-10-20
+
+### Changed
+
+- Increase mouse-wheel scrolling distance by 25% in library grids, lists,
+  save states and screenshots, while keeping the same smooth animation.
+  Touchpad pixel scrolling remains unchanged.
+
 ## [0.20.1] - 2026-10-14
 
 This release fixes missing damage-blink frames and uneven presentation by using
