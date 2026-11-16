@@ -1,5 +1,14 @@
 # EmuLuna
 
+<p align="center">
+  <img src="screenshots/emuluna-gameplay.png" alt="EmuLuna library and gameplay">
+</p>
+
+[Website](https://emuluna-retro-library.turgo82.chatgpt.site/) ·
+[GitHub releases](https://github.com/Turgo82/EmuLuna/releases)
+<br>
+<a href="https://www.buymeacoffee.com/turgo"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me a Coffee" style="height: 60px; width: 217px;"></a>
+
 EmuLuna is an independent Linux game library and libretro frontend inspired by OpenEmu. The Rust application is now the main development version, with native GPU presentation, controller configuration, themes, and a gameplay overlay.
 
 ## Build and run
@@ -27,7 +36,7 @@ Import games with **Library → Import games…**, the bottom-left **+**, Ctrl+O
 
 **Library → Back up disc…** and **+ → Back up disc…** open the native physical-CD wizard. It uses the read-only Direct MMC helper, preserves CD audio tracks, and offers BIN/CUE or verified CHD output. CHD requires `chdman`; artwork conversion uses FFmpeg. The cdrdao compatibility reader and its 0–3 audio-checking levels are also available. Completed backups are added with **Done**. Hardware validation of this new port remains pending.
 
-The main window remembers its normal size, position (when exposed by the window manager), and maximized state. The Rust port is still in progress; collection creation and other parity work remain. No new Rust AppImage is published by this change.
+The main window remembers its normal size, position (when exposed by the window manager), and maximized state. Download the Linux AppImage from [GitHub releases](https://github.com/Turgo82/EmuLuna/releases).
 
 ## Source layout
 
@@ -37,6 +46,5 @@ The main window remembers its normal size, position (when exposed by the window 
 - `native/`: shared native libretro host and CHD support, used by Rust.
 - `data/`: active artwork, controller layouts, themes, core catalogs, and shader sources.
 - `tests/`: native contract fixtures and ROM generators used by Rust validation.
-- `archive/legacy-python/`: old Python/Qt application, tests, packaging, and release workflow, retained for reference only.
 
 See [Rust validation](docs/VALIDATION.md), [hands-on testing](docs/HANDS_ON.md), and [third-party notices](THIRD_PARTY_NOTICES.md). Existing parity/export developer scripts may consult archived Python code; the running Rust app does not load it.
