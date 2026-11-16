@@ -1,6 +1,5 @@
 MIT License
 
-Copyright (c) 2026 OpenEmu Linux port contributors
 Copyright (c) 2026 EmuLuna contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -22,7 +21,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 This license covers original EmuLuna frontend/native host code and original
-console SVG badges. Existing copyright notices are preserved from the prior
-project name. Separately licensed dependencies and assets keep their own terms;
+console SVG badges. Separately licensed dependencies and assets keep their own terms;
 see THIRD_PARTY_NOTICES.md. Original diagnostic generators and generated ROM
 bytes are dedicated to CC0-1.0: https://creativecommons.org/publicdomain/zero/1.0/

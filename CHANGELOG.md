@@ -2,7 +2,11 @@
 
 This file records user-facing changes to EmuLuna releases.
 
-## [Unreleased]
+## [0.21.0] - 2026-11-15
+
+- Rewrote the application in Rust, with a native libretro host.
+- Added recovery of compatible save states from retained core builds.
+- Reduced routine game-session notifications.
 
 ### Added
 
