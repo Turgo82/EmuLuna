@@ -1,0 +1,7 @@
+[workspace]
+members = ["crates/theme", "crates/state-file", "apps/library", "crates/library-model", "crates/playback-control", "crates/native-input", "crates/session", "crates/libretro-host", "apps/player", "crates/audio-transport", "apps/native-player", "crates/gl-presenter", "crates/audio-device", "crates/launch-config", "crates/shader-pack"]
+resolver = "2"
+
+[workspace.package]
+edition = "2021"
+license = "MIT"

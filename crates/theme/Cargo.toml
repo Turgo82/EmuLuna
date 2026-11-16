@@ -1,0 +1,8 @@
+[package]
+name = "emuluna-theme"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+[dependencies]
+egui = "=0.31.1"
+serde_json = "=1.0.154"

@@ -2,6 +2,120 @@
 
 This file records user-facing changes to EmuLuna releases.
 
+## [Unreleased]
+
+### Added
+
+- Stop repainting the full raster window underneath each OpenGL gameplay frame.
+  Let the GPU surface clear its own black borders, preserving software fallback
+  and normal overlay updates while reducing shared rendering/audio overhead.
+
+- Retain a bounded recovery window after brief gameplay scheduling delays,
+  rather than immediately discarding missed audio-production time. Continue
+  presenting each normal frame and rebase after longer stalls.
+- Update the audio-clock target when changing the buffer or reconnecting an
+  output during play, clearing correction from the previous stream.
+
+- Smooth audio clock drift with bounded, gradual resampling correction, keeping
+  the playback queue balanced without changing core speed or skipping frames.
+
+- Correct audio-state/error comparisons across Qt versions so a healthy output
+  is not stopped as a failure. Retry interrupted streams up to three times,
+  preserving the chosen route, volume and pause state; log actual device errors.
+
+- Blend the disc-backup scroll area into the surrounding theme background.
+
+- Put **System** in the compact Theme dropdown instead of a separate checkbox;
+  follow OS sidebar/navigation colors without retaining the prior named palette.
+- Keep controller dropdown text readable on its light wood popup background in
+  every named theme and OS light/dark mode. Match library margins to the grid.
+- Name completed disc files after the reviewed game title, including CHD and
+  matching BIN/CUE references, while retaining game/save identity and duplicate
+  recognition. Sanitize filenames and refresh the stored file inventory.
+
+- Add Sega CD and 32X low-pass toggles to gameplay audio menus, using the core's
+  native filters. Keep Sega CD off initially to avoid filtering CD music; use
+  the Genesis-style 60% default for 32X. Save choices per console and core.
+- Expose the same audio toggle for Genesis when PicoDrive is selected, with
+  explanatory tooltips and no changes to shared Master System/Game Gear defaults.
+
+- Label the success-screen completion action **Done**; save the verified backup
+  to the library and close only after import succeeds.
+- Remember the disc-backup agreement and add **Disc backup legal agreement** to
+  About, where users can review it or clear acceptance to restore the prompt.
+
+- Open web links, library/ROM folders, themes, system files and screenshots
+  through the host desktop with AppImage library/plugin paths removed from the
+  child environment. Keep the UI responsive and report rejected launch requests.
+
+- Keep the disc-backup window at a fixed screen-fitting size, with its action
+  buttons pinned below a scrollable form so accepting the agreement or revealing
+  track details cannot shrink or hide the backup controls.
+
+- Replace the completed backup form with a green Success screen, larger centered
+  cover animation, **Add to library** and **Back up another** actions. Keep
+  verified images staged until import; retain them for retry after import errors.
+- Show clear dropdown arrows in the disc wizard and match progress-bar colors
+  to the selected theme, including Classic and Daylight.
+
+- Rename the menu and Plus action to **Back up disc…**. Require an unchecked
+  ownership/backup agreement before opening the workflow, with relevant
+  Section 117 excerpts, conditions and official Copyright Office links.
+
+- Default disc backups to the faster direct MMC reader, retaining cdrdao as a
+  compatibility option with adjustable audio checking.
+- Offer lossless CHD output alongside BIN/CUE, with compression and verification
+  before managed library import. Bundle the CHD compressor in AppImages.
+
+- Show boundary-scan elapsed/activity times and retain complete bounded reader
+  diagnostics and final backup outcomes, including conversion/import failures.
+
+- Put the audio output selector in General settings. Follow system-default and
+  saved output changes in running games without restarting unrelated audio routes.
+- Fall back to the system default when a selected device disconnects and return
+  to the selected device when it reconnects, preserving pause and mute state.
+- Add **Back up disc…** to the Library menu and Plus menu. A guided popup detects
+  the optical drive, shows a blank CD while identifying the inserted game,
+  looks up its cover and title, and offers **Back up to library**.
+- Preserve Sega CD / Mega-CD data and audio tracks in a complete BIN/CUE
+  backup, including stored pregaps and corrected CD-audio sample byte order.
+  Also support standard Saturn, PlayStation and PC Engine CD game discs.
+- Add cancellable reads, track/size validation, disc-change checks, artwork
+  fallback and verified managed library import. Bundle the CD reader and
+  converter in AppImages, with their licenses and matching source packages.
+- Show the current data/audio track, transferred bytes, read speed and estimated
+  time remaining. Animate the filled progress area while bytes advance; pause
+  the ETA and show a waiting message when the drive stops delivering data.
+  Retain the last reader log for troubleshooting after a failed or cancelled rip.
+- Use audio correction mode 2, retaining overlapping reads and verification
+  without mode 3's additional scratch repair, to reduce prolonged audio retries.
+- Let users choose audio checking levels 0–3 before backing up a disc, with
+  explanations of speed and verification tradeoffs and level 2 selected initially.
+- Use separate audio/subchannel reads on the MATSHITA CW-8123, retaining track
+  boundaries and pregaps instead of relying on its advertised combined-read support.
+- Validate explicit CUE pregaps against the physical track timeline so valid
+  compatibility-mode images are accepted while truncated audio is rejected.
+- Stop failed CD read commands immediately so a disconnected drive cannot
+  continue showing misleading progress or produce an imported image.
+
+### Performance
+
+- Schedule gameplay wake-ups against frame deadlines instead of polling the
+  GUI every millisecond; keep normal-speed frame presentation intact.
+
+- Refill available audio-device space in bounded batches after a delayed feeder
+  callback, retaining partial writes and stopping immediately on backpressure.
+- Show emulation work time and the frame budget in the performance display to
+  distinguish core load from presentation/audio stalls.
+
+- Deliver already-produced game audio from a dedicated Qt feeder thread using
+  a bounded, reusable PCM ring, reducing dependence on GUI repaint timing.
+- Preserve partial writes and pause/reset/device-change/shutdown behavior; show
+  audio underruns, queued time and overflow counts in the performance display.
+
+- Cache FPS graph history buckets and drawing paths between diagnostic refreshes,
+  reducing redundant overlay work while preserving frame-time and 1% low metrics.
+
 ## [0.20.2] - 2026-10-20
 
 ### Changed

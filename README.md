@@ -1,188 +1,42 @@
-<p align="center">
-  <img src="emuluna/data/branding/emuluna-logo.png" width="430" alt="EmuLuna logo">
-</p>
-
 # EmuLuna
 
-EmuLuna is a desktop library and emulator frontend for classic games. Browse
-your collection by console, find cover art, configure controllers, and play
-through downloadable libretro cores. It runs on Linux; Windows support is
-still in development. EmuLuna is independent of RetroArch and OpenEmu.
+EmuLuna is an independent Linux game library and libretro frontend inspired by OpenEmu. The Rust application is now the main development version, with native GPU presentation, controller configuration, themes, and a gameplay overlay.
 
-<p align="center">
-  <img src="screenshots/emuluna-gameplay.png" alt="EmuLuna library with a Sega Mega Drive game running">
-</p>
+## Build and run
 
-[Website](https://emuluna-retro-library.turgo82.chatgpt.site/) ·
-[GitHub releases](https://github.com/Turgo82/EmuLuna/releases) ·
-<br>
-<a href="https://www.buymeacoffee.com/turgo" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me a Coffee" style="height: 60px !important;width: 217px !important;" ></a>
-
-## Get started
-
-Download the latest Linux AppImage from
-[GitHub releases](https://github.com/Turgo82/EmuLuna/releases), make it
-executable, and open it. Or, from a source checkout, run `./run.sh` (or
-`Launch EmuLuna.sh`). The source version needs Python 3, PySide6, the
-native host built with `./build.sh`, and SDL2 for controller support.
-
-Use the **+** button at the bottom of the sidebar to import games or folders.
-EmuLuna can download a default core for a supported console when you import a
-game. You can also manage cores in **Settings → Cores**, or right-click a console
-to choose its installed core. BIOS files, games, and their licenses are yours
-to supply; EmuLuna does not include them.
-
-**Settings → System Files** shows essential and recommended files for your
-consoles and selected cores. Optional boot ROMs and accessories are hidden until
-you choose **Show optional files and accessories**. Shared files appear once;
-regional BIOS choices only need to cover the regions you play.
-
-## What you can do
-
-- Organize games by console or collection. Search, rate favorites, switch
-  between grid and list views. The grid fits the window automatically, with
-  a consistent left edge, even horizontal gaps and fixed covers capped at
-  256 pixels on the longest edge, with matching heights within each console.
-  Resizing only changes spacing and wrapping.
-- Download cover art automatically after imports, optionally check for
-  missing covers at startup, or right-click a game to pick a cover visually.
-  A sharper cached preview fills each cover while its full image loads. Use
-  **Advanced → Rebuild cover cache** if those previews become stale.
-  Downloads use WebP at quality 85 by default. **Advanced → Developer options**
-  lets you choose quality 75, 85, 95 or lossless. **Convert existing
-  covers to WebP** converts older artwork in the background and refreshes previews.
-- Play with keyboard or controller, customize controls for each console,
-  and use save states, screenshots, video filters, fullscreen, and scaling.
-- Browse save states and screenshots separately. Remove a game from the
-  library or move its files to Trash, with separate choices for states and
-  screenshots.
-
-Most games open in their own gameplay window. Move the pointer over that
-window to show its controls. F5 saves a state, F8 loads one, F11 switches
-fullscreen, and F12 takes a screenshot. Closing a game creates an automatic
-state; starting it again can resume that state. Manual states and in-game
-saves are separate.
-
-Library and game windows remember their size and maximized state. On Wayland
-desktops, EmuLuna uses native Wayland windows; KDE title bars match its theme.
-Drag the bottom-right grip to resize game windows in small steps while keeping
-the core's display proportions throughout the drag. Native border resizing is
-locked; Gameplay options → Scaling also provides Maximize / Restore.
-The gameplay background and fullscreen borders are pure black.
-Advanced → Show FPS while playing includes a ten-second FPS graph, 1% low,
-current frame interval and peak interval in milliseconds. The 1% low uses the
-slowest 1% of intervals after at least 100 samples. Pauses and fast-forward are
-excluded; these metrics measure core frame pacing, not monitor presentation.
-ParaLLEl N64 trims small, fully black outer margins after they persist for
-three seconds in a sufficiently bright scene, then keeps that adjustment for
-the rest of the play session. Mostly black scenes and fades are ignored during
-detection. Toggle the setting off and on to recalibrate. The core's display
-proportions are preserved.
-The game overlay's Gameplay options → Scaling → Automatic N64 border adjustment
-toggles this immediately and remembers your choice. Screen borders lets you disable it for one game
-or use the renderer's native overscan controls instead. Native crop changes
-require reopening the game. Choices are remembered per game and renderer;
-Restore Defaults enables automatic alignment again.
-
-EmuLuna keeps your library in `~/.local/share/emuluna` by default (or under
-`$XDG_DATA_HOME` when set).
-If an older `openemu-linux` library exists, EmuLuna opens it in place. It
-does not move or rename your games. Use `--data-dir` or `EMULUNA_DATA_DIR`
-to choose another location.
-
-Choose **Settings → Library → Move library…** to store `consoles` on another
-folder or drive. ROMs, saves, states and screenshots move together after an audit
-and verified copy. The library index, settings and cores stay in app data.
-
-On first run, a setup assistant walks through your console folder, appearance,
-import copying and recommended emulator downloads. Dismissing setup leaves it available next launch. Developers can
-try **Advanced → Developer options → Preview onboarding…** without changing
-settings or moving files. Existing libraries skip first-run setup after updates.
-
-## Themes and library folders
-
-Choose **Settings → General → Theme**: Luna (default), Daylight, or Classic.
-Create and reload custom themes there too. Each theme is an independent folder
-with its own colors, styles, fonts and controller background. [Theme guide](docs/THEMES.md).
-
-New libraries use `consoles/<system>/roms`, `saves`, `screenshots` and `states`,
-with a readable `games.json` inventory for each console. Multi-file discs keep
-private track folders; single-file games share the ROM folder. Existing libraries
-can switch with **Settings → Library → Move library…**; a database
-backup is kept during organization, and external files stay where they are.
-Migration checks for missing files and asks before moving anything.
-**Advanced → Library audit** can reconnect original ROMs or remove stale entries
-while keeping saved files. [Storage guide](docs/LIBRARY_STORAGE.md).
-
-## Cores and graphics
-
-EmuLuna's curated catalog contains 30 downloadable libretro cores. Existing
-cores are updated only when you request it, and the previous build is kept for
-rollback. Installed cores, ROMs, saves, and downloaded artwork live in your
-library folder, outside the AppImage.
-
-**Auto** display mode uses OpenGL, with software fallback. Vulkan presentation
-remains an explicit experimental choice; the Qt Quick path can lose alternating
-frames on Wayland even while the emulator runs at full speed.
-Software-rendered cores can still be displayed through Vulkan or OpenGL.
-Hardware-rendered cores must receive the context they request; EmuLuna
-supports libretro OpenGL contexts and Beetle PSX HW's Vulkan context. Beetle
-PSX HW tries Vulkan, then OpenGL, then software for new games. Save states
-resume with the renderer that created them. Beetle PSX HW also needs a
-region-matched PlayStation BIOS supplied by the user.
-
-Dreamcast uses Flycast with Vulkan or OpenGL. Import GDI, CDI, CHD, CUE, or
-M3U disc sets; keep every GDI/CUE track with its descriptor. An optional BIOS
-belongs in `system/dc/dc_boot.bin`. Dreamcast VMU saves are kept per game.
-For polygon or transparency glitches, try **Dreamcast Video → Accurate
-transparency** in the game's menu. It enables Flycast's per-pixel sorting;
-this is more accurate but uses more GPU resources. The choice is remembered
-for Dreamcast games.
-
-CHD imports identify supported consoles from the disc contents, including
-Dreamcast, PlayStation, Sega CD, Saturn and TurboGrafx-CD. If a disc cannot be
-identified, choose its console in Import issues. This identifies the console;
-cover matching still uses the game title. No separate CHD tools are needed.
-
-The video-filter menu includes CRT, LCD, smoothing, and other bundled
-community shaders. Some effects require a capable GPU. See the
-[shader notes](emuluna/data/shaders/README.md) for sources and compatibility.
-
-## Build and test
-
-For a source build, install Python 3, the packages in `requirements.txt`,
-a C++14 compiler, CMake, Ninja, and SDL2. Then run:
+Install Rust, CMake, Ninja, a C++ compiler, and the platform libraries described in [the Rust development guide](docs/RUST_DEVELOPMENT.md). Run:
 
 ```sh
 ./build.sh
 ./run.sh
 ```
 
-To build a Linux AppImage, run `./packaging/appimage/build-appimage.sh`.
-The result appears in `dist/`. The first build downloads its packaging tools.
-GitHub release tags build an AppImage and checksum through the release
-workflow.
+`Launch EmuLuna.sh` opens the same Rust application. On first run, choose
+`~/EmuLuna`, create the folder on another drive, or open a portable EmuLuna
+library. Games, saved progress, BIOS files, and settings live under the chosen
+root. The only system configuration entry is the location pointer in
+`${XDG_CONFIG_HOME:-~/.config}/emuluna/library-location.json`.
 
-Run the automated tests with:
+To migrate the previous default library from the terminal, close EmuLuna and
+run `./run.sh --migrate-library "$HOME/EmuLuna"`. The migration copies the
+library, checks the new index, and switches to the new location. It keeps the
+original for rollback. To relocate a portable library later, use **Settings →
+Library → Move library…**.
 
-```sh
-QT_QPA_PLATFORM=offscreen PYTHONPATH=. python3 -m unittest discover -s tests
-```
+Import games with **Library → Import games…**, the bottom-left **+**, Ctrl+O, or by dropping ROMs/folders into the window. Folder imports use Ctrl+Shift+O. The native importer follows the copy/external-file preference, copies managed files into the console library, skips duplicates, supports cartridge ZIPs, and keeps CUE/GDI/CCD/M3U disc sets together. Choose the console if a disc cannot be identified automatically.
 
-The project is still in development. Core availability does not guarantee
-every game works. Disc switching, wider hardware-core support, and Windows
-packaging remain on the [roadmap](ROADMAP.md). See the
-[changelog](CHANGELOG.md) for release details and the
-[core catalog checklist](docs/CORE_CATALOG_CHECKLIST.md) for supported cores.
+**Library → Back up disc…** and **+ → Back up disc…** open the native physical-CD wizard. It uses the read-only Direct MMC helper, preserves CD audio tracks, and offers BIN/CUE or verified CHD output. CHD requires `chdman`; artwork conversion uses FFmpeg. The cdrdao compatibility reader and its 0–3 audio-checking levels are also available. Completed backups are added with **Done**. Hardware validation of this new port remains pending.
 
-## Credits and licenses
+The main window remembers its normal size, position (when exposed by the window manager), and maximized state. The Rust port is still in progress; collection creation and other parity work remain. No new Rust AppImage is published by this change.
 
-**Controller illustrations: Pinapple_Graphics**, from the user-supplied
-Controller_Vectors_by_Pinapple_Graphics_(Normal_300ppi)_v2.1 set.
-Console icons include OpenEmu artwork. Community shaders, runtime libraries,
-downloaded cores, game art, and the user-supplied unlock sound have their own
-terms. The logo and Luna mascot were supplied for this project.
+## Source layout
 
-EmuLuna's original code is MIT-licensed. The diagnostic cartridges are CC0.
-No games or BIOS files are bundled. Read [LICENSE](LICENSE) and
-[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for credits and provenance.
+- `apps/` and `crates/`: active Rust application and shared crates.
+- `Cargo.toml`: root Rust workspace.
+- `tools/`: development and validation scripts.
+- `native/`: shared native libretro host and CHD support, used by Rust.
+- `data/`: active artwork, controller layouts, themes, core catalogs, and shader sources.
+- `tests/`: native contract fixtures and ROM generators used by Rust validation.
+- `archive/legacy-python/`: old Python/Qt application, tests, packaging, and release workflow, retained for reference only.
+
+See [Rust validation](docs/VALIDATION.md), [hands-on testing](docs/HANDS_ON.md), and [third-party notices](THIRD_PARTY_NOTICES.md). Existing parity/export developer scripts may consult archived Python code; the running Rust app does not load it.

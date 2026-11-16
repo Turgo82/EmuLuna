@@ -1,0 +1,21 @@
+[package]
+name = "emuluna-gl-presenter"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+[dependencies]
+glow = "=0.16.0"
+sdl2 = "=0.38.0"
+emuluna-libretro-host = { path = "../libretro-host" }
+emuluna-audio-device = { path = "../audio-device" }
+emuluna-session = { path = "../session" }
+emuluna-shader-pack = { path = "../shader-pack" }
+image = { version = "=0.25.10", default-features = false, features = ["png"] }
+emuluna-native-input = { path = "../native-input" }
+emuluna-playback-control = { path = "../playback-control" }
+emuluna-state-file = { path = "../state-file" }
+egui = "=0.31.1"
+egui_glow = "=0.31.1"
+emuluna-theme = { path = "../theme" }
+tempfile = "=3.23.0"
+serde_json = "=1.0.154"

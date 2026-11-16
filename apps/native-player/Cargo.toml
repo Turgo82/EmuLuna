@@ -1,0 +1,16 @@
+[package]
+name = "emuluna-native-player"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+[dependencies]
+emuluna-libretro-host = { path = "../../crates/libretro-host" }
+emuluna-audio-transport = { path = "../../crates/audio-transport" }
+sdl2 = "=0.38.0"
+emuluna-gl-presenter = { path = "../../crates/gl-presenter" }
+emuluna-audio-device = { path = "../../crates/audio-device" }
+emuluna-session = { path = "../../crates/session" }
+emuluna-launch-config = { path = "../../crates/launch-config" }
+emuluna-native-input = { path = "../../crates/native-input" }
+emuluna-playback-control = { path = "../../crates/playback-control" }
+emuluna-state-file = { path = "../../crates/state-file" }

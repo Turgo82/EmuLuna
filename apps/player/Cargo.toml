@@ -1,0 +1,7 @@
+[package]
+name = "emuluna-player-probe"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+[dependencies]
+emuluna-libretro-host = { path = "../../crates/libretro-host" }

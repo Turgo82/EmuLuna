@@ -20,3 +20,11 @@ target_link_libraries(emuluna-chd-probe PRIVATE chdr-static)
 set_target_properties(emuluna-chd-probe PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/cores")
 install(TARGETS emuluna-chd-probe RUNTIME DESTINATION lib/emuluna/cores)
+
+# Read-only Linux optical backup helper used by the native Rust wizard.
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    add_executable(emuluna-disc-backup native/disc_backup.cpp)
+    set_target_properties(emuluna-disc-backup PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/cores")
+    install(TARGETS emuluna-disc-backup RUNTIME DESTINATION lib/emuluna/cores)
+endif()

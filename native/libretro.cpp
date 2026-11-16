@@ -8,6 +8,8 @@
 #include "vulkan_host.h"
 #include <dlfcn.h>
 #include <algorithm>
+#include <array>
+#include <chrono>
 #include <atomic>
 #include <cmath>
 #include <cstdarg>
@@ -17,6 +19,7 @@
 #include <iterator>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -37,6 +40,7 @@ struct Host {
     double fps = 60, rate = 48000, aspect = 0;
     double phase = 0;
     double accumulated = 0, sum_left = 0, sum_right = 0;
+    double audio_ratio = 1, interval_step = 0;
     int16_t previous_left = 0, previous_right = 0;
     bool have_previous = false;
     std::string rom, save, system, core, error;
@@ -44,9 +48,16 @@ struct Host {
     std::vector<uint32_t> pixels;
     std::vector<int16_t> audio;
     std::vector<int16_t> output;
+    struct AudioRateChange { size_t offset; double rate; };
+    std::vector<AudioRateChange> audio_rate_changes;
+    bool in_frame = false;
+    double resampler_rate = 0;
     std::map<std::string,std::string> options;
     std::atomic<uint16_t> rumble[4][2];
     std::atomic<bool> variables_updated{false};
+    std::array<retro_perf_counter*, 256> perf_counters{};
+    unsigned perf_count = 0;
+    std::mutex perf_registry_mutex;
     Host() {
         for (auto &port : rumble) for (auto &motor : port) motor.store(0);
     }
@@ -98,6 +109,69 @@ static bool valid_av(const retro_system_av_info &info) {
         info.geometry.base_height > 0 && info.geometry.base_height <= 1024 &&
         std::isfinite(info.timing.fps) && info.timing.fps >= 10 && info.timing.fps <= 240 &&
         std::isfinite(info.timing.sample_rate) && info.timing.sample_rate >= 8000 && info.timing.sample_rate <= 4194304;
+}
+// The callbacks are opt-in core services. CPU dispatch reports only features
+// detected on this machine; the profiler uses a fixed registry and never adds
+// allocation or frontend locks to start/stop updates.
+static retro_time_t perf_time_usec() {
+    return std::chrono::duration_cast<std::chrono::microseconds>(
+        std::chrono::steady_clock::now().time_since_epoch()).count();
+}
+static retro_perf_tick_t perf_counter_ticks() {
+    return std::chrono::duration_cast<std::chrono::nanoseconds>(
+        std::chrono::steady_clock::now().time_since_epoch()).count();
+}
+static uint64_t perf_cpu_features() {
+    static const uint64_t features = [] {
+        uint64_t flags = 0;
+#if (defined(__x86_64__) || defined(__i386__)) && (defined(__GNUC__) || defined(__clang__))
+        __builtin_cpu_init();
+        if (__builtin_cpu_supports("mmx")) flags |= RETRO_SIMD_MMX;
+        if (__builtin_cpu_supports("sse")) flags |= RETRO_SIMD_SSE;
+        if (__builtin_cpu_supports("sse2")) flags |= RETRO_SIMD_SSE2;
+        if (__builtin_cpu_supports("sse3")) flags |= RETRO_SIMD_SSE3;
+        if (__builtin_cpu_supports("ssse3")) flags |= RETRO_SIMD_SSSE3;
+        if (__builtin_cpu_supports("sse4.1")) flags |= RETRO_SIMD_SSE4;
+        if (__builtin_cpu_supports("sse4.2")) flags |= RETRO_SIMD_SSE42;
+        if (__builtin_cpu_supports("avx")) {
+            flags |= RETRO_SIMD_AVX;
+            if (__builtin_cpu_supports("avx2")) flags |= RETRO_SIMD_AVX2;
+            if (__builtin_cpu_supports("fma")) flags |= RETRO_SIMD_FMA3;
+        }
+        if (__builtin_cpu_supports("aes")) flags |= RETRO_SIMD_AES;
+#elif defined(__aarch64__) || defined(__ARM_NEON) || defined(__ARM_NEON__)
+        flags |= RETRO_SIMD_NEON;
+#endif
+        return flags;
+    }();
+    return features;
+}
+static void perf_register_counter(retro_perf_counter *counter) {
+    if (!active || !counter || !counter->ident) return;
+    std::lock_guard<std::mutex> guard(active->perf_registry_mutex);
+    if (counter->registered || active->perf_count >= active->perf_counters.size()) return;
+    active->perf_counters[active->perf_count++] = counter;
+    counter->registered = true;
+}
+static void perf_start_counter(retro_perf_counter *counter) {
+    if (!counter) return;
+    counter->start = perf_counter_ticks();
+    ++counter->call_cnt;
+}
+static void perf_stop_counter(retro_perf_counter *counter) {
+    if (!counter) return;
+    counter->total += perf_counter_ticks() - counter->start;
+}
+static void perf_log_counters() {
+    if (!active) return;
+    std::lock_guard<std::mutex> guard(active->perf_registry_mutex);
+    for (unsigned i = 0; i < active->perf_count; ++i) {
+        const auto *counter = active->perf_counters[i];
+        if (!counter->call_cnt) continue;
+        std::fprintf(stderr, "[Core perf] %.128s: calls=%llu mean_ns=%llu\n",
+            counter->ident, static_cast<unsigned long long>(counter->call_cnt),
+            static_cast<unsigned long long>(counter->total / counter->call_cnt));
+    }
 }
 template<class T> static void defaults(const T *definitions) {
     if (!definitions) return;
@@ -181,6 +255,12 @@ static bool environment(unsigned command, void *data) {
     case RETRO_ENVIRONMENT_GET_CORE_ASSETS_DIRECTORY: *static_cast<const char**>(data) = active->system.c_str(); return true;
     case RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY: *static_cast<const char**>(data) = active->save.c_str(); return true;
     case RETRO_ENVIRONMENT_GET_LIBRETRO_PATH: *static_cast<const char**>(data) = active->core.c_str(); return true;
+    case RETRO_ENVIRONMENT_GET_PERF_INTERFACE:
+        if (!data) return false;
+        *static_cast<retro_perf_callback*>(data) = {
+            perf_time_usec, perf_cpu_features, perf_counter_ticks,
+            perf_register_counter, perf_start_counter, perf_stop_counter, perf_log_counters};
+        return true;
     case RETRO_ENVIRONMENT_GET_LOG_INTERFACE: static_cast<retro_log_callback*>(data)->log = log_message; return true;
     case RETRO_ENVIRONMENT_GET_LANGUAGE: *static_cast<unsigned*>(data) = RETRO_LANGUAGE_ENGLISH; return true;
     case RETRO_ENVIRONMENT_GET_INPUT_MAX_USERS: *static_cast<unsigned*>(data) = 4; return true;
@@ -227,9 +307,16 @@ static bool environment(unsigned command, void *data) {
         const unsigned maximum_width = std::max(info->geometry.base_width, info->geometry.max_width);
         const unsigned maximum_height = std::max(info->geometry.base_height, info->geometry.max_height);
         if (maximum_width > 4096 || maximum_height > 4096) return false;
-        if (active->rate != info->timing.sample_rate) {
-            active->phase = active->sum_left = active->sum_right = active->accumulated = 0;
-            active->have_previous = false;
+        if (active->in_frame && active->rate != info->timing.sample_rate) {
+            // Audio already submitted belongs to the previous driver rate.
+            const size_t offset = active->audio.size();
+            auto &changes = active->audio_rate_changes;
+            if (!changes.empty() && changes.back().offset == offset)
+                changes.back().rate = info->timing.sample_rate;
+            else {
+                if (changes.size() >= 4096) return false;
+                changes.push_back({offset, info->timing.sample_rate});
+            }
         }
         active->fps = info->timing.fps; active->rate = info->timing.sample_rate;
         active->aspect = info->geometry.aspect_ratio;
@@ -268,11 +355,11 @@ static void video(const void *data, unsigned width, unsigned height, size_t pitc
         active->last_frame_hardware = true;
         return;
     }
-    if (!width || !height || width > 1024 || height > 1024) {
+    if (!width || !height || width > 4096 || height > 4096) {
         active->error = "This core requires unsupported video output."; return;
     }
     unsigned bytes = active->pixel_format == RETRO_PIXEL_FORMAT_XRGB8888 ? 4 : 2;
-    if (pitch < width * bytes || pitch > 1024 * 16) { active->error = "Invalid core video stride."; return; }
+    if (pitch < width * bytes || pitch > 4096 * 16) { active->error = "Invalid core video stride."; return; }
     active->last_frame_hardware = false;
     active->width = width; active->height = height; active->pixels.resize(width * height);
     for (unsigned y = 0; y < height; ++y) {
@@ -491,23 +578,23 @@ void *el_libretro_create(const char *core, const char *rom, const char *save, co
     return h;
 }
 void *el_create(const char*, const char*) { last_error = "Select a Libretro core file first."; return nullptr; }
-void el_reset(void *instance) {
-    auto h = static_cast<Host*>(instance);
-    for (auto &port : h->rumble) for (auto &motor : port) motor.store(0, std::memory_order_relaxed);
-    h->reset();
+static void reset_audio_resampler(Host *h) {
+    h->phase = h->sum_left = h->sum_right = h->accumulated = 0;
+    h->interval_step = 0;
+    h->have_previous = false;
+    h->resampler_rate = 0;
 }
-int el_frame(void *instance, unsigned keys) {
-    auto h = static_cast<Host*>(instance); h->keys[0] = keys; h->audio.clear();
-    // NULL video callbacks retain the previous framebuffer, including its API.
-    h->run();
-    if (!h->error.empty() || h->shutdown) return -1;
-    // Convert each core's native rate (including SameBoy's MHz-rate audio) to the
-    // desktop's 48 kHz stream, preserving fractional position between frames.
-    h->output.clear();
-    double step = h->rate / 48000.0;
-    for (size_t i = 0; i + 1 < h->audio.size(); i += 2) {
+static void resample_audio(Host *h, size_t begin, size_t end, double rate) {
+    if (h->resampler_rate != rate) {
+        reset_audio_resampler(h);
+        h->resampler_rate = rate;
+    }
+    const double target_step = rate / (48000.0 * h->audio_ratio);
+    if (h->interval_step <= 0) h->interval_step = target_step;
+    double step = rate >= 48000 ? h->interval_step : target_step;
+    for (size_t i = begin; i + 1 < end; i += 2) {
         int16_t left = h->audio[i], right = h->audio[i + 1];
-        if (step >= 1) {
+        if (rate >= 48000) {
             // Average the complete source interval instead of discarding
             // high-rate samples, so downsampling also provides a low-pass filter.
             double remaining = 1;
@@ -519,6 +606,9 @@ int el_frame(void *instance, unsigned keys) {
                     h->output.push_back(std::lround(h->sum_left / step));
                     h->output.push_back(std::lround(h->sum_right / step));
                     h->sum_left = h->sum_right = h->accumulated = 0;
+                    // Finish the current source interval before adopting a
+                    // new ratio. Retain fractional audio across video frames.
+                    h->interval_step = step = target_step;
                 }
             }
             continue;
@@ -531,6 +621,38 @@ int el_frame(void *instance, unsigned keys) {
         }
         h->phase -= 1.0; h->previous_left = left; h->previous_right = right;
     }
+}
+void el_reset(void *instance) {
+    auto h = static_cast<Host*>(instance);
+    if (!h) return;
+    h->shutdown = false; h->error.clear();
+    for (auto &port : h->rumble) for (auto &motor : port) motor.store(0, std::memory_order_relaxed);
+    h->reset();
+    h->audio.clear(); h->output.clear(); h->audio_rate_changes.clear();
+    reset_audio_resampler(h);
+}
+int el_frame(void *instance, unsigned keys) {
+    auto h = static_cast<Host*>(instance);
+    if (!h || !h->error.empty()) return -1;
+    if (h->shutdown) return -2;
+    h->keys[0] = keys; h->audio.clear(); h->audio_rate_changes.clear();
+    const double initial_rate = h->rate;
+    // NULL video callbacks retain the previous framebuffer, including its API.
+    h->in_frame = true;
+    h->run();
+    h->in_frame = false;
+    if (!h->error.empty()) return -1;
+    if (h->shutdown) return -2;
+    // Preserve callback chronology even when a core changes rates mid-run.
+    h->output.clear();
+    size_t begin = 0;
+    double rate = initial_rate;
+    for (const auto &change : h->audio_rate_changes) {
+        resample_audio(h, begin, change.offset, rate);
+        begin = change.offset;
+        rate = change.rate;
+    }
+    resample_audio(h, begin, h->audio.size(), rate);
     return h->output.size() / 2;
 }
 const uint32_t *el_pixels(void *h) { return static_cast<Host*>(h)->pixels.data(); }
@@ -543,6 +665,10 @@ double el_aspect_ratio(void *instance) {
     return std::isfinite(h->aspect) && h->aspect > 0 && h->aspect < 10 ? h->aspect : double(h->width) / h->height;
 }
 unsigned el_sample_rate(void*) { return 48000; }
+void el_set_audio_rate_adjustment(void *instance, double ratio) {
+    auto h = static_cast<Host*>(instance);
+    h->audio_ratio = std::isfinite(ratio) ? std::max(.995, std::min(1.005, ratio)) : 1.;
+}
 // Dreamcast states include RAM, VRAM and device state and exceed the old 31 MiB cap.
 size_t el_state_size_limit(void) { return 128u * 1024u * 1024u; }
 int el_save_state(void *instance, const char *path) {
@@ -574,7 +700,7 @@ int el_load_state(void *instance, const char *path) {
     };
     restore(RETRO_MEMORY_SAVE_RAM, battery);
     restore(RETRO_MEMORY_RTC, rtc);
-    h->audio.clear(); h->output.clear(); h->have_previous = false; h->phase = 0;
-    h->sum_left = h->sum_right = h->accumulated = 0; return ok;
+    h->audio.clear(); h->output.clear(); h->audio_rate_changes.clear();
+    reset_audio_resampler(h); return ok;
 }
 }

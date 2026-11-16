@@ -1,0 +1,25 @@
+[package]
+name = "emuluna-native-library"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+[dependencies]
+eframe = { version = "=0.31.1", default-features = false, features = ["default_fonts", "glow", "x11", "wayland"] }
+emuluna-library-model = { path = "../../crates/library-model" }
+serde_json = "=1.0.154"
+semver = "=1.0.28"
+serde = { version = "=1.0.229", features = ["derive"] }
+image = { version = "=0.25.10", default-features = false, features = ["png", "jpeg", "webp"] }
+emuluna-theme = { path = "../../crates/theme" }
+emuluna-launch-config = { path = "../../crates/launch-config" }
+emuluna-native-input = { path = "../../crates/native-input" }
+emuluna-shader-pack = { path = "../../crates/shader-pack" }
+tempfile = "=3.23.0"
+emuluna-audio-device = { path = "../../crates/audio-device" }
+sdl2 = "=0.38.0"
+sha2 = "=0.10.9"
+crc32fast = "=1.5.4"
+emuluna-state-file = { path = "../../crates/state-file" }
+rusqlite = { version = "=0.32.1", features = ["backup", "bundled"] }
+resvg = { version = "=0.45.1", default-features = false }
+rustix = { version = "=1.1.6", features = ["fs"] }

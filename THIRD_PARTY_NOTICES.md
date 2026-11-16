@@ -15,10 +15,9 @@ dependencies or artwork.
 
 | Material | Origin and status |
 | --- | --- |
-| Console PNG icons in emuluna/data/icons/ | OpenEmu and its contributors. openemu-icons.json records hashes and matching upstream paths where known. Ownership remains with the original creators; reuse rights have not been independently verified. [OpenEmu system plugins](https://github.com/OpenEmu/OpenEmu/tree/master/OpenEmu/SystemPlugins). |
-| 24 imported controller WebP illustrations in emuluna/data/controllers/ | Artwork by **Pinapple_Graphics**, from the user-supplied Controller_Vectors_by_Pinapple_Graphics_(Normal_300ppi)_v2.1 set. Files were resized/converted, and some retain local edits. artwork_manifest.json records source names, hashes, and processing. No license accompanied the supplied set; these images are not covered by EmuLuna's MIT license. The remaining fallback SVG controller illustrations are original project artwork. |
+| Console PNG icons in `data/icons/` | OpenEmu and its contributors. The bundled `openemu-icons.json` records hashes and upstream artwork paths. |
+| 24 imported controller WebP illustrations in emuluna/data/controllers/ | Artwork by **Pinapple_Graphics**, from the user-supplied Controller_Vectors_by_Pinapple_Graphics_(Normal_300ppi)_v2.1 set. Files were resized or converted, and some retain local edits. artwork_manifest.json records source names, hashes, and processing. No license accompanied the supplied set; these images are not covered by EmuLuna's MIT license. The remaining fallback SVG controller illustrations are original project artwork. |
 | Full EmuLuna logo and Luna mascot in emuluna/data/branding/ | User-supplied project artwork. The compact app icon was generated for EmuLuna; provenance is recorded in branding/README.md. No separate third-party license is asserted for the user-supplied images. |
-| Original OpenEmu Controls wood in `emuluna/data/themes/luna/`, `daylight/` and `classic/` | Unchanged `controls_background@2x.jpg` from OpenEmu and its contributors. `emuluna/data/themes/openemu-wood.json` records the upstream path and SHA-256. Ownership remains with the original creators; this artwork is not relicensed under EmuLuna’s MIT license. No independent asset-specific reuse terms were supplied in the source archive. [Upstream artwork](https://github.com/OpenEmu/OpenEmu/tree/master/OpenEmu/Graphics.xcassets/Preferences/controls_background.imageset). |
 | emuluna/data/sounds/unlock-pop.wav | User-supplied pop sound for the Advanced-settings unlock animation. Its creator and reuse terms were not supplied; the project MIT license does not cover it. |
 
 ## Runtime and packaging
@@ -26,7 +25,7 @@ dependencies or artwork.
 | Component | Use and upstream terms |
 | --- | --- |
 | native/vendor/libretro.h | Bundled libretro API header; its upstream MIT notice remains at the top of the file. [Libretro](https://github.com/libretro/libretro-common). |
-| Dreamcast console/controller illustrations | New assets created for EmuLuna with the built-in image generation tool. They are separate from OpenEmu and Pinapple_Graphics artwork. Prompts and asset paths are recorded in docs/DREAMCAST_ARTWORK.md. |
+| Dreamcast console/controller illustrations | New assets created for EmuLuna with the built-in image generation tool. Prompts and asset paths are recorded in docs/DREAMCAST_ARTWORK.md. |
 | native/vendor/libretro_vulkan.h | Bundled libretro Vulkan interface header; its upstream permissive notice remains in the file. [RetroArch](https://github.com/libretro/RetroArch/blob/master/libretro-common/include/libretro_vulkan.h). |
 | native/vendor/vulkan/ and native/vendor/vk_video/ | Vulkan API headers from Khronos, licensed under Apache-2.0 OR MIT as marked in the files. The MIT license text is included in emuluna/data/licenses/vulkan-headers-MIT.txt. The native host loads the system Vulkan loader at runtime; no GPU driver is bundled. [Vulkan-Headers](https://github.com/KhronosGroup/Vulkan-Headers). |
 | Python | The AppImage bundles a Python runtime. Python is distributed under the [Python Software Foundation License](https://docs.python.org/3/license.html), with additional licenses for some incorporated software. Source installs use the system's Python. |
@@ -40,6 +39,13 @@ dependencies or artwork.
 | AppImage runtime / appimagetool | Used to package and launch the AppImage. [AppImageKit is MIT-licensed](https://docs.appimage.org/packaging-guide/distribution.html); the build downloads appimagetool if it is not already cached. |
 
 The AppImage includes native libraries and Qt plugins resolved at build time.
+The optical-disc backup tools cdrdao and toc2cue are unmodified Ubuntu 22.04
+builds of cdrdao 1.2.4-2 (GPL-2.0-or-later), invoked as separate processes.
+Their copyright/license and corresponding upstream and Debian source packages
+are included in the AppImage's `disc-reader-source` directory. Upstream:
+https://github.com/cdrdao/cdrdao; package source:
+https://archive.ubuntu.com/ubuntu/pool/universe/c/cdrdao/.
+
 The exact binary contents and applicable license files should be checked
 when preparing each release; this source-level list does not claim that every
 transitive binary dependency has the same license as its parent package.
@@ -95,3 +101,18 @@ for PlayStation, PSP, Sega CD, Saturn and PC Engine CD. No Cocoa/AppKit importer
 or emulator code was copied. Disc-set behavior also follows the documented
 need to preserve cue sheets and audio tracks in the
 [OpenEmu CD-based games guide](https://github.com/OpenEmu/OpenEmu/wiki/User-guide:-CD-based-games).
+
+## CHD compression helper
+
+AppImages bundle the unmodified Ubuntu 22.04 `chdman` from
+`mame-tools 0.242+dfsg.1-1`, invoked as a separate process. The tool entry point
+uses BSD-3-Clause; linked components retain their own notices, including LGPL
+components. The complete matching MAME source archive and Debian build recipe,
+and Debian's detailed copyright/license inventory, accompany the executable
+under `disc-reader-source`. They are not relicensed under EmuLuna's license.
+
+Matching `libFLAC.so.8` (FLAC 1.3.3-2ubuntu0.2, BSD-style library license) and
+`libutf8proc.so.2` (utf8proc 2.7.0-3, MIT/Unicode notices) are included with their
+copyright/license files. Package sources and notices are available from the
+[Ubuntu archive](https://archive.ubuntu.com/ubuntu/pool/) and
+[MAME](https://www.mamedev.org/).

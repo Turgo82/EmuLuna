@@ -15,6 +15,7 @@ extern "C" {
 void* el_create(const char* rom, const char* save_dir);
 void el_destroy(void* instance);
 void el_reset(void* instance);
+/* Stereo frame count, -1 on failure, -2 for a normal core-requested shutdown. */
 int el_frame(void* instance, unsigned keys);
 void el_set_analog(void* instance, int16_t lx, int16_t ly, int16_t rx, int16_t ry);
 void el_set_port_input(void* instance, unsigned port, unsigned keys, int16_t lx, int16_t ly, int16_t rx, int16_t ry);
