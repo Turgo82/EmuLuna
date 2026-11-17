@@ -2,6 +2,14 @@
 
 This file records user-facing changes to EmuLuna releases.
 
+## [0.21.1] - 2026-11-16
+
+- Scroll the cover grid half a row per wheel notch, with smooth slowdown.
+- Preserve quick keyboard taps through to the next emulated frame.
+- Open Settings in a separate window. Enable startup update checks and library minimization by default.
+- List Sega six-button controls in A, B, C, X, Y, Z order.
+- Fix the rating menu checkmark and keep the selected library tab highlight consistent.
+
 ## [0.21.0] - 2026-11-15
 
 - Rewrote the application in Rust, with a native libretro host.
