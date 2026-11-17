@@ -30,7 +30,17 @@ pub(crate) fn menu_row(
             font.clone(),
             color,
         );
-        if !shortcut.is_empty() {
+        if shortcut == "✓" {
+            let center = rect.right_center() - egui::vec2(18., 0.);
+            ui.painter().line(
+                vec![
+                    center + egui::vec2(-5., 0.),
+                    center + egui::vec2(-1.5, 3.5),
+                    center + egui::vec2(5., -4.),
+                ],
+                egui::Stroke::new(1.6, color),
+            );
+        } else if !shortcut.is_empty() {
             ui.painter().text(
                 rect.right_center() - egui::vec2(11., 0.),
                 egui::Align2::RIGHT_CENTER,

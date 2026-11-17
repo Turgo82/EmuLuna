@@ -12,6 +12,7 @@ struct Shared {
     version: AtomicU64,
     buttons: AtomicU32,
     axes: AtomicU64,
+    pending_presses: AtomicU32,
 }
 /// Single publisher; intentionally not Clone. Publication needs exclusive access.
 pub struct Publisher(Arc<Shared>);
@@ -24,6 +25,7 @@ pub fn channel() -> (Publisher, Reader) {
         version: AtomicU64::new(0),
         buttons: AtomicU32::new(0),
         axes: AtomicU64::new(0),
+        pending_presses: AtomicU32::new(0),
     });
     (
         Publisher(shared.clone()),
@@ -34,6 +36,17 @@ pub fn channel() -> (Publisher, Reader) {
     )
 }
 impl Publisher {
+    pub fn latch_buttons(&mut self, buttons: u32) {
+        if buttons != 0 {
+            self.0.pending_presses.fetch_or(buttons, SeqCst);
+        }
+    }
+
+    pub fn clear(&mut self) {
+        self.publish(Snapshot::default());
+        self.0.pending_presses.store(0, SeqCst);
+    }
+
     pub fn publish(&mut self, snapshot: Snapshot) {
         let axes = snapshot
             .axes
@@ -49,6 +62,15 @@ impl Publisher {
     }
 }
 impl Reader {
+    /// A key can be pressed and released before the next emulated frame.
+    /// Deliver its press once even if the latest held state is already clear.
+    pub fn for_frame(&mut self) -> Snapshot {
+        let pending = self.shared.pending_presses.swap(0, SeqCst);
+        let mut snapshot = self.latest();
+        snapshot.buttons |= pending;
+        snapshot
+    }
+
     /// Bounded attempts: a preempted publisher cannot stall emulation/audio.
     /// Sequentially consistent atomics keep the sequence and both data words in
     /// one order; a failed read retains the previous complete snapshot.

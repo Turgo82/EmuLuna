@@ -1,6 +1,6 @@
 //! Window-thread input using the existing EmuLuna console catalogs.
 #![forbid(unsafe_code)]
-use emuluna_session::input::Snapshot;
+use emuluna_session::input::{Publisher, Snapshot};
 mod saved;
 pub use saved::library_profile;
 use sdl2::{
@@ -351,14 +351,19 @@ impl Players {
         }
     }
 
-    pub fn event(&mut self, event: &Event) {
+    pub fn event(&mut self, event: &Event, publishers: &mut [Publisher], paused: bool) {
         match event {
             Event::ControllerDeviceAdded { .. } | Event::ControllerDeviceRemoved { .. } => {
                 self.refresh_controllers();
             }
             _ => {
-                for port in &mut self.ports {
-                    port.event(event);
+                for (port, publisher) in self.ports.iter_mut().zip(publishers) {
+                    let pressed = port.event(event);
+                    if !port.focused {
+                        publisher.clear();
+                    } else if !paused {
+                        publisher.latch_buttons(pressed);
+                    }
                 }
             }
         }
@@ -466,14 +471,14 @@ impl Driver {
             }
         }
     }
-    pub fn event(&mut self, event: &Event) {
+    pub fn event(&mut self, event: &Event) -> u32 {
         match *event {
             Event::KeyDown { window_id, .. }
             | Event::KeyUp { window_id, .. }
             | Event::Window { window_id, .. }
                 if window_id != self.window_id =>
             {
-                return
+                return 0
             }
             _ => {}
         }
@@ -483,7 +488,14 @@ impl Driver {
                 repeat: false,
                 ..
             } if self.focused => {
-                self.pressed.insert(key);
+                if self.pressed.insert(key) {
+                    return self
+                        .profile
+                        .keys
+                        .iter()
+                        .filter(|(bound, _)| *bound == key)
+                        .fold(0, |buttons, (_, bit)| buttons | bit);
+                }
             }
             Event::KeyUp {
                 keycode: Some(key), ..
@@ -543,6 +555,7 @@ impl Driver {
             }
             _ => {}
         }
+        0
     }
     pub fn snapshot(&self) -> Snapshot {
         if !self.focused {
@@ -694,19 +707,61 @@ mod tests {
         assert_eq!(player_count("snes"), 2);
         assert_eq!(player_count("gba"), 1);
 
+        let (mut publishers, _): (Vec<_>, Vec<_>) = (0..players.port_count())
+            .map(|_| emuluna_session::input::channel())
+            .unzip();
         for keycode in [Keycode::J, Keycode::K] {
-            players.event(&Event::KeyDown {
-                timestamp: 0,
-                window_id: 7,
-                keycode: Some(keycode),
-                scancode: None,
-                keymod: sdl2::keyboard::Mod::NOMOD,
-                repeat: false,
-            });
+            players.event(
+                &Event::KeyDown {
+                    timestamp: 0,
+                    window_id: 7,
+                    keycode: Some(keycode),
+                    scancode: None,
+                    keymod: sdl2::keyboard::Mod::NOMOD,
+                    repeat: false,
+                },
+                &mut publishers,
+                false,
+            );
         }
         assert_eq!(players.snapshot(1).buttons, 64);
         assert_eq!(players.snapshot(2), Snapshot::default());
         assert_eq!(players.snapshot(3).buttons, 128);
+    }
+
+    #[test]
+    fn face_button_tap_in_one_event_batch_reaches_one_core_frame() {
+        let _guard = SDL_TEST.lock().unwrap();
+        let sdl = sdl2::init().unwrap();
+        let mut players = Players::new(&sdl, Some("segacd"), 7, None).unwrap();
+        let (mut publishers, mut readers): (Vec<_>, Vec<_>) = (0..players.port_count())
+            .map(|_| emuluna_session::input::channel())
+            .unzip();
+        let down = Event::KeyDown {
+            timestamp: 10,
+            window_id: 7,
+            keycode: Some(Keycode::Z),
+            scancode: None,
+            keymod: sdl2::keyboard::Mod::NOMOD,
+            repeat: false,
+        };
+        let up = Event::KeyUp {
+            timestamp: 10,
+            window_id: 7,
+            keycode: Some(Keycode::Z),
+            scancode: None,
+            keymod: sdl2::keyboard::Mod::NOMOD,
+            repeat: false,
+        };
+        for paused in [false, true] {
+            players.event(&down, &mut publishers, paused);
+            players.event(&up, &mut publishers, paused);
+            assert_eq!(players.snapshot(0).buttons, 0);
+            publishers[0].publish(players.snapshot(0));
+            assert_eq!(readers[0].for_frame().buttons, if paused { 0 } else { 2 });
+            assert_eq!(readers[0].for_frame().buttons, 0);
+            assert_eq!(readers[1].for_frame().buttons, 0);
+        }
     }
 
     #[test]

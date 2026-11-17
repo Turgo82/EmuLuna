@@ -520,7 +520,7 @@ impl Presenter {
                         }
                         let mut states = [emuluna_session::input::Snapshot::default(); emuluna_native_input::MAX_PLAYERS];
                         for (state, reader) in states.iter_mut().zip(&mut input_readers) {
-                            *state = reader.latest();
+                            *state = reader.for_frame();
                         }
                         states[0].buttons |= scripted_input.buttons(sequence);
                         match source.render(&gl,&mut slots[slot],&states[..input_readers.len()])? {
@@ -677,7 +677,7 @@ impl Presenter {
                             self.overlay_message(message);
                         }
                     }
-                    input.event(&event);
+                    input.event(&event, &mut input_publishers, commands.paused());
                     if let Event::KeyDown { keycode: Some(key), keymod, .. } = event {
                         // A gameplay binding owns its key. Keep Escape and Ctrl shortcuts available.
                         if key != Keycode::Escape

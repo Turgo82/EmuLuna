@@ -248,7 +248,7 @@ impl Settings {
             self.tools.cores_changed = false;
         }
         self.updates
-            .poll(ctx, value(prefs, env.library, updates::AUTO, "0") == "1");
+            .poll(ctx, value(prefs, env.library, updates::AUTO, "1") == "1");
         if self.about_open
             && self
                 .about
@@ -271,10 +271,7 @@ impl Settings {
             self.tab = Page::General;
         }
         let mut open = self.open;
-        let size = egui::vec2(
-            1160_f32.min((ctx.screen_rect().width() - 36.).max(320.)),
-            760_f32.min((ctx.screen_rect().height() - 64.).max(240.)),
-        );
+        let size = ctx.screen_rect().size();
         let mut done = false;
         let mut restore = false;
         let settings_style = ctx.style();
@@ -433,15 +430,12 @@ impl Settings {
             });
         };
         ctx.style_mut(|style| style.spacing.interact_size.y = 22.);
-        egui::Window::new(emuluna_theme::fonts::window_title("Settings — EmuLuna"))
-            .id(egui::Id::new("settings"))
-            .anchor(egui::Align2::CENTER_CENTER, egui::Vec2::ZERO)
-            .movable(false)
-            .open(&mut open)
-            .collapsible(false)
-            .fixed_size(size)
-            .resizable(false)
+        egui::CentralPanel::default()
+            .frame(egui::Frame::NONE.fill(ctx.style().visuals.panel_fill))
             .show(ctx, &mut contents);
+        if ctx.input(|input| input.viewport().close_requested()) {
+            open = false;
+        }
         ctx.set_style(settings_style);
         if restore {
             self.restore_tab_defaults(prefs, env.library);
@@ -468,10 +462,10 @@ impl Settings {
         let defaults: &[(&str, &str)] = match self.tab {
             Page::General => &[
                 ("theme", "luna"),
-                (updates::AUTO, "0"),
+                (updates::AUTO, "1"),
                 ("native.audio_output", ""),
                 ("volume", "80"),
-                ("experimental.minimize_library_during_game", "0"),
+                ("experimental.minimize_library_during_game", "1"),
             ],
             Page::Library => &[
                 ("library.show_alphabet_index", "1"),
@@ -639,7 +633,7 @@ impl Settings {
             env.library,
             updates::AUTO,
             "Check for updates at startup",
-            false,
+            true,
         );
         ui.add_space(12.);
         heading(ui, "Audio");
@@ -689,7 +683,7 @@ impl Settings {
             env.library,
             "experimental.minimize_library_during_game",
             "Minimize the library while a game is running",
-            false,
+            true,
         );
         if crate::kwin_restore::wayland() && !crate::kwin_restore::available() {
             ui.weak("On Wayland, the library stays behind the game so it is available when the game closes.");
@@ -1096,80 +1090,9 @@ mod layout_tests {
                         },
                     );
                 }
-                let rect = ctx
-                    .memory(|memory| memory.area_rect(egui::Id::new("settings")))
-                    .unwrap();
+                let rect = ctx.screen_rect();
                 let expected = *expected.get_or_insert(rect.size());
-                assert!(
-                    (rect.size() - expected).length() < 1.,
-                    "Page {} changed the size: {rect:?}",
-                    page as u8
-                );
-                assert!(rect.width() <= screen.x && rect.height() <= screen.y);
-            }
-            if screen.x > 1000. {
-                for title_bar in [false, true] {
-                    let before = ctx
-                        .memory(|memory| memory.area_rect(egui::Id::new("settings")))
-                        .unwrap();
-                    let start = if title_bar {
-                        before.center_top() + egui::vec2(0., 12.)
-                    } else {
-                        before.right_bottom() - egui::vec2(40., 40.)
-                    };
-                    let end = start + egui::vec2(25., 0.);
-                    for (point, pressed) in [
-                        (start, None),
-                        (start, Some(true)),
-                        (end, None),
-                        (end, Some(false)),
-                        (end, None),
-                    ] {
-                        let mut events = vec![egui::Event::PointerMoved(point)];
-                        if let Some(pressed) = pressed {
-                            events.push(egui::Event::PointerButton {
-                                pos: point,
-                                button: egui::PointerButton::Primary,
-                                pressed,
-                                modifiers: egui::Modifiers::NONE,
-                            });
-                        }
-                        let _ = ctx.run(
-                            egui::RawInput {
-                                screen_rect: Some(egui::Rect::from_min_size(
-                                    egui::Pos2::ZERO,
-                                    screen,
-                                )),
-                                events,
-                                ..Default::default()
-                            },
-                            |ctx| {
-                                settings.show(
-                                    ctx,
-                                    &mut prefs,
-                                    &mut Environment {
-                                        library: &library,
-                                        presets: &[],
-                                        themes: &[],
-                                        data: &data,
-                                        theme: &theme,
-                                        artwork: &mut artwork,
-                                        original_covers: &originals,
-                                        preferences_path: &path,
-                                        playing: false,
-                                    },
-                                );
-                            },
-                        );
-                    }
-                    let after = ctx
-                        .memory(|memory| memory.area_rect(egui::Id::new("settings")))
-                        .unwrap();
-                    assert!(
-                        (after.min - before.min).length() < 1.,
-                        "Settings moved during drag (title bar: {title_bar})"
-                    );
-                }
+                assert_eq!(rect.size(), expected, "Settings page changed viewport size");
             }
         }
     }

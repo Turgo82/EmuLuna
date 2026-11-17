@@ -85,6 +85,12 @@ impl Startup {
 }
 
 impl eframe::App for Startup {
+    fn raw_input_hook(&mut self, ctx: &egui::Context, input: &mut egui::RawInput) {
+        if let Self::Library(app) = self {
+            app.raw_input_hook(ctx, input);
+        }
+    }
+
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
         match self {
             Self::Library(app) => app.update(ctx, frame),

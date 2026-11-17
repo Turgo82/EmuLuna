@@ -445,10 +445,10 @@ fn run() -> Result<(), String> {
             core.set_audio_rate_adjustment(ratio);
             let run_started = Instant::now();
             for (port, reader) in input_readers.iter_mut().enumerate().skip(1) {
-                let state = reader.latest();
+                let state = reader.for_frame();
                 core.set_port_input(port as u32, state.buttons, state.axes);
             }
-            let mut state = input_readers[0].latest();
+            let mut state = input_readers[0].for_frame();
             state.buttons |= scripted_input.buttons(index);
             core.set_analog(state.axes);
             if core.run_into(state.buttons, &mut frame)?
@@ -562,7 +562,7 @@ fn run() -> Result<(), String> {
                 if let Some(message) = device.handle_event(&event) {
                     presenter.overlay_message(message);
                 }
-                input.event(&event);
+                input.event(&event, &mut input_publishers, commands.paused());
                 if let Event::KeyDown {
                     keycode: Some(key),
                     keymod,

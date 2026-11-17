@@ -52,20 +52,22 @@ impl Page {
     }
 }
 fn library_tabs(ui: &mut egui::Ui, theme: &theme::Theme, selected: &mut Page) {
-    const TAB_HEIGHT: f32 = 30.;
+    const TAB_HEIGHT: f32 = 32.;
     const TAB_RADIUS: f32 = TAB_HEIGHT / 2.;
     const BORDER_WIDTH: f32 = 1.;
-    const TAB_INSET: f32 = 1.;
     egui::Frame::new()
         .fill(theme.color("navigation-background", ui.visuals().panel_fill))
         .stroke(Stroke::new(BORDER_WIDTH, theme.color("mid", Color32::GRAY)))
-        .corner_radius(TAB_RADIUS + BORDER_WIDTH + TAB_INSET)
-        .inner_margin(TAB_INSET)
+        .corner_radius(TAB_RADIUS + BORDER_WIDTH)
         .show(ui, |ui| {
             ui.visuals_mut().selection.bg_fill =
                 theme.color("sidebar-selected-background", Color32::from_gray(70));
             ui.visuals_mut().selection.stroke.color =
                 theme.color("sidebar-selected-text", ui.visuals().text_color());
+            // Keep the selected pill at the same size as its hovered button.
+            let widgets = &mut ui.visuals_mut().widgets;
+            widgets.inactive.expansion = widgets.hovered.expansion;
+            widgets.active.expansion = widgets.hovered.expansion;
             ui.horizontal(|ui| {
                 ui.spacing_mut().item_spacing.x = 0.;
                 for (page, label) in [
@@ -89,7 +91,7 @@ fn library_tabs(ui: &mut egui::Ui, theme: &theme::Theme, selected: &mut Page) {
                             })
                             .stroke(Stroke::NONE)
                             .min_size(egui::vec2(
-                                if page == Page::Library { 84. } else { 112. },
+                                if page == Page::Library { 86. } else { 112. },
                                 TAB_HEIGHT,
                             ))
                             .corner_radius(TAB_RADIUS),
@@ -323,6 +325,7 @@ struct App {
     update_count: u64,
     max_drawn: usize,
     last_drawn: usize,
+    cover_scroll_target: Option<(Rect, egui::LayerId, f32)>,
     launcher: launcher::Launcher,
     presets: Vec<(String, String)>,
     test_preset: String,
@@ -451,6 +454,7 @@ impl App {
             update_count: 0,
             max_drawn: 0,
             last_drawn: 0,
+            cover_scroll_target: None,
             launcher: launcher::Launcher::new(ctx.clone()),
             presets: emuluna_shader_pack::Pack::open(&resources::path("build/rust/shader-pack"))
                 .map(|pack| {
@@ -795,7 +799,39 @@ impl App {
     }
 }
 impl eframe::App for App {
+    fn raw_input_hook(&mut self, ctx: &egui::Context, input: &mut egui::RawInput) {
+        let Some((rect, layer, row_step)) = self.cover_scroll_target else {
+            return;
+        };
+        if input.viewport_id != egui::ViewportId::ROOT {
+            return;
+        }
+        let mut pointer = ctx.input(|state| state.pointer.hover_pos());
+        for event in &mut input.events {
+            match event {
+                egui::Event::PointerMoved(pos) => pointer = Some(*pos),
+                egui::Event::PointerGone => pointer = None,
+                egui::Event::MouseWheel { unit, delta, modifiers }
+                    if *unit == egui::MouseWheelUnit::Line
+                        && delta.y != 0.
+                        && !modifiers.shift
+                        && !modifiers.ctrl
+                        && !modifiers.command
+                        && !modifiers.mac_cmd
+                        && pointer.is_some_and(|pos| {
+                            rect.contains(pos) && ctx.layer_id_at(pos) == Some(layer)
+                        }) =>
+                {
+                    *unit = egui::MouseWheelUnit::Point;
+                    delta.y *= row_step * 0.5;
+                }
+                _ => {}
+            }
+        }
+    }
+
     fn update(&mut self, ctx: &egui::Context, _: &mut eframe::Frame) {
+        self.cover_scroll_target = None;
         if self.move_library.show(
             ctx,
             self.loaded.as_ref().map(|data| data.library.root.as_path()),
@@ -1048,7 +1084,8 @@ impl eframe::App for App {
                         .map(String::as_str)
                 })
             })
-            == Some("1");
+            .unwrap_or("1")
+            == "1";
         if self.minimized_for_game
             && (!self.launcher.busy || !minimize_library || self.settings.open)
         {
@@ -2173,6 +2210,7 @@ impl eframe::App for App {
                     return;
                 }
                 let row_height = self.grid.row_height;
+                let row_step = row_height + ui.spacing().item_spacing.y;
                 let mut scroll = egui::ScrollArea::vertical()
                     .id_salt(("covers", format!("{:?}", self.view), &self.search))
                     .auto_shrink([false, false]);
@@ -2183,12 +2221,10 @@ impl eframe::App for App {
                         .iter()
                         .position(|row| row.iter().any(|place| place.index == position))
                     {
-                        scroll = scroll.vertical_scroll_offset(
-                            row as f32 * (row_height + ui.spacing().item_spacing.y),
-                        );
+                        scroll = scroll.vertical_scroll_offset(row as f32 * row_step);
                     }
                 }
-                scroll.show_rows(ui, row_height, self.grid.rows.len(), |ui, rows| {
+                let grid = scroll.show_rows(ui, row_height, self.grid.rows.len(), |ui, rows| {
                     let nearby =
                         rows.start.saturating_sub(2)..(rows.end + 2).min(self.grid.rows.len());
                     for row in rows.clone() {
@@ -2374,6 +2410,7 @@ impl eframe::App for App {
                         ui.scroll_with_delta(egui::vec2(0., -48.));
                     }
                 });
+                self.cover_scroll_target = Some((grid.inner_rect, ui.layer_id(), row_step));
             });
         if let Some(action) = game_action {
             self.game_action(action, ctx);
@@ -2417,21 +2454,37 @@ impl eframe::App for App {
         self.media.show_delete(ctx, self.launcher.busy);
         let mut settings_changed = false;
         if let Some(data) = &self.loaded {
-            if self.settings.show(
-                ctx,
-                &mut self.preferences,
-                &mut settings::Environment {
-                    library: &data.library,
-                    presets: &self.presets,
-                    themes: &self.themes,
-                    data: &self.data,
-                    theme: &self.theme,
-                    artwork: &mut self.art,
-                    original_covers: &data.original_covers,
-                    preferences_path: &self.preferences_path,
-                    playing: self.launcher.busy,
-                },
-            ) {
+            let settings_open = self.settings.open;
+            let mut show_settings = |settings_ctx: &egui::Context| {
+                self.settings.show(
+                    settings_ctx,
+                    &mut self.preferences,
+                    &mut settings::Environment {
+                        library: &data.library,
+                        presets: &self.presets,
+                        themes: &self.themes,
+                        data: &self.data,
+                        theme: &self.theme,
+                        artwork: &mut self.art,
+                        original_covers: &data.original_covers,
+                        preferences_path: &self.preferences_path,
+                        playing: self.launcher.busy,
+                    },
+                )
+            };
+            let changed = if settings_open {
+                ctx.show_viewport_immediate(
+                    egui::ViewportId::from_hash_of("settings-window"),
+                    egui::ViewportBuilder::default()
+                        .with_title("Settings — EmuLuna")
+                        .with_inner_size([1160.0, 760.0])
+                        .with_min_inner_size([680.0, 480.0]),
+                    |settings_ctx, _| show_settings(settings_ctx),
+                )
+            } else {
+                show_settings(ctx)
+            };
+            if changed {
                 settings_changed = true;
                 self.resumes.refresh = true;
                 if let Some(id) = self.preferences.get("theme") {
