@@ -520,6 +520,9 @@ fn prepare(request: Request, stop: &AtomicBool) -> Result<Plan, String> {
         work.path().join("saves")
     };
     let mut command = Command::new(player);
+    command
+        .env("SDL_VIDEO_WAYLAND_WMCLASS", "emuluna")
+        .env("SDL_VIDEO_X11_WMCLASS", "emuluna");
     let shader_prefix = format!("shader_parameters.{}.", request.game.system);
     let shader_resolution_key = format!("filter_resolution.{}", request.game.system);
     let shader_settings: BTreeMap<_, _> = request

@@ -1,5 +1,6 @@
 //! Native settings, sharing the original catalog and isolated preferences.
 mod about;
+pub(crate) mod appimage_update;
 mod controls;
 pub(crate) mod conversion;
 mod diagram;
@@ -188,6 +189,20 @@ impl Settings {
         self.updates.links().map(|(page, _)| page)
     }
 
+    pub fn poll_updates(&mut self, ctx: &egui::Context, prefs: &Preferences, library: &Library) {
+        self.updates.poll(ctx, value(prefs, library, updates::AUTO, "1") == "1");
+    }
+
+    pub fn show_update_prompt(&mut self, ctx: &egui::Context) {
+        if !self.open && !self.about_open && !self.onboarding.open {
+            self.updates.show_prompt(ctx);
+        }
+    }
+
+    pub fn restart_for_update(&mut self, ctx: &egui::Context) {
+        self.updates.restart_if_ready(ctx);
+    }
+
     pub fn open_tab(&mut self, tab: &str) -> Result<(), String> {
         if let Some(step) = [
             "onboarding",
@@ -247,8 +262,6 @@ impl Settings {
             self.maintenance.refresh_firmware();
             self.tools.cores_changed = false;
         }
-        self.updates
-            .poll(ctx, value(prefs, env.library, updates::AUTO, "1") == "1");
         if self.about_open
             && self
                 .about
@@ -784,6 +797,7 @@ impl Settings {
                 .first()
                 .map_or(String::new(), |c| c.id.clone());
         }
+        heading(ui, "Console");
         egui::ComboBox::from_id_salt("settings-console")
             .width(300.)
             .selected_text(

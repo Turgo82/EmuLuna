@@ -14,7 +14,7 @@ const MAX_HEADER: usize = 16384;
 const MAGIC: &[u8] = b"EMULUNA1\n";
 const LEGACY_MAGIC: &[u8] = b"OELINUX1\n";
 pub const STATE_EXTENSION: &str = "emuluna-state";
-const LEGACY_EXTENSION: &str = "oesavestate";
+pub const LEGACY_EXTENSION: &str = "oesavestate";
 
 pub fn automatic_path(directory: &Path) -> PathBuf {
     directory.join("auto").with_extension(STATE_EXTENSION)

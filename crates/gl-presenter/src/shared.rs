@@ -377,9 +377,12 @@ impl Presenter {
         let core_diagnostics = Arc::new(AtomicU64::new(0));
         let worker_diagnostics = core_diagnostics.clone();
         let automatic = core_paths.as_ref().map(|paths| {
-            automatic_path.unwrap_or_else(|| emuluna_state_file::automatic_path(
-                state_directory.as_ref().unwrap_or(&paths[3]),
-            ))
+            let legacy = emuluna_state_file::automatic_path(state_directory.as_ref().unwrap_or(&paths[3]));
+            let automatic = automatic_path.unwrap_or_else(|| legacy.clone());
+            if persistent && state_identity.is_some() {
+                commands.configure_autosave_paths(automatic.clone(), legacy);
+            }
+            automatic
         });
         let automatic_preview_path = automatic.as_ref().map(|path| path.with_extension("png"));
         thread::scope(|scope| {
@@ -490,7 +493,7 @@ impl Presenter {
                             Command::Reset=>{if let Some(source)=source.as_mut() {source.reset()?;}Ok(())},
                             Command::CoreOption(key,value)=>source.as_mut().ok_or("No game is running")?.set_runtime_option(key,value),
                             Command::SaveState(path)=>source.as_mut().ok_or("No game is running")?.save_state(path,state_identity.as_ref().ok_or("State identity is missing")?),
-                            Command::LoadState(path)=>source.as_mut().ok_or("No game is running")?.load_state(path,state_identity.as_ref().ok_or("State identity is missing")?),
+                            Command::LoadState(path) | Command::ResumeAutosave(path)=>source.as_mut().ok_or("No game is running")?.load_state(path,state_identity.as_ref().ok_or("State identity is missing")?),
                             _=>Err("Unsupported core operation".into()),
                         }
                     })?;

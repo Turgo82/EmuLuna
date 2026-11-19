@@ -11,6 +11,8 @@ pub use preview::Preview;
 pub use window::WindowPreferences;
 mod shared;
 use sdl2::{
+    pixels::PixelFormatEnum,
+    surface::Surface,
     video::{FullscreenType, GLContext, GLProfile, SwapInterval, Window},
     VideoSubsystem,
 };
@@ -127,7 +129,7 @@ impl Presenter {
         attributes.set_context_version(3, 3);
         attributes.set_double_buffer(true);
         attributes.set_depth_size(0);
-        let window = video
+        let mut window = video
             .window("EmuLuna — Rust GPU playback prototype", 960, 720)
             .opengl()
             .allow_highdpi()
@@ -135,6 +137,19 @@ impl Presenter {
             .resizable()
             .build()
             .map_err(|e| e.to_string())?;
+        let mut icon = image::load_from_memory(include_bytes!("../../../data/branding/emuluna.png"))
+            .map_err(|e| e.to_string())?
+            .thumbnail(128, 128)
+            .into_rgba8();
+        let (icon_width, icon_height) = icon.dimensions();
+        let surface = Surface::from_data(
+            icon.as_mut(),
+            icon_width,
+            icon_height,
+            icon_width * 4,
+            PixelFormatEnum::RGBA32,
+        )?;
+        window.set_icon(surface);
         let context = window.gl_create_context()?;
         window.gl_make_current(&context)?;
         // The diagnostic keeps presentation from controlling the worker's clock.

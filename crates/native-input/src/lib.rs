@@ -485,10 +485,12 @@ impl Driver {
         match *event {
             Event::KeyDown {
                 keycode: Some(key),
-                repeat: false,
+                repeat,
                 ..
             } if self.focused => {
-                if self.pressed.insert(key) {
+                // Repeats confirm the key is held, even if we missed its initial
+                // press. Only the initial press should queue a short tap.
+                if self.pressed.insert(key) && !repeat {
                     return self
                         .profile
                         .keys
@@ -727,6 +729,34 @@ mod tests {
         assert_eq!(players.snapshot(1).buttons, 64);
         assert_eq!(players.snapshot(2), Snapshot::default());
         assert_eq!(players.snapshot(3).buttons, 128);
+    }
+
+    #[test]
+    fn repeated_keydown_restores_a_hold_without_queuing_a_tap() {
+        let _guard = SDL_TEST.lock().unwrap();
+        let sdl = sdl2::init().unwrap();
+        let mut input = Driver::new(&sdl, Some("segacd"), 7).unwrap();
+        let down = Event::KeyDown {
+            timestamp: 10,
+            window_id: 7,
+            keycode: Some(Keycode::Z),
+            scancode: None,
+            keymod: sdl2::keyboard::Mod::NOMOD,
+            repeat: true,
+        };
+        assert_eq!(input.event(&down), 0);
+        for _ in 0..3 {
+            assert_eq!(input.snapshot().buttons, 2);
+        }
+        input.event(&Event::KeyUp {
+            timestamp: 20,
+            window_id: 7,
+            keycode: Some(Keycode::Z),
+            scancode: None,
+            keymod: sdl2::keyboard::Mod::NOMOD,
+            repeat: false,
+        });
+        assert_eq!(input.snapshot().buttons, 0);
     }
 
     #[test]

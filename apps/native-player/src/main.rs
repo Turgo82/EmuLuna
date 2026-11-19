@@ -251,6 +251,7 @@ fn run() -> Result<(), String> {
             )
         })
         .transpose()?;
+    sdl2::hint::set("SDL_APP_ID", "emuluna");
     let sdl = sdl2::init()?;
     if parent_control {
         let sender = sdl.event()?.event_sender();
@@ -263,6 +264,9 @@ fn run() -> Result<(), String> {
     let video = sdl.video()?;
     let audio = sdl.audio()?;
     let mut presenter = Presenter::new(&video)?;
+    // Gameplay uses key events. An active input method can turn printable
+    // keys into a press and release pair even when the key is still held.
+    video.text_input().stop();
     if let Some(title) = title {
         presenter.set_title(title.to_str().ok_or("Invalid window title")?)?;
     }
@@ -375,6 +379,7 @@ fn run() -> Result<(), String> {
     commands.set_volume(volume)?;
     if persistent && state_identity.is_some() {
         commands.configure_autosave(auto_resume);
+        commands.configure_autosave_paths(automatic.clone(), legacy);
     }
     if state_identity.is_some() {
         let directory = state_directory.as_ref().unwrap_or(&paths[3]);
@@ -421,7 +426,7 @@ fn run() -> Result<(), String> {
                             path,
                             state_identity.as_ref().ok_or("State identity is missing")?,
                         ),
-                        Command::LoadState(path) => core.load_state(
+                        Command::LoadState(path) | Command::ResumeAutosave(path) => core.load_state(
                             path,
                             state_identity.as_ref().ok_or("State identity is missing")?,
                         ),

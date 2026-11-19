@@ -2425,24 +2425,7 @@ mod helper_tests {
 }
 
 fn backup_viewport(size: egui::Vec2) -> egui::ViewportBuilder {
-    static ICON: std::sync::OnceLock<Option<Arc<egui::IconData>>> = std::sync::OnceLock::new();
-    let icon = ICON.get_or_init(|| {
-        image::load_from_memory(include_bytes!("../../../data/branding/emuluna.png"))
-            .ok()
-            .map(|image| {
-                let image = image.thumbnail(128, 128).into_rgba8();
-                Arc::new(egui::IconData {
-                    width: image.width(),
-                    height: image.height(),
-                    rgba: image.into_raw(),
-                })
-            })
-    });
-    let mut builder = egui::ViewportBuilder::default();
-    if let Some(icon) = icon {
-        builder = builder.with_icon(icon.clone());
-    }
-    builder
+    crate::window_state::app_viewport()
         .with_title("Back up a game disc — EmuLuna")
         .with_inner_size(size)
         .with_min_inner_size(size)

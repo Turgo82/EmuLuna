@@ -4,8 +4,9 @@ use emuluna_audio_device::Producer;
 use emuluna_session::{Command, SessionControl, SessionState};
 use std::{
     sync::{
+        Arc,
         atomic::{AtomicBool, AtomicU64, Ordering},
-        mpsc, Arc,
+        mpsc,
     },
     time::Duration,
 };
@@ -21,6 +22,7 @@ pub struct Controller {
     desired_volume: f32,
     state_slot: Option<std::path::PathBuf>,
     autosave_available: bool,
+    autosave_paths: Option<[std::path::PathBuf; 2]>,
     autosave: Arc<AtomicBool>,
     slot_number: u8,
     messages: mpsc::Receiver<Message>,
@@ -52,6 +54,7 @@ pub fn channel() -> (Controller, Worker) {
             desired_volume: 1.,
             state_slot: None,
             autosave_available: false,
+            autosave_paths: None,
             autosave: autosave.clone(),
             slot_number: 1,
             messages: message_receiver,
@@ -99,6 +102,50 @@ impl Controller {
     pub fn configure_autosave(&mut self, enabled: bool) {
         self.autosave_available = true;
         self.autosave.store(enabled, Ordering::Release);
+    }
+    pub fn configure_autosave_paths(
+        &mut self,
+        shared: std::path::PathBuf,
+        legacy: std::path::PathBuf,
+    ) {
+        self.autosave_paths = Some([shared, legacy]);
+    }
+
+    pub fn existing_autosave(&self) -> Option<std::path::PathBuf> {
+        self.autosave_paths
+            .as_ref()?
+            .iter()
+            .map(|path| emuluna_state_file::readable_path(path))
+            .find(|path| path.is_file())
+    }
+
+    pub fn resume_autosave(&self) -> Result<(), String> {
+        let path = self
+            .existing_autosave()
+            .ok_or("The autosave is no longer available.")?;
+        self.send(Command::ResumeAutosave(path))
+    }
+
+    pub fn remove_autosave(&self) -> Result<(), String> {
+        self.set_autosave(false)?;
+        let paths = self
+            .autosave_paths
+            .as_ref()
+            .ok_or("Autosave is unavailable for this session")?;
+        for path in paths {
+            for extension in [
+                emuluna_state_file::STATE_EXTENSION,
+                emuluna_state_file::LEGACY_EXTENSION,
+                "png",
+            ] {
+                match std::fs::remove_file(path.with_extension(extension)) {
+                    Ok(()) => {}
+                    Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+                    Err(error) => return Err(format!("Could not remove the autosave: {error}")),
+                }
+            }
+        }
+        Ok(())
     }
     pub fn autosave(&self) -> Option<bool> {
         self.autosave_available
@@ -247,7 +294,7 @@ impl Worker {
                             running: false,
                             reset_clock,
                             generation: self.state.generation().0,
-                        })
+                        });
                     }
                 }
             } else {
@@ -259,7 +306,7 @@ impl Worker {
                             running: false,
                             reset_clock,
                             generation: self.state.generation().0,
-                        })
+                        });
                     }
                 }
             };
@@ -274,12 +321,18 @@ impl Worker {
                     self.state.apply(Command::Pause(paused));
                     reset_clock = true;
                 }
-                command @ (Command::Reset | Command::SaveState(_) | Command::LoadState(_)) => {
+                command @ (Command::Reset
+                | Command::SaveState(_)
+                | Command::LoadState(_)
+                | Command::ResumeAutosave(_)) => {
                     if let Some(audio) = audio.as_deref_mut() {
                         audio.set_paused(true, stop)?;
                     }
-                    let changes_video = matches!(&command, Command::Reset | Command::LoadState(_));
+                    let changes_video = !matches!(&command, Command::SaveState(_));
                     let result = operation(&command);
+                    if result.is_ok() && matches!(&command, Command::ResumeAutosave(_)) {
+                        self.autosave.store(true, Ordering::Release);
+                    }
                     if changes_video {
                         // Even a failed core unserialization may change internal
                         // state. Never retain an old video/filter generation.
@@ -300,6 +353,7 @@ impl Worker {
                             Command::Reset => "Game reset".into(),
                             Command::SaveState(path) => state_notice("State saved", &path),
                             Command::LoadState(path) => state_notice("State loaded", &path),
+                            Command::ResumeAutosave(_) => "Autosave loaded and turned on".into(),
                             _ => unreachable!(),
                         },
                         Err(ref error) => error.clone(),
@@ -369,6 +423,55 @@ mod autosave_tests {
         assert_eq!(controls.autosave(), Some(false));
         controls.set_autosave(true).unwrap();
         assert!(worker.autosave_enabled());
+    }
+
+    #[test]
+    fn resume_enables_autosave_only_after_loading_and_removal_keeps_manual_slots() {
+        let root = std::env::temp_dir().join(format!(
+            "emuluna-autosave-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos(),
+        ));
+        let shared = emuluna_state_file::automatic_path(&root.join("shared"));
+        let legacy = emuluna_state_file::automatic_path(&root.join("core"));
+        let legacy_file = legacy.with_extension(emuluna_state_file::LEGACY_EXTENSION);
+        let preview = legacy.with_extension("png");
+        let manual = emuluna_state_file::slot_path(legacy.parent().unwrap(), 1);
+        std::fs::create_dir_all(shared.parent().unwrap()).unwrap();
+        std::fs::create_dir_all(legacy.parent().unwrap()).unwrap();
+        for path in [&legacy_file, &preview, &manual] {
+            std::fs::write(path, b"fixture").unwrap();
+        }
+
+        let (mut controls, mut worker) = channel();
+        controls.configure_autosave(false);
+        controls.configure_autosave_paths(shared, legacy);
+        let stop = AtomicBool::new(false);
+        for succeeds in [false, true] {
+            controls.resume_autosave().unwrap();
+            assert_eq!(controls.autosave(), Some(false));
+            worker
+                .service_operations(None, &stop, |command| {
+                    assert_eq!(*command, Command::ResumeAutosave(legacy_file.clone()));
+                    if succeeds {
+                        Ok(())
+                    } else {
+                        Err("Incompatible state".into())
+                    }
+                })
+                .unwrap();
+            assert_eq!(controls.autosave(), Some(succeeds));
+        }
+        controls.set_autosave(false).unwrap();
+        assert!(legacy_file.is_file() && preview.is_file());
+        controls.remove_autosave().unwrap();
+        assert_eq!(controls.existing_autosave(), None);
+        assert!(!preview.exists());
+        assert!(manual.is_file());
+        std::fs::remove_dir_all(root).unwrap();
     }
 }
 

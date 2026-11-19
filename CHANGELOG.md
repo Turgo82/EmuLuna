@@ -2,6 +2,14 @@
 
 This file records user-facing changes to EmuLuna releases.
 
+## [0.21.2] - 2026-11-19
+
+- Fix held keyboard buttons being treated as taps during gameplay.
+- Prompt when a newer release is available, with an option to verify, install, and restart from the new AppImage.
+- Choose whether to keep or remove the saved state when turning off autosave. When turning it back on, load an existing autosave before resuming automatic saving.
+- Show the reset warning only when autosave is on.
+- Use the EmuLuna icon on separate windows and label the console selector in Cores settings.
+
 ## [0.21.1] - 2026-11-16
 
 - Scroll the cover grid half a row per wheel notch, with smooth slowdown.

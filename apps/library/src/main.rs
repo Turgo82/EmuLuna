@@ -588,7 +588,19 @@ impl App {
     fn game_action(&mut self, action: actions::Action, ctx: &egui::Context) {
         match action {
             actions::Action::Play(game) => self.play(game, None),
-            actions::Action::StartFromBoot(game) => self.restart = Some(game),
+            actions::Action::StartFromBoot(game) => {
+                let autosave = self.loaded.as_ref().is_some_and(|data| {
+                    let mut settings = data.library.settings.clone();
+                    settings.extend(self.preferences.values.clone());
+                    settings.get("native.keep_progress").is_none_or(|v| v != "0")
+                        && launcher::autosave_enabled(&settings, &game.id)
+                });
+                if autosave {
+                    self.restart = Some(game);
+                } else {
+                    self.launch(game, None, None, true);
+                }
+            }
             actions::Action::Details(id) => {
                 self.selected.only(Some(id));
                 self.details = true;
@@ -1289,6 +1301,9 @@ impl eframe::App for App {
         self.notifications
             .update("media", &self.media.message, false);
 
+        if let Some(data) = &self.loaded {
+            self.settings.poll_updates(ctx, &self.preferences, &data.library);
+        }
         self.notifications
             .update("updates", &self.settings.update_notification(), false);
 
@@ -2475,7 +2490,7 @@ impl eframe::App for App {
             let changed = if settings_open {
                 ctx.show_viewport_immediate(
                     egui::ViewportId::from_hash_of("settings-window"),
-                    egui::ViewportBuilder::default()
+                    window_state::app_viewport()
                         .with_title("Settings — EmuLuna")
                         .with_inner_size([1160.0, 760.0])
                         .with_min_inner_size([680.0, 480.0]),
@@ -2695,6 +2710,18 @@ impl eframe::App for App {
             }
             ctx.request_repaint_after(Duration::from_millis(16));
         }
+        if !self.launcher.busy {
+            self.settings.show_update_prompt(ctx);
+        }
+        if !self.launcher.busy
+            && !self.backup.busy
+            && !self.importer.busy
+            && !self.import_services.busy
+            && !self.settings.sidebar_busy()
+            && !self.removal.busy()
+        {
+            self.settings.restart_for_update(ctx);
+        }
         self.capture(ctx);
     }
 }
@@ -2714,21 +2741,10 @@ fn main() {
             std::process::exit(1);
         }
     };
-    let icon = image::load_from_memory(include_bytes!("../../../data/branding/emuluna.png"))
-        .ok()
-        .map(|image| {
-            let image = image.thumbnail(128, 128).into_rgba8();
-            egui::IconData {
-                width: image.width(),
-                height: image.height(),
-                rgba: image.into_raw(),
-            }
-        });
     let options = eframe::NativeOptions {
         renderer: eframe::Renderer::Glow,
-        viewport: egui::ViewportBuilder::default()
+        viewport: window_state::app_viewport()
             .with_inner_size(args.window_size)
-            .with_app_id("emuluna")
             .with_min_inner_size([850., 560.]),
         ..Default::default()
     };
@@ -2737,9 +2753,6 @@ fn main() {
         if let Ok(prefs) = preferences::Preferences::load(&args.preferences) {
             options.viewport = window_state::restore(options.viewport, &prefs);
         }
-    }
-    if let Some(icon) = icon {
-        options.viewport = options.viewport.with_icon(icon);
     }
     if let Err(error) = eframe::run_native(
         "EmuLuna — Native Preview",
@@ -2754,6 +2767,10 @@ fn main() {
         std::process::exit(1);
     }
     if TEST_FAILED.load(std::sync::atomic::Ordering::Acquire) {
+        std::process::exit(1);
+    }
+    if let Err(error) = settings::appimage_update::restart_if_ready() {
+        eprintln!("EmuLuna update: {error}");
         std::process::exit(1);
     }
 }

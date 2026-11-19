@@ -25,6 +25,8 @@ enum Action {
     Controls,
     IntegerScale(bool),
     Autosave(bool),
+    RemoveAutosave,
+    ResumeAutosave,
     PreserveCropAspect(bool),
 }
 pub(super) struct Overlay {
@@ -65,6 +67,7 @@ pub(super) struct Overlay {
     confirm_load: bool,
     autosave: Option<bool>,
     confirm_disable_autosave: bool,
+    confirm_resume_autosave: bool,
     last_paint: Instant,
     dirty: bool,
     repaint_at: Option<Instant>,
@@ -154,6 +157,14 @@ fn show_console_options(
     }
 }
 impl Overlay {
+    fn request_reset(&mut self) {
+        if self.autosave == Some(true) {
+            self.confirm_reset = true;
+        } else {
+            self.actions.push(Action::Reset);
+        }
+    }
+
     fn new(gl: Arc<glow::Context>, theme: emuluna_theme::Theme) -> Result<Self, String> {
         let ctx = egui::Context::default();
         theme.apply(&ctx);
@@ -201,6 +212,7 @@ impl Overlay {
             confirm_load: false,
             autosave: None,
             confirm_disable_autosave: false,
+            confirm_resume_autosave: false,
             last_paint: Instant::now(),
             dirty: true,
             repaint_at: None,
@@ -332,7 +344,7 @@ impl Overlay {
                                 self.game_menu_open = false;
                                 self.game_submenu = None;
                             } else if label == "Reset" {
-                                self.confirm_reset = true;
+                                self.request_reset();
                                 self.game_menu_open = false;
                                 self.game_submenu = None;
                             } else if section.is_some() {
@@ -688,6 +700,7 @@ impl Overlay {
                 || self.confirm_reset
                 || self.confirm_load
                 || self.confirm_disable_autosave
+                || self.confirm_resume_autosave
                 || self.shader_controls_open
                 || ctx.memory(|m| m.any_popup_open())
                 || ctx.input(|i| i.pointer.any_down());
@@ -733,7 +746,7 @@ impl Overlay {
                                 )
                                 .clicked()
                                 {
-                                    self.confirm_reset = true;
+                                    self.request_reset();
                                 }
                                 ui.add_space(12. * scale);
                                 if icon_button(
@@ -957,9 +970,9 @@ impl Overlay {
             if self.confirm_disable_autosave {
                 let response = egui::Modal::new(egui::Id::new("confirm-disable-autosave"))
                     .show(ctx, |ui| {
-                        ui.set_max_width(340.);
+                        ui.set_max_width(410.);
                         ui.heading("Turn off autosave?");
-                        ui.label("EmuLuna won’t save a new automatic state when you close this game. You can still save manually.");
+                        ui.label("You can keep the existing autosave or remove it when turning autosave off.");
                         ui.horizontal(|ui| {
                             if ui.button("Cancel").clicked() {
                                 self.confirm_disable_autosave = false;
@@ -968,10 +981,34 @@ impl Overlay {
                                 self.confirm_disable_autosave = false;
                                 self.actions.push(Action::Autosave(false));
                             }
+                            if ui.button("Turn off and remove autosave").clicked() {
+                                self.confirm_disable_autosave = false;
+                                self.actions.push(Action::RemoveAutosave);
+                            }
                         });
                     });
                 if response.should_close() {
                     self.confirm_disable_autosave = false;
+                }
+            }
+            if self.confirm_resume_autosave {
+                let response = egui::Modal::new(egui::Id::new("confirm-resume-autosave"))
+                    .show(ctx, |ui| {
+                        ui.set_max_width(355.);
+                        ui.heading("Load the existing autosave?");
+                        ui.label("Turning autosave back on will load the existing autosave and replace your current progress in this session.");
+                        ui.horizontal(|ui| {
+                            if ui.button("Cancel").clicked() {
+                                self.confirm_resume_autosave = false;
+                            }
+                            if ui.button("Turn on and load").clicked() {
+                                self.confirm_resume_autosave = false;
+                                self.actions.push(Action::ResumeAutosave);
+                            }
+                        });
+                    });
+                if response.should_close() {
+                    self.confirm_resume_autosave = false;
                 }
             }
             if let Some((message, time)) = &self.message {
@@ -1535,16 +1572,17 @@ impl Presenter {
                     )]))
                 }
 
-                Action::Autosave(enabled) => commands.set_autosave(enabled).and_then(|()| {
-                    if let Ok(game) = std::env::var("EMULUNA_CONSOLE_GAME_ID") {
-                        Self::persist_session_options(BTreeMap::from([(
-                            format!("game.{game}.autosave"),
-                            if enabled { "1" } else { "0" }.into(),
-                        )]))
-                        .map_err(|error| format!("Could not remember autosave: {error}"))?;
+                Action::Autosave(true) if commands.existing_autosave().is_some() => {
+                    if let Some(overlay) = &mut self.overlay {
+                        overlay.confirm_resume_autosave = true;
+                        overlay.activity = Instant::now();
+                        overlay.dirty = true;
                     }
                     Ok(())
-                }),
+                }
+                Action::Autosave(enabled) => commands.set_autosave(enabled),
+                Action::RemoveAutosave => commands.remove_autosave(),
+                Action::ResumeAutosave => commands.resume_autosave(),
                 Action::Reset => commands.reset(),
                 Action::Save => commands.save_state(),
                 Action::Load if commands.autosave() == Some(true) => {
@@ -1611,6 +1649,16 @@ impl Presenter {
             }
             overlay.states = commands.states_available();
             if overlay.autosave != commands.autosave() {
+                if let (Some(_), Some(enabled), Ok(game)) =
+                    (overlay.autosave, commands.autosave(), std::env::var("EMULUNA_CONSOLE_GAME_ID"))
+                {
+                    if let Err(error) = Self::persist_session_options(BTreeMap::from([(
+                        format!("game.{game}.autosave"),
+                        if enabled { "1" } else { "0" }.into(),
+                    )])) {
+                        overlay.message = Some((format!("Could not remember autosave: {error}"), Instant::now()));
+                    }
+                }
                 overlay.autosave = commands.autosave();
                 overlay.dirty = true;
             }
@@ -1659,7 +1707,7 @@ impl Presenter {
                 repeat: false,
                 ..
             } => {
-                overlay.confirm_reset = true;
+                overlay.request_reset();
                 overlay.activity = Instant::now();
                 overlay.dirty = true;
                 true
@@ -1667,10 +1715,12 @@ impl Presenter {
             Event::KeyDown {
                 keycode: Some(sdl2::keyboard::Keycode::Escape),
                 ..
-            } if overlay.confirm_reset || overlay.confirm_load || overlay.confirm_disable_autosave => {
+            } if overlay.confirm_reset || overlay.confirm_load || overlay.confirm_disable_autosave
+                || overlay.confirm_resume_autosave => {
                 overlay.confirm_reset = false;
                 overlay.confirm_load = false;
                 overlay.confirm_disable_autosave = false;
+                overlay.confirm_resume_autosave = false;
                 overlay.activity = Instant::now();
                 overlay.dirty = true;
                 true
@@ -1683,7 +1733,7 @@ impl Presenter {
             } if keymod
                 .intersects(sdl2::keyboard::Mod::LCTRLMOD | sdl2::keyboard::Mod::RCTRLMOD) =>
             {
-                overlay.confirm_reset = true;
+                overlay.request_reset();
                 overlay.activity = Instant::now();
                 overlay.dirty = true;
                 true
@@ -2227,7 +2277,14 @@ mod tests {
             keymod: sdl2::keyboard::Mod::NOMOD,
             repeat: false,
         };
-        assert!(presenter.intercept_overlay_shortcut(&key_event(sdl2::keyboard::Keycode::F7)));
+        let reset = key_event(sdl2::keyboard::Keycode::F7);
+        presenter.overlay.as_mut().unwrap().autosave = Some(false);
+        assert!(presenter.intercept_overlay_shortcut(&reset));
+        let overlay = presenter.overlay.as_mut().unwrap();
+        assert!(!overlay.confirm_reset);
+        assert!(matches!(overlay.actions.pop(), Some(Action::Reset)));
+        overlay.autosave = Some(true);
+        assert!(presenter.intercept_overlay_shortcut(&reset));
         presenter.redraw_inner(false).unwrap();
         assert!(presenter.overlay.as_ref().unwrap().confirm_reset);
         assert!(!presenter

@@ -23,6 +23,7 @@ pub enum Command {
     Reset,
     SaveState(std::path::PathBuf),
     LoadState(std::path::PathBuf),
+    ResumeAutosave(std::path::PathBuf),
     Volume(f32),
     CoreOption(String, String),
     Stop,
@@ -83,7 +84,9 @@ impl SessionControl {
                     SessionState::Running
                 };
             }
-            Command::Reset | Command::LoadState(_) if self.state != SessionState::Stopped => {
+            Command::Reset | Command::LoadState(_) | Command::ResumeAutosave(_)
+                if self.state != SessionState::Stopped =>
+            {
                 self.invalidate_frames()
             }
             Command::Stop => {

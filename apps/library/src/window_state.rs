@@ -2,7 +2,28 @@
 use crate::preferences::Preferences;
 use eframe::egui::{self, ViewportBuilder, ViewportInfo};
 use serde::{Deserialize, Serialize};
+use std::sync::{Arc, OnceLock};
 use std::time::{Duration, Instant};
+
+pub fn app_viewport() -> ViewportBuilder {
+    static ICON: OnceLock<Option<Arc<egui::IconData>>> = OnceLock::new();
+    let mut builder = ViewportBuilder::default().with_app_id("emuluna");
+    if let Some(icon) = ICON.get_or_init(|| {
+        let image = image::load_from_memory(include_bytes!("../../../data/branding/emuluna.png"))
+            .ok()?
+            .thumbnail(128, 128)
+            .into_rgba8();
+        Some(Arc::new(egui::IconData {
+            width: image.width(),
+            height: image.height(),
+            rgba: image.into_raw(),
+        }))
+    }) {
+        builder = builder.with_icon(Arc::clone(icon));
+    }
+    builder
+}
+
 const KEY: &str = "native.window";
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 struct State {
