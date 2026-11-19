@@ -2,6 +2,10 @@
 
 This file records user-facing changes to EmuLuna releases.
 
+## [0.21.3] - 2026-11-19
+
+- Increase the visible size of the EmuLuna icon in launchers, docks, and window title bars.
+
 ## [0.21.2] - 2026-11-19
 
 - Fix held keyboard buttons being treated as taps during gameplay.
