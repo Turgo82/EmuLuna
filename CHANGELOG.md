@@ -2,6 +2,13 @@
 
 This file records user-facing changes to EmuLuna releases.
 
+## [0.21.4] - 2026-11-19
+
+- Use a PC mouse as an SNES Mouse with Snes9x or a Mega Mouse with Genesis Plus GX in compatible games. Choose the port, speed, and acceleration per game. Grab the mouse from the gameplay toolbar and release it with Esc.
+- Open Game information in a docked sidebar with box art and metadata. Match the ROM against the local catalog when metadata is missing.
+- Show the filename in Find cover art.
+- List supported libretro cores by console in the README.
+
 ## [0.21.3] - 2026-11-19
 
 - Increase the visible size of the EmuLuna icon in launchers, docks, and window title bars.
