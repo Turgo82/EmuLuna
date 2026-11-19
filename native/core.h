@@ -18,6 +18,8 @@ void el_reset(void* instance);
 /* Stereo frame count, -1 on failure, -2 for a normal core-requested shutdown. */
 int el_frame(void* instance, unsigned keys);
 void el_set_analog(void* instance, int16_t lx, int16_t ly, int16_t rx, int16_t ry);
+/* Relative motion for one frame. Button bits use RETRO_DEVICE_ID_MOUSE_* positions. */
+void el_set_mouse_input(void* instance, int16_t dx, int16_t dy, unsigned buttons);
 void el_set_port_input(void* instance, unsigned port, unsigned keys, int16_t lx, int16_t ly, int16_t rx, int16_t ry);
 uint16_t el_rumble_strength(void* instance, unsigned port, unsigned effect);
 void el_set_runtime_option(void* instance, const char* key, const char* value);

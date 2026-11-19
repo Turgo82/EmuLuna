@@ -299,6 +299,7 @@ impl<'a> CoreSource<'a> {
         gl: &glow::Context,
         slot: &mut Slot,
         inputs: &[emuluna_session::input::Snapshot],
+        mouse: &crate::mouse_input::MouseFrames,
     ) -> Result<Option<Metadata>, String> {
         self.prepare_core_call()?;
         let core_started = Instant::now();
@@ -307,6 +308,7 @@ impl<'a> CoreSource<'a> {
                 .set_port_input(port as u32, input.buttons, input.axes);
         }
         self.core.set_analog(inputs[0].axes);
+        mouse.update(&mut self.core);
         match self.core.run_into(inputs[0].buttons, &mut self.frame) {
             Ok(emuluna_libretro_host::FrameOutcome::Frame) => {}
             Ok(emuluna_libretro_host::FrameOutcome::Shutdown) => {

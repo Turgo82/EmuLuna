@@ -82,6 +82,11 @@ pub fn launch_options(
     }
     if let Some(accessories) = record.get("accessories").and_then(Value::as_array) {
         for accessory in accessories {
+            if accessory["systems"].as_array().is_some_and(|systems| {
+                !systems.iter().any(|value| value.as_str() == Some(system))
+            }) {
+                continue;
+            }
             let key = accessory
                 .get("key")
                 .and_then(Value::as_str)

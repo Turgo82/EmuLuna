@@ -32,6 +32,9 @@ struct Host {
     uintptr_t hardware_framebuffer = 0;
     retro_hw_render_callback hardware{};
     std::unique_ptr<VulkanHost> vulkan;
+    unsigned mouse_port = 4;
+    int16_t mouse_dx = 0, mouse_dy = 0;
+    unsigned mouse_buttons = 0;
     int16_t axes[4][4] = {};
     unsigned keys[4] = {};
     bool input_ports[4] = {true, false, false, false};
@@ -390,6 +393,13 @@ static void audio_sample(int16_t left, int16_t right) { int16_t samples[2] = {le
 static void poll() {}
 static int16_t input(unsigned port, unsigned device, unsigned index, unsigned id) {
     if (!active || port >= 4) return 0;
+    if ((device & RETRO_DEVICE_MASK) == RETRO_DEVICE_MOUSE) {
+        if (port != active->mouse_port || index) return 0;
+        if (id == RETRO_DEVICE_ID_MOUSE_X) return active->mouse_dx;
+        if (id == RETRO_DEVICE_ID_MOUSE_Y) return active->mouse_dy;
+        return id < 32 && (active->mouse_buttons & (1u << id)) ? 1 : 0;
+    }
+    if (port == active->mouse_port) return 0;
     if ((device & RETRO_DEVICE_MASK) == RETRO_DEVICE_ANALOG)
         return index < 2 && id < 2 ? active->axes[port][index * 2 + id] : 0;
     if ((device & RETRO_DEVICE_MASK) != RETRO_DEVICE_JOYPAD || index) return 0;
@@ -417,6 +427,12 @@ extern "C" {
 void el_set_analog(void *instance, int16_t lx, int16_t ly, int16_t rx, int16_t ry) {
     auto h = static_cast<Host*>(instance);
     h->axes[0][0] = lx; h->axes[0][1] = ly; h->axes[0][2] = rx; h->axes[0][3] = ry;
+}
+void el_set_mouse_input(void *instance, int16_t dx, int16_t dy, unsigned buttons) {
+    auto h = static_cast<Host*>(instance);
+    h->mouse_dx = dx;
+    h->mouse_dy = dy;
+    h->mouse_buttons = buttons;
 }
 void el_set_port_input(void *instance, unsigned port, unsigned keys, int16_t lx, int16_t ly, int16_t rx, int16_t ry) {
     auto h = static_cast<Host*>(instance);
@@ -560,6 +576,12 @@ void *el_libretro_create(const char *core, const char *rom, const char *save, co
     if (!h->load_game(&game)) { last_error = "The Libretro core could not load this ROM. Check its format and any required BIOS files."; el_destroy(h); return nullptr; }
     h->loaded = true;
     h->set_controller_port_device(0, RETRO_DEVICE_JOYPAD);
+    auto mouse = h->options.find("emuluna_mouse_port");
+    if (mouse != h->options.end() && (mouse->second == "1" || mouse->second == "2")) {
+        h->mouse_port = mouse->second == "1" ? 0 : 1;
+        h->input_ports[h->mouse_port] = true;
+        h->set_controller_port_device(h->mouse_port, RETRO_DEVICE_MOUSE);
+    }
     retro_system_av_info av{}; h->get_system_av_info(&av);
     if (!valid_av(av)) {
         last_error = "Unsupported core video dimensions or audio timing: " + std::to_string(av.geometry.base_width) + "x" +

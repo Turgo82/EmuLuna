@@ -7,6 +7,7 @@ mod artwork;
 mod collections;
 mod cover_search;
 mod disc_backup;
+mod game_metadata;
 mod game_table;
 mod import_services;
 mod importing;
@@ -314,6 +315,7 @@ struct App {
     delete_collection: Option<(i64, String)>,
     removal: removal::Removal,
     details: bool,
+    details_metadata: Option<(String, rusqlite::Result<game_metadata::Fields>)>,
     show_log: bool,
     capture: Option<PathBuf>,
     capture_requested: bool,
@@ -443,6 +445,7 @@ impl App {
             delete_collection: None,
             removal: removal::Removal::default(),
             details: false,
+            details_metadata: None,
             show_log: false,
             capture: args.capture,
             capture_requested: false,
@@ -603,6 +606,7 @@ impl App {
             }
             actions::Action::Details(id) => {
                 self.selected.only(Some(id));
+                self.details_metadata = None;
                 self.details = true;
             }
             actions::Action::Favorite(id, value) => {
@@ -1387,6 +1391,7 @@ impl eframe::App for App {
                                 )
                                 .clicked()
                             {
+                                self.details_metadata = None;
                                 self.details = true;
                                 ui.close_menu();
                             }
@@ -1969,6 +1974,164 @@ impl eframe::App for App {
         }
         if let Some(view) = next_view {
             self.select_view(view);
+        }
+        let mut play_game = None;
+        if self.details && self.page == Page::Library {
+            if let Some((library, game)) = self.loaded.as_ref().and_then(|data| {
+                data.library.games.iter()
+                    .find(|g| Some(&g.id) == self.selected.primary.as_ref())
+                    .map(|game| (&data.library, game))
+            }) {
+                if self.details_metadata.as_ref().is_none_or(|(id, _)| id != &game.id) {
+                    self.details_metadata = Some((
+                        game.id.clone(),
+                        game_metadata::for_game(
+                            &library.root,
+                            game,
+                            self.preferences.get(region::KEY).unwrap_or(region::DEFAULT),
+                        ),
+                    ));
+                }
+                let metadata = self.details_metadata.as_ref().map(|(_, data)| data);
+                let console = region::console_name(
+                    &game.system,
+                    self.preferences.get(region::KEY).unwrap_or(region::DEFAULT),
+                )
+                .or_else(|| library.consoles.iter().find(|console| console.id == game.system).map(|console| console.name.as_str()))
+                .unwrap_or(&game.system);
+                let cover = game.cover.as_deref().and_then(|path| {
+                    let texture = self.art.box_art_texture(path)?;
+                    let size = self.art.size(path)?;
+                    Some((texture, size))
+                });
+                let cover_radius = if settings::value(
+                    &self.preferences,
+                    library,
+                    "library.rounded_box_art",
+                    "1",
+                ) == "1" { 8 } else { 0 };
+                let width = (ctx.available_rect().width() * 0.48).clamp(165., 340.);
+                egui::SidePanel::right("game-information")
+                    .exact_width(width)
+                    .resizable(false)
+                    .frame(
+                        egui::Frame::new()
+                            .fill(self.theme.color("sidebar-background", Color32::from_gray(35)))
+                            .inner_margin(egui::Margin::symmetric(12, 12)),
+                    )
+                    .show(ctx, |ui| {
+                        ui.horizontal(|ui| {
+                            ui.label(fonts::window_title("Game information"));
+                            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                                if ui.button("×").on_hover_text("Close game information").clicked() {
+                                    self.details = false;
+                                }
+                            });
+                        });
+                        ui.separator();
+                        egui::ScrollArea::vertical()
+                            .id_salt((&game.id, "game-information-scroll"))
+                            .auto_shrink([false, false])
+                            .show(ui, |ui| {
+                                let facts = |ui: &mut egui::Ui| {
+                                    ui.heading(&game.title);
+                                    ui.label(console);
+                                    ui.add_space(8.);
+                                    match metadata {
+                                        Some(Ok(fields)) if !fields.is_empty() => {
+                                            for (label, value) in fields {
+                                                if !matches!(*label, "Description" | "Notes") {
+                                                    ui.label(egui::RichText::new(*label).strong());
+                                                    ui.label(value);
+                                                }
+                                            }
+                                        }
+                                        Some(Err(_)) => {
+                                            ui.weak("Game metadata could not be read.");
+                                        }
+                                        _ => {
+                                            ui.weak("No metadata was found for this game.");
+                                        }
+                                    }
+                                };
+                                if let Some((texture, size)) = cover {
+                                    ui.horizontal_top(|ui| {
+                                        let cover_width = (ui.available_width() * 0.40).min(175.);
+                                        let left_width = ui.available_width()
+                                            - cover_width
+                                            - ui.spacing().item_spacing.x;
+                                        ui.allocate_ui_with_layout(
+                                            egui::vec2(left_width, 0.),
+                                            egui::Layout::top_down(egui::Align::Min),
+                                            |ui| {
+                                                ui.set_width(left_width);
+                                                facts(ui);
+                                            },
+                                        );
+                                        let scale = (cover_width / size.x).min(230. / size.y);
+                                        ui.allocate_ui_with_layout(
+                                            egui::vec2(cover_width, 0.),
+                                            egui::Layout::top_down(egui::Align::Center),
+                                            |ui| {
+                                                ui.set_width(cover_width);
+                                                ui.add(
+                                                    egui::Image::new((texture, size * scale))
+                                                        .corner_radius(cover_radius),
+                                                );
+                                            },
+                                        );
+                                    });
+                                } else {
+                                    facts(ui);
+                                }
+                                if let Some(Ok(fields)) = metadata {
+                                    for (label, value) in fields {
+                                        if matches!(*label, "Description" | "Notes") {
+                                            ui.add_space(6.);
+                                            ui.label(egui::RichText::new(*label).strong());
+                                            ui.label(value);
+                                        }
+                                    }
+                                }
+                                ui.separator();
+                                ui.label(format!("Played {} times", game.play_count));
+                                ui.add_space(8.);
+                                ui.label(game.rom.to_string_lossy());
+                                ui.add_space(12.);
+                                egui::ComboBox::from_id_salt("test-filter")
+                                    .selected_text(
+                                        self.presets
+                                            .iter()
+                                            .find(|(id, _)| id == &self.test_preset)
+                                            .map_or("Nearest Neighbor", |(_, name)| name.as_str()),
+                                    )
+                                    .show_ui(ui, |ui| {
+                                        for (id, name) in &self.presets {
+                                            ui.selectable_value(&mut self.test_preset, id.clone(), name);
+                                        }
+                                    });
+                                if ui
+                                    .add_enabled(
+                                        !self.launcher.busy,
+                                        egui::Button::new(if self.resumes.has(&game.id) {
+                                            "Resume"
+                                        } else {
+                                            "Play"
+                                        }),
+                                    )
+                                    .clicked()
+                                {
+                                    play_game = Some(game.clone());
+                                }
+                                ui.weak(
+                                    "Each launch uses fresh temporary saves. Your existing progress stays unchanged.",
+                                );
+                            });
+                    });
+            }
+        }
+        if let Some(game) = play_game {
+            self.play(game, None);
         }
         let mut game_action = None;
         let mut media_action = None;
@@ -2616,59 +2779,6 @@ impl eframe::App for App {
             if response.should_close() {
                 self.confirm_state = None;
             }
-        }
-        let mut play_game = None;
-        if self.details {
-            if let Some(game) = self.loaded.as_ref().and_then(|data| {
-                data.library
-                    .games
-                    .iter()
-                    .find(|g| Some(&g.id) == self.selected.primary.as_ref())
-            }) {
-                egui::Window::new(emuluna_theme::fonts::window_title("Game details"))
-                    .collapsible(false)
-                    .resizable(false)
-                    .open(&mut self.details)
-                    .show(ctx, |ui| {
-                        ui.heading(&game.title);
-                        ui.label(&game.system);
-                        ui.label(format!("Played {} times", game.play_count));
-                        ui.add_space(8.);
-                        ui.label(game.rom.to_string_lossy());
-                        ui.add_space(12.);
-                        egui::ComboBox::from_id_salt("test-filter")
-                            .selected_text(
-                                self.presets
-                                    .iter()
-                                    .find(|(id, _)| id == &self.test_preset)
-                                    .map_or("Nearest Neighbor", |(_, name)| name.as_str()),
-                            )
-                            .show_ui(ui, |ui| {
-                                for (id, name) in &self.presets {
-                                    ui.selectable_value(&mut self.test_preset, id.clone(), name);
-                                }
-                            });
-                        if ui
-                            .add_enabled(
-                                !self.launcher.busy,
-                                egui::Button::new(if self.resumes.has(&game.id) {
-                                    "Resume"
-                                } else {
-                                    "Play"
-                                }),
-                            )
-                            .clicked()
-                        {
-                            play_game = Some(game.clone());
-                        }
-                        ui.weak(
-                            "Each launch uses fresh temporary saves. Your existing progress stays unchanged.",
-                        );
-                    });
-            }
-        }
-        if let Some(game) = play_game {
-            self.play(game, None);
         }
         if self.show_log {
             egui::Window::new(emuluna_theme::fonts::window_title("Session log"))

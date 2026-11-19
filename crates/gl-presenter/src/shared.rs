@@ -385,6 +385,7 @@ impl Presenter {
             automatic
         });
         let automatic_preview_path = automatic.as_ref().map(|path| path.with_extension("png"));
+        let (mut game_mouse, mouse_frames) = self.game_mouse(&launch_options);
         thread::scope(|scope| {
             let producer = scope.spawn(move || -> ProducerResult {
                 let context = detached;
@@ -526,7 +527,7 @@ impl Presenter {
                             *state = reader.for_frame();
                         }
                         states[0].buttons |= scripted_input.buttons(sequence);
-                        match source.render(&gl,&mut slots[slot],&states[..input_readers.len()])? {
+                        match source.render(&gl,&mut slots[slot],&states[..input_readers.len()],&mouse_frames)? {
                             Some(metadata)=>metadata,
                             None=>{worker_diagnostics.store(source.diagnostics(),Ordering::Relaxed);free.push(slot);break;}
                         }
@@ -673,6 +674,9 @@ impl Presenter {
                     );
                 }
                 for event in events.poll_iter() {
+                    if self.game_mouse_event(&mut game_mouse, &event, commands.paused()) {
+                        continue;
+                    }
                     self.window_event(&event, &mut commands)?;
                     self.overlay_event(&event);
                     if let Some(device) = audio_device.as_deref_mut() {
@@ -730,6 +734,7 @@ impl Presenter {
                 if self.service_overlay(&mut commands)? {
                     break;
                 }
+                self.service_mouse_grab(&mut game_mouse);
                 for (port, publisher) in input_publishers.iter_mut().enumerate() {
                     publisher.publish(input.snapshot(port));
                 }

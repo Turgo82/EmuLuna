@@ -394,6 +394,7 @@ fn run() -> Result<(), String> {
         .autosave()
         .is_some()
         .then(|| automatic.with_extension("png"));
+    let (mut game_mouse, mouse_frames) = presenter.game_mouse(&options);
     let worker = thread::spawn(move || -> Result<WorkerStatistics, String> {
         let paths: [PathBuf; 5] = paths.try_into().map_err(|_| "Invalid paths")?;
         let mut core = Core::open_with_options(&paths, &options)?;
@@ -456,6 +457,7 @@ fn run() -> Result<(), String> {
             let mut state = input_readers[0].for_frame();
             state.buttons |= scripted_input.buttons(index);
             core.set_analog(state.axes);
+            mouse_frames.update(&mut core);
             if core.run_into(state.buttons, &mut frame)?
                 == emuluna_libretro_host::FrameOutcome::Shutdown
             {
@@ -562,6 +564,9 @@ fn run() -> Result<(), String> {
                 thread::sleep(Duration::from_millis(stall_ms));
             }
             for event in events.poll_iter() {
+                if presenter.game_mouse_event(&mut game_mouse, &event, commands.paused()) {
+                    continue;
+                }
                 presenter.window_event(&event, &mut commands)?;
                 presenter.overlay_event(&event);
                 if let Some(message) = device.handle_event(&event) {
@@ -618,6 +623,7 @@ fn run() -> Result<(), String> {
             if presenter.service_overlay(&mut commands)? {
                 return Ok(());
             }
+            presenter.service_mouse_grab(&mut game_mouse);
             for (port, publisher) in input_publishers.iter_mut().enumerate() {
                 publisher.publish(input.snapshot(port));
             }

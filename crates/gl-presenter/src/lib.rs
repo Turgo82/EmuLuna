@@ -3,6 +3,7 @@
 use glow::HasContext;
 use std::{collections::BTreeMap, rc::Rc, sync::Arc};
 mod chain;
+mod mouse_input;
 mod n64_crop;
 mod overlay;
 mod preview;

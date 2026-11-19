@@ -200,6 +200,9 @@ impl Picker {
         let contents = |ui: &mut egui::Ui| {
             ui.spacing_mut().item_spacing = egui::vec2(12., 10.);
             ui.heading(format!("Find a cover for {}", game.title));
+            if let Some(filename) = game.rom.file_name() {
+                ui.label(format!("Filename: {}", filename.to_string_lossy()));
+            }
             ui.label("Search the artwork catalog and choose a cover.");
             ui.horizontal(|ui| {
                 let field_width =

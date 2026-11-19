@@ -51,6 +51,10 @@ pub(super) struct Overlay {
     shader_resolution_request: Option<u32>,
     console_options: Vec<ConsoleOption>,
     option_requests: Vec<(String, String, String, bool)>,
+    accessory_help: &'static str,
+    pub(super) mouse_port_active: bool,
+    pub(super) mouse_captured: bool,
+    pub(super) grab_mouse_requested: bool,
     n64_auto: Option<bool>,
     n64_preserve_aspect: bool,
     n64_auto_request: Option<bool>,
@@ -72,6 +76,8 @@ pub(super) struct Overlay {
     dirty: bool,
     repaint_at: Option<Instant>,
     #[cfg(test)]
+    grab_mouse_rect: Option<egui::Rect>,
+    #[cfg(test)]
     pause_rect: Option<egui::Rect>,
     #[cfg(test)]
     bar_rect: Option<egui::Rect>,
@@ -90,7 +96,9 @@ struct ConsoleOption {
     description: String,
 }
 fn is_accessory(option: &ConsoleOption) -> bool {
-    option.key.contains("pak") || option.key.contains("memcard")
+    option.key.contains("pak")
+        || option.key.contains("memcard")
+        || option.key.starts_with("emuluna_mouse_")
 }
 fn is_resolution(option: &ConsoleOption) -> bool {
     option.key.contains("upscaling")
@@ -151,7 +159,9 @@ fn show_console_options(
                     });
             });
         }
-        if option.restart {
+        if option.key == emuluna_libretro_host::MOUSE_PORT_OPTION {
+            ui.weak("Reopen the game after choosing a port.\nUse Grab mouse in the toolbar.");
+        } else if option.restart {
             ui.weak("Applies when the game is restarted.");
         }
     }
@@ -196,6 +206,10 @@ impl Overlay {
             shader_resolution_request: None,
             console_options: Vec::new(),
             option_requests: Vec::new(),
+            accessory_help: "No controller accessories are available for this console and core.",
+            mouse_port_active: false,
+            mouse_captured: false,
+            grab_mouse_requested: false,
             n64_auto: None,
             n64_preserve_aspect: false,
             n64_auto_request: None,
@@ -216,6 +230,8 @@ impl Overlay {
             last_paint: Instant::now(),
             dirty: true,
             repaint_at: None,
+            #[cfg(test)]
+            grab_mouse_rect: None,
             #[cfg(test)]
             pause_rect: None,
             #[cfg(test)]
@@ -292,7 +308,7 @@ impl Overlay {
                             None,
                             None,
                             Some(2),
-                            self.console_options.iter().any(is_accessory),
+                            true,
                         ),
                         (
                             "Video Filter",
@@ -451,6 +467,9 @@ impl Overlay {
                                             }
                                         }
                                     });
+                            }
+                            2 if !self.console_options.iter().any(is_accessory) => {
+                                ui.label(self.accessory_help);
                             }
                             2 => show_console_options(
                                 ui,
@@ -689,6 +708,7 @@ impl Overlay {
         }
         #[cfg(test)]
         {
+            self.grab_mouse_rect = None;
             self.pause_rect = None;
             self.bar_rect = None;
             self.notice_visible = false;
@@ -707,7 +727,9 @@ impl Overlay {
             if keep_open {
                 self.activity = Instant::now();
             }
-            if keep_open || self.activity.elapsed() < Duration::from_millis(2500) {
+            if !self.mouse_captured
+                && (keep_open || self.activity.elapsed() < Duration::from_millis(2500))
+            {
                 egui::Area::new("playback-controls".into())
                     .anchor(egui::Align2::CENTER_BOTTOM, egui::vec2(0., -18.))
                     .show(ctx, |ui| {
@@ -828,6 +850,18 @@ impl Overlay {
                                     self.game_menu_anchor = response.rect;
                                     if response.clicked() {
                                         self.game_menu_open = !self.game_menu_open;
+                                        self.game_submenu = None;
+                                    }
+                                }
+                                if self.mouse_port_active {
+                                    let button = ui.button("Grab mouse");
+                                    #[cfg(test)]
+                                    {
+                                        self.grab_mouse_rect = Some(button.rect);
+                                    }
+                                    if button.clicked() {
+                                        self.grab_mouse_requested = true;
+                                        self.game_menu_open = false;
                                         self.game_submenu = None;
                                     }
                                 }
@@ -1046,8 +1080,9 @@ impl Overlay {
             let expiry = self.activity + Duration::from_millis(2500);
             self.repaint_at = Some(self.repaint_at.map_or(expiry, |next| next.min(expiry)));
         }
-        if self.focused {
-            window.subsystem().sdl().mouse().show_cursor(
+        let mouse = window.subsystem().sdl().mouse();
+        if self.focused && !self.mouse_captured {
+            mouse.show_cursor(
                 !hide_cursor
                     || self.ctx.input(|i| i.pointer.any_down())
                     || self.paused
@@ -1115,6 +1150,11 @@ impl Presenter {
         else {
             return;
         };
+        overlay.accessory_help = match system {
+            "snes" => "Select Snes9x as the playback core to use the SNES Mouse.",
+            "genesis" | "segacd" => "Select Genesis Plus GX as the playback core to use the Mega Mouse.",
+            _ => "No controller accessories are available for this console and core.",
+        };
         let definition = &catalog[catalog_id];
         let value = |key: &str, default: &str| {
             initial
@@ -1161,6 +1201,11 @@ impl Presenter {
         }
         if let Some(items) = definition["accessories"].as_array() {
             for item in items {
+                if item["systems"].as_array().is_some_and(|systems| {
+                    !systems.iter().any(|value| value.as_str() == Some(system))
+                }) {
+                    continue;
+                }
                 let Some(template) = item["key"].as_str() else {
                     continue;
                 };
@@ -1497,7 +1542,8 @@ impl Presenter {
             .map(|o| std::mem::take(&mut o.option_requests))
             .unwrap_or_default();
         for (key, value, preference, restart) in requests {
-            if !restart {
+            let is_mouse = key == emuluna_libretro_host::MOUSE_PORT_OPTION;
+            if !restart && !key.starts_with("emuluna_mouse_") {
                 if let Err(error) = commands.set_core_option(key, value.clone()) {
                     self.overlay_message(error);
                     continue;
@@ -1517,7 +1563,12 @@ impl Presenter {
                 }
             }
             if restart {
-                self.overlay_message("Console option will apply when the game restarts".into());
+                let message = if is_mouse {
+                    "Reopen the game to apply the mouse port"
+                } else {
+                    "Console option will apply when the game restarts"
+                };
+                self.overlay_message(message.into());
             }
         }
         let filter = self.overlay.as_mut().and_then(|overlay| {
@@ -1791,6 +1842,31 @@ impl Presenter {
             overlay.dirty = true;
         }
     }
+    pub(super) fn mouse_tuning(&self) -> (f32, f32) {
+        let value = |key, default| {
+            self.overlay
+                .as_ref()
+                .and_then(|overlay| overlay.console_options.iter().find(|option| option.key == key))
+                .and_then(|option| option.value.parse::<f32>().ok())
+                .unwrap_or(default)
+        };
+        (
+            value("emuluna_mouse_speed", 1.0).clamp(0.5, 2.0),
+            value("emuluna_mouse_acceleration", 0.0).clamp(0.0, 3.0),
+        )
+    }
+    pub(super) fn set_mouse_captured(&mut self, captured: bool) {
+        if let Some(overlay) = self.overlay.as_mut() {
+            overlay.mouse_captured = captured;
+            overlay.activity = Instant::now();
+            overlay.dirty = true;
+            if captured {
+                overlay.game_menu_open = false;
+                overlay.game_submenu = None;
+                overlay.ctx.memory_mut(|memory| memory.close_popup());
+            }
+        }
+    }
     pub fn overlay_needs_redraw(&self) -> bool {
         self.overlay.as_ref().is_some_and(|o| {
             o.last_paint.elapsed() >= Duration::from_millis(16)
@@ -1903,6 +1979,103 @@ mod tests {
                 .capture_diagnostic(std::path::Path::new(&path))
                 .unwrap();
         }
+    }
+    #[test]
+    #[ignore = "requires an OpenGL context"]
+    fn live_console_mice_appear_in_the_controller_accessories_menu() {
+        let sdl = sdl2::init().unwrap();
+        let video = sdl.video().unwrap();
+        let mut presenter = Presenter::new(&video).unwrap();
+        presenter.enable_overlay("luna").unwrap();
+        presenter.configure_console_options("snes", "snes9x", "snes9x", "sample", &[]);
+        let overlay = presenter.overlay.as_mut().unwrap();
+        let mouse = overlay
+            .console_options
+            .iter()
+            .find(|option| is_accessory(option))
+            .unwrap();
+        assert_eq!(mouse.label, "SNES Mouse");
+        assert_eq!(mouse.value, "0");
+        assert!(mouse.restart);
+        overlay.console_options.clear();
+        presenter.configure_console_options("genesis", "genesis_plus_gx", "genesis_plus_gx", "sample", &[]);
+        let overlay = presenter.overlay.as_mut().unwrap();
+        let mouse = overlay.console_options.iter().find(|option| is_accessory(option)).unwrap();
+        assert_eq!(mouse.label, "Mega Mouse");
+        assert_eq!(mouse.choices.iter().map(|(_, name)| name.as_str()).collect::<Vec<_>>(), ["Off", "Port 1", "Port 2"]);
+        overlay.game_menu_open = true;
+        overlay.game_submenu = Some(2);
+        presenter
+            .draw_inner(4, 3, 4. / 3., &[96; 48], false)
+            .unwrap();
+        for _ in 0..4 {
+            presenter.redraw_inner(false).unwrap();
+        }
+        let overlay = presenter.overlay.as_ref().unwrap();
+        let flyout = overlay.ctx.memory(|memory| {
+            memory
+                .area_rect(egui::Id::new(("game-menu-submenu", 2u8)))
+                .unwrap()
+        });
+        assert!(
+            overlay.ctx.screen_rect().contains_rect(flyout),
+            "{flyout:?}"
+        );
+        if let Some(path) = std::env::var_os("EMULUNA_TEST_MOUSE_MENU_CAPTURE") {
+            presenter
+                .capture_diagnostic(std::path::Path::new(&path))
+                .unwrap();
+        }
+    }
+    #[test]
+    #[ignore = "requires a private display with desktop GL and relative mouse mode"]
+    fn live_mouse_button_grabs_and_escape_releases() {
+        let sdl = sdl2::init().unwrap();
+        let video = sdl.video().unwrap();
+        let mut presenter = Presenter::new(&video).unwrap();
+        presenter.enable_overlay("luna").unwrap();
+        let options = vec![(emuluna_libretro_host::MOUSE_PORT_OPTION.into(), "1".into())];
+        presenter.configure_console_options("snes", "snes9x", "snes9x", "sample", &options);
+        let (mut mouse, _) = presenter.game_mouse(&options);
+        presenter
+            .draw_inner(4, 3, 4. / 3., &[96; 48], false)
+            .unwrap();
+        for _ in 0..4 {
+            presenter.redraw_inner(false).unwrap();
+        }
+        let button = presenter.overlay.as_ref().unwrap().grab_mouse_rect.unwrap();
+        if let Some(path) = std::env::var_os("EMULUNA_TEST_GRAB_CAPTURE") {
+            presenter.capture_diagnostic(std::path::Path::new(&path)).unwrap();
+        }
+        assert!(presenter.overlay.as_ref().unwrap().ctx.screen_rect().contains_rect(button));
+        let pos = button.center();
+        for pressed in [true, false] {
+            let overlay = presenter.overlay.as_mut().unwrap();
+            overlay.events.push(egui::Event::PointerMoved(pos));
+            overlay.events.push(egui::Event::PointerButton {
+                pos,
+                button: egui::PointerButton::Primary,
+                pressed,
+                modifiers: egui::Modifiers::NONE,
+            });
+            presenter.redraw_inner(false).unwrap();
+        }
+        presenter.service_mouse_grab(&mut mouse);
+        assert!(sdl.mouse().relative_mouse_mode());
+        presenter.redraw_inner(false).unwrap();
+        assert!(presenter.overlay.as_ref().unwrap().grab_mouse_rect.is_none());
+        let escape = Event::KeyDown {
+            timestamp: 0,
+            window_id: presenter.window_id(),
+            keycode: Some(sdl2::keyboard::Keycode::Escape),
+            scancode: None,
+            keymod: sdl2::keyboard::Mod::NOMOD,
+            repeat: false,
+        };
+        assert!(presenter.game_mouse_event(&mut mouse, &escape, false));
+        assert!(!sdl.mouse().relative_mouse_mode());
+        presenter.redraw_inner(false).unwrap();
+        assert!(presenter.overlay.as_ref().unwrap().grab_mouse_rect.is_some());
     }
     #[test]
     #[ignore = "requires GL and EMULUNA_TEST_SHADER_PACK"]

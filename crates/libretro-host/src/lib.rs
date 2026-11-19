@@ -93,7 +93,18 @@ pub enum FrameOutcome {
     Frame,
     Shutdown,
 }
+pub const MOUSE_PORT_OPTION: &str = "emuluna_mouse_port";
+
+pub fn mouse_enabled(options: &[(String, String)]) -> bool {
+    options
+        .iter()
+        .any(|(key, value)| key == MOUSE_PORT_OPTION && matches!(value.as_str(), "1" | "2"))
+}
+
+type SetMouseInput = unsafe extern "C" fn(*mut c_void, i16, i16, c_uint);
+
 pub struct Core {
+    mouse_input: Option<SetMouseInput>,
     handle: NonNull<c_void>,
     frame: unsafe extern "C" fn(*mut c_void, c_uint) -> c_int,
     pixels: unsafe extern "C" fn(*mut c_void) -> *const u32,
@@ -181,6 +192,7 @@ impl Core {
         gl: Option<(u32, u32)>,
         options: &[(String, String)],
     ) -> Result<Self, String> {
+        let mouse_enabled = mouse_enabled(options);
         let options: Vec<_> = options
             .iter()
             .map(|(key, value)| {
@@ -197,6 +209,11 @@ impl Core {
             .try_lock()
             .map_err(|_| "Only one core may own the native host in a process")?;
         let lib = Library::open(host)?;
+        let mouse_input = if mouse_enabled {
+            Some(load!(lib, "el_set_mouse_input", SetMouseInput))
+        } else {
+            None
+        };
         let create = load!(
             lib,
             "el_libretro_create",
@@ -350,6 +367,7 @@ impl Core {
             )
         })?;
         Ok(Self {
+            mouse_input,
             handle,
             frame,
             pixels,
@@ -482,6 +500,11 @@ impl Core {
         self.set_analog([0; 4]);
         unsafe {
             (self.reset)(self.handle.as_ptr());
+        }
+    }
+    pub fn set_mouse_input(&mut self, dx: i16, dy: i16, buttons: u32) {
+        if let Some(set_input) = self.mouse_input {
+            unsafe { set_input(self.handle.as_ptr(), dx, dy, buttons) };
         }
     }
     pub fn set_port_input(&mut self, port: u32, buttons: u32, [lx, ly, rx, ry]: [i16; 4]) {

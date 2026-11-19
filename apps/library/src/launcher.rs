@@ -778,6 +778,11 @@ fn saved_options(
     }
     if let Some(accessories) = definition["accessories"].as_array() {
         for item in accessories {
+            if item["systems"].as_array().is_some_and(|systems| {
+                !systems.iter().any(|value| value.as_str() == Some(system))
+            }) {
+                continue;
+            }
             let Some(key) = item["key"].as_str() else {
                 continue;
             };

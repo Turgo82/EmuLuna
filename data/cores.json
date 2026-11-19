@@ -109,6 +109,27 @@
       }
     ],
     "notes": "(!) BS-X.bin (md5): fed4d8242cfbed61343d53d48432aced|(!) STBIOS.bin (md5): d3a44ba7d42a74d3ac58cb9c14c6a5ca|(!) To start BS-X games from the RPG-like interface, go back into the house and select the 1st option.",
+    "accessories": [
+      {
+        "key": "emuluna_mouse_port",
+        "label": "SNES Mouse",
+        "restart": true,
+        "default": "0",
+        "choices": [["0", "Off"], ["1", "Port 1"], ["2", "Port 2"]]
+      },
+      {
+        "key": "emuluna_mouse_speed",
+        "label": "Mouse speed",
+        "default": "1.0",
+        "choices": [["0.5", "50%"], ["0.75", "75%"], ["1.0", "100%"], ["1.25", "125%"], ["1.5", "150%"], ["2.0", "200%"]]
+      },
+      {
+        "key": "emuluna_mouse_acceleration",
+        "label": "Acceleration",
+        "default": "0",
+        "choices": [["0", "Off"], ["1", "Low"], ["2", "Medium"], ["3", "High"]]
+      }
+    ],
     "source": "https://raw.githubusercontent.com/libretro/libretro-core-info/master/snes9x_libretro.info"
   },
   "nestopia": {
@@ -426,6 +447,30 @@
       }
     ],
     "notes": "(!) sk2chip.bin (md5): b4e76e416b887f4e7413ba76fa735f16|(!) sk.bin (md5): 4ea493ea4e9f6c9ebfccbdb15110367e",
+    "accessories": [
+      {
+        "key": "emuluna_mouse_port",
+        "label": "Mega Mouse",
+        "systems": ["genesis", "segacd"],
+        "restart": true,
+        "default": "0",
+        "choices": [["0", "Off"], ["1", "Port 1"], ["2", "Port 2"]]
+      },
+      {
+        "key": "emuluna_mouse_speed",
+        "label": "Mouse speed",
+        "systems": ["genesis", "segacd"],
+        "default": "1.0",
+        "choices": [["0.5", "50%"], ["0.75", "75%"], ["1.0", "100%"], ["1.25", "125%"], ["1.5", "150%"], ["2.0", "200%"]]
+      },
+      {
+        "key": "emuluna_mouse_acceleration",
+        "label": "Acceleration",
+        "systems": ["genesis", "segacd"],
+        "default": "0",
+        "choices": [["0", "Off"], ["1", "Low"], ["2", "Medium"], ["3", "High"]]
+      }
+    ],
     "source": "https://raw.githubusercontent.com/libretro/libretro-core-info/master/genesis_plus_gx_libretro.info",
     "system_options": {
       "genesis": {
