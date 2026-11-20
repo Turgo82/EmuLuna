@@ -2,6 +2,14 @@
 
 This file records user-facing changes to EmuLuna releases.
 
+## [0.21.5] - 2026-11-19
+
+- Group ROM revisions and alternate versions under one library entry. Choose a preferred version from the Versions menu or the optional cover and list badges.
+- Show a translucent Play or Resume button that fades in on cover hover. Start from beginning is available in the right-click menu.
+- Highlight save states and screenshots with the same selection outline as box art, with Load and Open buttons on previews.
+- Match gameplay notices to the translucent toolbar.
+- Fix the search field border clipping and align the Scaling submenu with its parent row.
+
 ## [0.21.4] - 2026-11-19
 
 - Use a PC mouse as an SNES Mouse with Snes9x or a Mega Mouse with Genesis Plus GX in compatible games. Choose the port, speed, and acceleration per game. Grab the mouse from the gameplay toolbar and release it with Esc.
