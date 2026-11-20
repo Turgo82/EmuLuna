@@ -414,7 +414,21 @@ impl Overlay {
             let desired_height = match section {
                 1 => 10. * MENU_ROW_HEIGHT,
                 3 => (self.filter_choices.len() + 1) as f32 * MENU_ROW_HEIGHT + 2.,
-                4 => 255.,
+                4 => {
+                    let border_rows = if self.n64_auto.is_some() { 2 } else { 0 };
+                    let resolution_height: f32 = self
+                        .console_options
+                        .iter()
+                        .filter(|option| is_resolution(option))
+                        .map(|option| {
+                            option.choices.len() as f32 * MENU_ROW_HEIGHT
+                                + GAME_MENU_SEPARATOR_HEIGHT
+                                + ctx.style().text_styles[&egui::TextStyle::Body].size
+                                + 4.
+                        })
+                        .sum();
+                    ((1 + border_rows) as f32 * MENU_ROW_HEIGHT + resolution_height).min(255.)
+                }
                 _ => 190.,
             };
             let content_height = if desired_height > available_height && matches!(section, 1 | 3) {
@@ -1055,12 +1069,16 @@ impl Overlay {
                         .interactable(false)
                         .anchor(egui::Align2::CENTER_TOP, egui::vec2(0., 20.))
                         .show(ctx, |ui| {
-                            egui::Frame::popup(ui.style())
+                            bar_frame(1.)
                                 .corner_radius(10.)
-                                .inner_margin(12.)
                                 .show(ui, |ui| {
                                     ui.set_max_width((width as f32 - 48.).min(460.));
-                                    ui.label(egui::RichText::new(message).strong().size(16.));
+                                    ui.label(
+                                        egui::RichText::new(message)
+                                            .strong()
+                                            .size(16.)
+                                            .color(OVERLAY_TEXT),
+                                    );
                                 });
                         });
                 }
@@ -1982,6 +2000,34 @@ mod tests {
     }
     #[test]
     #[ignore = "requires an OpenGL context"]
+    fn live_scaling_menu_with_one_option_aligns_to_its_row() {
+        let sdl = sdl2::init().unwrap();
+        let video = sdl.video().unwrap();
+        let mut presenter = Presenter::new(&video).unwrap();
+        presenter.enable_overlay("luna").unwrap();
+        let overlay = presenter.overlay.as_mut().unwrap();
+        overlay.game_menu_open = true;
+        overlay.game_submenu = Some(4);
+        presenter.draw_inner(4, 3, 4. / 3., &[96; 48], false).unwrap();
+        for _ in 0..4 {
+            presenter.redraw_inner(false).unwrap();
+        }
+        let overlay = presenter.overlay.as_ref().unwrap();
+        let flyout = overlay.ctx.memory(|memory| {
+            memory.area_rect(egui::Id::new(("game-menu-submenu", 4u8))).unwrap()
+        });
+        assert!(
+            (flyout.top() + f32::from(MENU_PADDING) - overlay.submenu_anchor.top()).abs() <= 1.,
+            "flyout {flyout:?}, anchor {:?}",
+            overlay.submenu_anchor
+        );
+        if let Some(path) = std::env::var_os("EMULUNA_TEST_SIMPLE_SCALING_CAPTURE") {
+            presenter.capture_diagnostic(std::path::Path::new(&path)).unwrap();
+        }
+    }
+
+    #[test]
+    #[ignore = "requires an OpenGL context"]
     fn live_console_mice_appear_in_the_controller_accessories_menu() {
         let sdl = sdl2::init().unwrap();
         let video = sdl.video().unwrap();
@@ -2374,6 +2420,15 @@ mod tests {
         presenter.overlay_message("State loaded · Slot 2".into());
         presenter.redraw_inner(false).unwrap();
         assert!(presenter.overlay.as_ref().unwrap().notice_visible);
+        if let Some(path) = std::env::var_os("EMULUNA_TEST_NOTICE_CAPTURE") {
+            for _ in 0..4 {
+                std::thread::sleep(Duration::from_millis(30));
+                presenter.redraw_inner(false).unwrap();
+            }
+            presenter
+                .capture_diagnostic(std::path::Path::new(&path))
+                .unwrap();
+        }
         assert!(presenter.overlay.as_ref().unwrap().pause_rect.is_none());
         presenter
             .overlay

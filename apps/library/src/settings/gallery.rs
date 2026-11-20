@@ -351,8 +351,8 @@ impl Samples {
                     }
                 });
                 ui.weak("Cover actions");
-                let space = ui.allocate_space(egui::vec2(144., 36.)).1;
-                let _ = actions::hover_controls(ui, "gallery-cover", space, false, true);
+                let space = ui.allocate_space(egui::vec2(112., 36.)).1;
+                let _ = actions::hover_controls(ui, "gallery-cover", space, true, false, true);
             });
         });
     }

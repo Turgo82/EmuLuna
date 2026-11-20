@@ -16,7 +16,30 @@ const HEADERS: [&str; 8] = [
 ];
 const WIDTHS: [f32; 8] = [0.235, 0.18, 0.08, 0.105, 0.105, 0.095, 0.105, 0.095];
 
-pub fn paint(ui: &Ui, rect: Rect, values: [&str; 8], header: bool, rating: Color32) {
+pub fn version_badge_rect(row: Rect) -> Option<Rect> {
+    let title_width = row.width() * WIDTHS[0];
+    let usable = title_width - COVER_LEFT_INSET - COVER_SIZE.x - 8.;
+    let width = if usable >= 150. {
+        82.
+    } else if usable >= 65. {
+        34.
+    } else {
+        return None;
+    };
+    Some(Rect::from_center_size(
+        egui::pos2(row.left() + title_width - 6. - width / 2., row.center().y),
+        egui::vec2(width, 22.),
+    ))
+}
+
+pub fn paint(
+    ui: &Ui,
+    rect: Rect,
+    values: [&str; 8],
+    header: bool,
+    rating: Color32,
+    badge_width: f32,
+) {
     let mut left = rect.left();
     for (column, (text, fraction)) in values.into_iter().zip(WIDTHS).enumerate() {
         let right = left + rect.width() * fraction;
@@ -25,7 +48,8 @@ pub fn paint(ui: &Ui, rect: Rect, values: [&str; 8], header: bool, rating: Color
         } else {
             8.
         };
-        let width = (right - left - inset - 6.).max(0.);
+        let reserved = if column == 0 { badge_width } else { 0. };
+        let width = (right - left - inset - 6. - reserved).max(0.);
         if width > 0. {
             let font = if header || column == 0 {
                 fonts::bold(14.)
@@ -57,7 +81,7 @@ pub fn header(ui: &mut Ui, width: f32) {
         .0;
     ui.painter()
         .rect_filled(rect, 0., ui.visuals().widgets.inactive.bg_fill);
-    paint(ui, rect, HEADERS, true, Color32::TRANSPARENT);
+    paint(ui, rect, HEADERS, true, Color32::TRANSPARENT, 0.);
 }
 
 pub fn date(timestamp: f64) -> String {

@@ -483,6 +483,7 @@ impl Settings {
             Page::Library => &[
                 ("library.show_alphabet_index", "1"),
                 ("library.rounded_box_art", "1"),
+                ("library.show_version_badges", "1"),
                 (crate::region::KEY, crate::region::DEFAULT),
                 ("library.hide_empty_consoles", "1"),
             ],
@@ -958,6 +959,14 @@ impl Settings {
             env.library,
             "library.rounded_box_art",
             "Round box-art and preview corners",
+            true,
+        );
+        toggle(
+            ui,
+            prefs,
+            env.library,
+            "library.show_version_badges",
+            "Show version badges",
             true,
         );
         toggle(

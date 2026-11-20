@@ -25,6 +25,7 @@ mod selection;
 mod settings;
 mod startup;
 mod storage;
+mod versions;
 mod window_state;
 use eframe::egui::{self, Color32, FontId, Rect, RichText, Sense, Stroke, StrokeKind};
 use emuluna_library_model::{fit_covers, Cover, Grid, Library, View};
@@ -216,6 +217,7 @@ struct Loaded {
     sizes: Vec<[u32; 2]>,
     rom_available: Vec<bool>,
     counts: HashMap<String, usize>,
+    versions: versions::Index,
     original_covers: HashMap<String, PathBuf>,
 }
 impl Loaded {
@@ -243,12 +245,17 @@ impl Loaded {
                 settings::conversion::apply(&mut library, &original_covers, &artwork_root, &index);
             }
 
+            let versions = versions::Index::new(&library.games);
             let mut counts = HashMap::new();
+            for (index, game) in library.games.iter().enumerate() {
+                if versions.for_game(index).first().is_none_or(|version| version.game == index) {
+                    *counts.entry(game.system.clone()).or_insert(0) += 1;
+                }
+            }
             let sizes = library
                 .games
                 .iter()
                 .map(|game| {
-                    *counts.entry(game.system.clone()).or_insert(0) += 1;
                     let fallback = library
                         .consoles
                         .iter()
@@ -270,6 +277,7 @@ impl Loaded {
                 sizes,
                 rom_available,
                 counts,
+                versions,
                 original_covers,
             }
         })
@@ -591,6 +599,10 @@ impl App {
     fn game_action(&mut self, action: actions::Action, ctx: &egui::Context) {
         match action {
             actions::Action::Play(game) => self.play(game, None),
+            actions::Action::SelectVersion(preference, id) => {
+                self.preferences.set(&preference, id);
+                self.save_preferences();
+            }
             actions::Action::StartFromBoot(game) => {
                 let autosave = self.loaded.as_ref().is_some_and(|data| {
                     let mut settings = data.library.settings.clone();
@@ -711,7 +723,11 @@ impl App {
     }
     fn rebuild(&mut self) {
         if let Some(data) = &self.loaded {
-            self.visible = data.library.visible(&self.view, &self.search);
+            let matching = data.library.visible(&self.view, &self.search);
+            self.media.set_games(
+                matching.iter().map(|&index| data.library.games[index].id.clone()).collect(),
+            );
+            self.visible = data.versions.collapse(matching, &data.rom_available);
             self.selected
                 .retain_visible(&self.visible, &data.library.games);
             self.alphabet_targets.clear();
@@ -724,12 +740,6 @@ impl App {
                 self.visible
                     .iter()
                     .filter_map(|&index| data.library.games[index].cover.clone())
-                    .collect(),
-            );
-            self.media.set_games(
-                self.visible
-                    .iter()
-                    .map(|i| data.library.games[*i].id.clone())
                     .collect(),
             );
             // Median aspect normalization depends on the selected games, not
@@ -1549,7 +1559,13 @@ impl eframe::App for App {
                                     .max_rect(field_rect.translate(slide))
                                     .layout(egui::Layout::left_to_right(egui::Align::Center)),
                             );
-                            field_ui.set_clip_rect(ui.clip_rect().intersect(field_rect));
+                            // Clip the slide horizontally while leaving the frame's vertical stroke visible.
+                            let toolbar_clip = ui.clip_rect();
+                            let slide_clip = Rect::from_min_max(
+                                egui::pos2(field_rect.left() - 1., toolbar_clip.top()),
+                                egui::pos2(field_rect.right() + 1., toolbar_clip.bottom()),
+                            );
+                            field_ui.set_clip_rect(toolbar_clip.intersect(slide_clip));
                             let search_field = frame.show(&mut field_ui, |ui| {
                                 ui.set_width(166.);
                                 ui.spacing_mut().item_spacing.x = 4.;
@@ -1800,17 +1816,17 @@ impl eframe::App for App {
                                         actions::CollectionIcon::Added,
                                     ),
                                 ] {
-                                    let count = data
-                                        .library
-                                        .games
-                                        .iter()
-                                        .filter(|game| match view {
-                                            View::Favorites => game.favorite,
-                                            View::Recent => game.last_played.is_some(),
-                                            View::Added => game.added >= added_cutoff,
-                                            _ => true,
-                                        })
-                                        .count();
+                                    let count = data.versions.count(
+                                        data.library.games.iter().enumerate().filter_map(|(index, game)| {
+                                            let included = match view {
+                                                View::Favorites => game.favorite,
+                                                View::Recent => game.last_played.is_some(),
+                                                View::Added => game.added >= added_cutoff,
+                                                _ => true,
+                                            };
+                                            included.then_some(index)
+                                        }),
+                                    );
                                     if actions::collection_row(
                                         ui,
                                         label,
@@ -1829,7 +1845,8 @@ impl eframe::App for App {
                                     let response = actions::collection_row(
                                         ui,
                                         &collection.name,
-                                        collection.games.len(),
+                                        data.versions.count(data.library.games.iter().enumerate()
+                                            .filter_map(|(index, game)| collection.games.contains(&game.id).then_some(index))),
                                         actions::CollectionIcon::Folder,
                                         self.view == view,
                                         &self.theme,
@@ -1977,11 +1994,15 @@ impl eframe::App for App {
         }
         let mut play_game = None;
         if self.details && self.page == Page::Library {
-            if let Some((library, game)) = self.loaded.as_ref().and_then(|data| {
-                data.library.games.iter()
-                    .find(|g| Some(&g.id) == self.selected.primary.as_ref())
-                    .map(|game| (&data.library, game))
+            if let Some((data, index, game)) = self.loaded.as_ref().and_then(|data| {
+                data.library.games.iter().enumerate()
+                    .find(|(_, game)| Some(&game.id) == self.selected.primary.as_ref())
+                    .map(|(index, game)| (data, index, game))
             }) {
+                let library = &data.library;
+                let playback = &library.games[data.versions.playback_index(
+                    index, &library.games, &data.rom_available, &self.preferences,
+                )];
                 if self.details_metadata.as_ref().is_none_or(|(id, _)| id != &game.id) {
                     self.details_metadata = Some((
                         game.id.clone(),
@@ -2113,7 +2134,7 @@ impl eframe::App for App {
                                 if ui
                                     .add_enabled(
                                         !self.launcher.busy,
-                                        egui::Button::new(if self.resumes.has(&game.id) {
+                                        egui::Button::new(if self.resumes.has(&playback.id) {
                                             "Resume"
                                         } else {
                                             "Play"
@@ -2121,7 +2142,7 @@ impl eframe::App for App {
                                     )
                                     .clicked()
                                 {
-                                    play_game = Some(game.clone());
+                                    play_game = Some(playback.clone());
                                 }
                                 ui.weak(
                                     "Each launch uses fresh temporary saves. Your existing progress stays unchanged.",
@@ -2203,6 +2224,9 @@ impl eframe::App for App {
                     ctx.request_repaint_after(Duration::from_millis(30));
                     return;
                 };
+                let show_version_badges = settings::value(
+                    &self.preferences, &data.library, "library.show_version_badges", "1",
+                ) == "1";
                 let cover_radius = if settings::value(
                     &self.preferences,
                     &data.library,
@@ -2253,6 +2277,9 @@ impl eframe::App for App {
                         for row in rows {
                             let index = self.visible[row];
                             let game = &data.library.games[index];
+                            let playback = &data.library.games[data.versions.playback_index(
+                                index, &data.library.games, &data.rom_available, &self.preferences,
+                            )];
                             let (rect, response) = ui
                                 .allocate_exact_size(egui::vec2(table_width, 40.), Sense::click());
                             let selected = self.selected.contains(&game.id);
@@ -2322,6 +2349,9 @@ impl eframe::App for App {
                             } else {
                                 "★".repeat(game.rating as usize)
                             };
+                            let badge = data.versions.group(index)
+                                .filter(|_| show_version_badges)
+                                .zip(game_table::version_badge_rect(rect));
                             game_table::paint(
                                 ui,
                                 rect,
@@ -2341,7 +2371,15 @@ impl eframe::App for App {
                                 ],
                                 false,
                                 self.theme.color("rating-filled", Color32::YELLOW),
+                                badge.map_or(0., |(_, badge)| badge.width() + 6.),
                             );
+                            if let Some((group, badge)) = badge {
+                                if let Some(selection) = actions::version_badge(
+                                    ui, badge, group, &data.library.games, &data.rom_available, playback,
+                                ) {
+                                    game_action = Some(selection);
+                                }
+                            }
                             let modifiers = ui.input(|input| input.modifiers);
                             if response.clicked() {
                                 self.selected.click(
@@ -2352,7 +2390,7 @@ impl eframe::App for App {
                                 );
                             }
                             if response.double_clicked() && !modifiers.ctrl && !modifiers.shift {
-                                game_action = Some(actions::Action::Play(game.clone()));
+                                game_action = Some(actions::Action::Play(playback.clone()));
                             }
                             if response.secondary_clicked() && !self.selected.contains(&game.id) {
                                 self.selected.only(Some(game.id.clone()));
@@ -2361,8 +2399,12 @@ impl eframe::App for App {
                                 actions::menu(
                                     ui,
                                     game,
+                                    playback,
+                                    data.versions.group(index),
+                                    &data.library.games,
+                                    &data.rom_available,
                                     self.launcher.busy,
-                                    self.resumes.has(&game.id),
+                                    self.resumes.has(&playback.id),
                                     if self.selected.contains(&game.id) {
                                         self.selected.ids()
                                     } else {
@@ -2410,7 +2452,11 @@ impl eframe::App for App {
                             ui.allocate_exact_size(egui::vec2(width, row_height), Sense::hover());
                         for place in &self.grid.rows[row] {
                             self.last_drawn += 1;
-                            let game = &data.library.games[self.visible[place.index]];
+                            let index = self.visible[place.index];
+                            let game = &data.library.games[index];
+                            let playback = &data.library.games[data.versions.playback_index(
+                                index, &data.library.games, &data.rom_available, &self.preferences,
+                            )];
                             let art = Rect::from_min_size(
                                 row_rect.min + egui::vec2(place.x, 8.),
                                 egui::vec2(place.cover.width, place.cover.height),
@@ -2512,34 +2558,29 @@ impl eframe::App for App {
                             }
                             let selecting =
                                 ui.input(|input| input.modifiers.ctrl || input.modifiers.shift);
-                            if !selecting
+                            let show_play = !selecting
                                 && (self.scroll_test.is_some()
-                                    || actions::play_button_visible(
-                                        ui,
-                                        &response,
-                                        !self.selected.multiple()
-                                            && self.selected.contains(&game.id),
-                                    ))
-                            {
-                                let button = Rect::from_center_size(
-                                    art.center(),
-                                    egui::vec2(
-                                        if self.resumes.has(&game.id) {
-                                            144.
-                                        } else {
-                                            100.
-                                        },
-                                        36.,
-                                    ),
+                                    || ui.rect_contains_pointer(art));
+                            let resume = self.resumes.has(&playback.id);
+                            let button = Rect::from_center_size(
+                                art.center(),
+                                egui::vec2(if resume { 112. } else { 100. }, 36.),
+                            );
+                            if let Some(action) = actions::hover_game_controls(
+                                ui, playback, button, show_play, self.launcher.busy, resume,
+                            ) {
+                                game_action = Some(action);
+                            }
+                            if let Some(group) = data.versions.group(index).filter(|_| show_version_badges) {
+                                let width = if art.width() >= 94. { 82. } else { 34. };
+                                let badge = Rect::from_min_size(
+                                    art.right_top() + egui::vec2(-width - 6., 6.),
+                                    egui::vec2(width, 22.),
                                 );
-                                if let Some(action) = actions::hover_game_controls(
-                                    ui,
-                                    game,
-                                    button,
-                                    self.launcher.busy,
-                                    self.resumes.has(&game.id),
+                                if let Some(selection) = actions::version_badge(
+                                    ui, badge, group, &data.library.games, &data.rom_available, playback,
                                 ) {
-                                    game_action = Some(action);
+                                    game_action = Some(selection);
                                 }
                             }
                             let modifiers = ui.input(|input| input.modifiers);
@@ -2552,7 +2593,7 @@ impl eframe::App for App {
                                 );
                             }
                             if response.double_clicked() && !modifiers.ctrl && !modifiers.shift {
-                                game_action = Some(actions::Action::Play(game.clone()));
+                                game_action = Some(actions::Action::Play(playback.clone()));
                             }
                             if response.secondary_clicked() && !self.selected.contains(&game.id) {
                                 self.selected.only(Some(game.id.clone()));
@@ -2561,8 +2602,12 @@ impl eframe::App for App {
                                 actions::menu(
                                     ui,
                                     game,
+                                    playback,
+                                    data.versions.group(index),
+                                    &data.library.games,
+                                    &data.rom_available,
                                     self.launcher.busy,
-                                    self.resumes.has(&game.id),
+                                    self.resumes.has(&playback.id),
                                     if self.selected.contains(&game.id) {
                                         self.selected.ids()
                                     } else {

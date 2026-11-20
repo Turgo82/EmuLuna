@@ -36,11 +36,24 @@ pub enum Action {
     Open(PathBuf),
     Delete(Kind, Entry),
 }
+impl Entry {
+    fn open_action(&self, kind: Kind) -> Action {
+        match kind {
+            Kind::States => Action::Resume {
+                game: self.game.clone(),
+                path: self.path.clone(),
+                autosave: self.label == "Autosave",
+            },
+            Kind::Screenshots => Action::Open(self.path.clone()),
+        }
+    }
+}
 type IndexResult = (Kind, Result<Vec<Entry>, String>);
 type DeleteResult = (Kind, PathBuf, Result<Option<String>, String>);
 pub struct Browser {
     entries: Vec<Entry>,
     visible: Vec<usize>,
+    selected: Option<PathBuf>,
     games: HashSet<String>,
     kind: Kind,
     receiver: Option<mpsc::Receiver<IndexResult>>,
@@ -57,6 +70,7 @@ impl Default for Browser {
         Self {
             entries: Vec::new(),
             visible: Vec::new(),
+            selected: None,
             games: HashSet::new(),
             kind: Kind::States,
             receiver: None,
@@ -525,6 +539,7 @@ impl Browser {
             self.indexed = false;
             self.entries.clear();
             self.visible.clear();
+            self.selected = None;
         }
     }
     pub fn ensure(&mut self, library: &Library, native: PathBuf, ctx: &egui::Context) {
@@ -625,11 +640,19 @@ impl Browser {
                             egui::vec2(ui.available_width(), 50.),
                             egui::Sense::click(),
                         );
-                        if response.hovered() {
+                        if response.clicked() || response.secondary_clicked() {
+                            self.selected = Some(entry.path.clone());
+                        }
+                        let selected = self.selected.as_ref() == Some(&entry.path);
+                        if response.hovered() || selected {
                             ui.painter().rect_filled(
                                 rect,
                                 4.,
-                                ui.visuals().widgets.hovered.weak_bg_fill,
+                                if selected {
+                                    ui.visuals().selection.bg_fill
+                                } else {
+                                    ui.visuals().widgets.hovered.weak_bg_fill
+                                },
                             );
                         }
                         let thumb = egui::Rect::from_min_size(
@@ -682,15 +705,7 @@ impl Browser {
                             ui.visuals().weak_text_color(),
                         );
                         if response.double_clicked() && (self.kind == Kind::Screenshots || !busy) {
-                            action = Some(if self.kind == Kind::States {
-                                Action::Resume {
-                                    game: entry.game.clone(),
-                                    path: entry.path.clone(),
-                                    autosave: entry.label == "Autosave",
-                                }
-                            } else {
-                                Action::Open(entry.path.clone())
-                            });
+                            action = Some(entry.open_action(self.kind));
                         }
                         response
                             .context_menu(|ui| media_menu(ui, self.kind, entry, busy, &mut action));
@@ -731,6 +746,7 @@ impl Browser {
                         );
                         card.set_clip_rect(ui.clip_rect().intersect(cell));
                         let ui = &mut card;
+                        ui.add_space(5.);
                         let (rect, response) =
                             ui.allocate_exact_size(egui::vec2(208., 156.), egui::Sense::click());
                         ui.painter().rect_filled(
@@ -752,6 +768,41 @@ impl Browser {
                                 .corner_radius(preview_radius)
                                 .paint_at(ui, target);
                         }
+                        if response.clicked() || response.secondary_clicked() {
+                            self.selected = Some(entry.path.clone());
+                        }
+                        let selected = self.selected.as_ref() == Some(&entry.path);
+                        let show_controls = crate::actions::play_button_visible(ui, &response, selected);
+                        if show_controls {
+                            ui.painter().rect_stroke(
+                                rect.expand(3.),
+                                preview_radius.saturating_add(3),
+                                egui::Stroke::new(2., ui.visuals().selection.bg_fill),
+                                egui::StrokeKind::Outside,
+                            );
+                        }
+                        let can_open = self.kind == Kind::Screenshots || !busy;
+                        if show_controls && can_open {
+                            let button = egui::Rect::from_center_size(rect.center(), egui::vec2(100., 36.));
+                            let label = if self.kind == Kind::States { "▶ Load" } else { "Open" };
+                            let mut overlay = ui.new_child(
+                                egui::UiBuilder::new()
+                                    .id_salt("media-preview-button")
+                                    .max_rect(button)
+                                    .layout(egui::Layout::top_down(egui::Align::Center)),
+                            );
+                            if overlay.add_sized(
+                                button.size(),
+                                egui::Button::new(
+                                    egui::RichText::new(label).strong()
+                                        .color(ui.visuals().selection.stroke.color),
+                                )
+                                .fill(ui.visuals().selection.bg_fill)
+                                .corner_radius(8.),
+                            ).clicked() {
+                                action = Some(entry.open_action(self.kind));
+                            }
+                        }
                         if self.kind == Kind::States {
                             ui.label(egui::RichText::new(&entry.label).strong());
                         } else {
@@ -759,15 +810,7 @@ impl Browser {
                             ui.weak(&entry.system);
                         }
                         if response.double_clicked() && (self.kind == Kind::Screenshots || !busy) {
-                            action = Some(if self.kind == Kind::States {
-                                Action::Resume {
-                                    game: entry.game.clone(),
-                                    path: entry.path.clone(),
-                                    autosave: entry.label == "Autosave",
-                                }
-                            } else {
-                                Action::Open(entry.path.clone())
-                            });
+                            action = Some(entry.open_action(self.kind));
                         }
                         response
                             .context_menu(|ui| media_menu(ui, self.kind, entry, busy, &mut action));

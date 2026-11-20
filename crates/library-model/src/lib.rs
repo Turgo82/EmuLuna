@@ -12,6 +12,7 @@ pub struct Game {
     pub title: String,
     pub system: String,
     pub rom: PathBuf,
+    pub original_filename: Option<String>,
     pub cover: Option<PathBuf>,
     pub rating: u8,
     pub favorite: bool,
@@ -174,12 +175,13 @@ impl Library {
                 let original: Option<String> = row.get(10)?;
                 Ok(Game {
                     id: row.get(0)?,
-                    search: format!("{title} {system} {rom} {}", original.unwrap_or_default())
+                    search: format!("{title} {system} {rom} {}", original.as_deref().unwrap_or_default())
                         .to_lowercase(),
                     sort_title: title.to_lowercase(),
                     title,
                     system,
                     rom: resolve(&root, rom),
+                    original_filename: original,
                     cover: row
                         .get::<_, Option<String>>(4)?
                         .filter(|s| !s.is_empty())

@@ -79,6 +79,7 @@ pub(crate) fn search_input(query: &mut String) -> egui::TextEdit<'_> {
 pub enum Action {
     Play(Game),
     StartFromBoot(Game),
+    SelectVersion(String, String),
     Details(String),
     Favorite(String, bool),
     Rating(String, u8),
@@ -87,9 +88,99 @@ pub enum Action {
     Remove(Vec<String>),
     NewCollection(Vec<String>),
 }
+fn version_options(
+    ui: &mut egui::Ui,
+    group: &crate::versions::Group,
+    games: &[Game],
+    available: &[bool],
+    playback: &Game,
+) -> Option<Action> {
+    ui.set_width(176.);
+    ui.spacing_mut().item_spacing.y = 0.;
+    for version in &group.versions {
+        let candidate = &games[version.game];
+        let marker = if candidate.id == playback.id { "✓" } else { "" };
+        let filename = candidate.rom.file_name().unwrap_or_default().to_string_lossy();
+        if menu_row(ui, &version.label, marker, available[version.game])
+            .on_hover_text(filename)
+            .clicked()
+        {
+            return Some(Action::SelectVersion(
+                group.preference.clone(),
+                candidate.id.clone(),
+            ));
+        }
+    }
+    None
+}
+
+pub fn version_badge(
+    ui: &mut egui::Ui,
+    rect: egui::Rect,
+    group: &crate::versions::Group,
+    games: &[Game],
+    available: &[bool],
+    playback: &Game,
+) -> Option<Action> {
+    let count = group.versions.len();
+    let label = if rect.width() >= 78. {
+        format!("{count} versions")
+    } else {
+        count.to_string()
+    };
+    let popup = ui.id().with(("version-badge", &group.preference));
+    let response = ui.interact(rect, popup.with("button"), egui::Sense::click());
+    response.widget_info(|| egui::WidgetInfo::labeled(
+        egui::WidgetType::Button, true, format!("{count} versions"),
+    ));
+    let open = ui.memory(|memory| memory.is_popup_open(popup));
+    let visuals = ui.visuals();
+    let (fill, text) = if response.hovered() || open {
+        (visuals.selection.bg_fill, visuals.selection.stroke.color)
+    } else {
+        (visuals.window_fill, visuals.text_color())
+    };
+    ui.painter().rect(
+        rect, 6., fill, visuals.window_stroke, egui::StrokeKind::Inside,
+    );
+    ui.painter().text(
+        rect.left_center() + egui::vec2(7., 0.),
+        egui::Align2::LEFT_CENTER,
+        label,
+        egui::FontId::proportional(11.),
+        text,
+    );
+    let arrow = rect.right_center() - egui::vec2(8., 0.);
+    ui.painter().add(egui::Shape::convex_polygon(
+        vec![arrow + egui::vec2(-3., -1.), arrow + egui::vec2(3., -1.), arrow + egui::vec2(0., 2.)],
+        text,
+        egui::Stroke::NONE,
+    ));
+    let response = response.on_hover_text("Choose a ROM version");
+    if response.clicked() {
+        ui.memory_mut(|memory| memory.toggle_popup(popup));
+    }
+    let selection = egui::popup::popup_below_widget(
+        ui,
+        popup,
+        &response,
+        egui::PopupCloseBehavior::CloseOnClickOutside,
+        |ui| version_options(ui, group, games, available, playback),
+    )
+    .flatten();
+    if selection.is_some() {
+        ui.memory_mut(|memory| memory.close_popup());
+    }
+    selection
+}
+
 pub fn menu(
     ui: &mut egui::Ui,
     game: &Game,
+    playback: &Game,
+    versions: Option<&crate::versions::Group>,
+    games: &[Game],
+    available: &[bool],
     busy: bool,
     resume: bool,
     selected: Vec<String>,
@@ -103,12 +194,24 @@ pub fn menu(
         return;
     }
     if menu_row(ui, if resume { "Resume" } else { "Play" }, "", !busy).clicked() {
-        *action = Some(Action::Play(game.clone()));
+        *action = Some(Action::Play(playback.clone()));
         ui.close_menu();
     }
-    if resume && menu_row(ui, "Restart game…", "", !busy).clicked() {
-        *action = Some(Action::StartFromBoot(game.clone()));
+    if resume && menu_row(ui, "Start from beginning…", "", !busy).clicked() {
+        *action = Some(Action::StartFromBoot(playback.clone()));
         ui.close_menu();
+    }
+    if let Some(group) = versions {
+        ui.scope(|ui| {
+            ui.spacing_mut().button_padding.x = 11.;
+            ui.spacing_mut().interact_size.y = 32.;
+            ui.menu_button("Versions", |ui| {
+                if let Some(selection) = version_options(ui, group, games, available, playback) {
+                    *action = Some(selection);
+                    ui.close_menu();
+                }
+            });
+        });
     }
     let favorite_label = if game.favorite {
         "Remove from favorites"
@@ -307,106 +410,50 @@ pub fn hover_game_controls(
     ui: &mut egui::Ui,
     game: &Game,
     rect: egui::Rect,
+    visible: bool,
     busy: bool,
     resume: bool,
 ) -> Option<Action> {
-    hover_controls(ui, &game.id, rect, busy, resume).map(|restart| {
-        if restart {
-            Action::StartFromBoot(game.clone())
-        } else {
-            Action::Play(game.clone())
-        }
-    })
+    hover_controls(ui, &game.id, rect, visible, busy, resume)
+        .then(|| Action::Play(game.clone()))
 }
+
+fn hover_opacity(ui: &egui::Ui, id: &str, visible: bool) -> f32 {
+    ui.ctx()
+        .animate_bool_with_time(ui.id().with(("hover-play-opacity", id)), visible, 0.16)
+}
+
 pub(crate) fn hover_controls(
     ui: &mut egui::Ui,
     id: &str,
     rect: egui::Rect,
+    visible: bool,
     busy: bool,
     resume: bool,
-) -> Option<bool> {
+) -> bool {
+    let opacity = hover_opacity(ui, id, visible);
+    if opacity <= 0. {
+        return false;
+    }
     let mut overlay = ui.new_child(
         egui::UiBuilder::new()
             .id_salt(("hover-play", id))
             .max_rect(rect)
             .layout(egui::Layout::left_to_right(egui::Align::Center)),
     );
-    overlay.spacing_mut().item_spacing.x = 0.;
-    let mut action = None;
-    egui::Frame::new()
-        .fill(egui::Color32::from_rgba_unmultiplied(22, 30, 41, 225))
-        .corner_radius(8.)
-        .show(&mut overlay, |ui| {
-            ui.spacing_mut().item_spacing.x = 0.;
-            if ui
-                .add_enabled(
-                    !busy,
-                    egui::Button::new(
-                        egui::RichText::new(if resume { "▶ Resume" } else { "▶ Play" })
-                            .strong()
-                            .color(ui.visuals().selection.stroke.color),
-                    )
-                    .fill(ui.visuals().selection.bg_fill)
-                    .min_size(egui::vec2(if resume { 104. } else { 100. }, 36.))
-                    .corner_radius(if resume {
-                        egui::CornerRadius {
-                            nw: 8,
-                            sw: 8,
-                            ne: 0,
-                            se: 0,
-                        }
-                    } else {
-                        egui::CornerRadius::same(8)
-                    }),
-                )
-                .clicked()
-            {
-                action = Some(false);
-            }
-            if resume {
-                let response = ui.add_enabled(
-                    !busy,
-                    egui::Button::new("")
-                        .min_size(egui::vec2(36., 36.))
-                        .frame(false),
-                );
-                if response.hovered() || response.has_focus() {
-                    ui.painter().rect_filled(
-                        response.rect,
-                        egui::CornerRadius {
-                            nw: 0,
-                            sw: 0,
-                            ne: 8,
-                            se: 8,
-                        },
-                        egui::Color32::from_white_alpha(30),
-                    );
-                }
-                let center = response.rect.center();
-                let color = egui::Color32::from_white_alpha(if busy { 110 } else { 245 });
-                let stroke = egui::Stroke::new(1.8_f32, color);
-                let tip = center + egui::vec2(6.1, -3.5);
-                let mut arc: Vec<_> = (0..24)
-                    .map(|i| {
-                        let angle = egui::lerp(0.42..=5.76, i as f32 / 24.);
-                        center + egui::vec2(angle.cos(), angle.sin()) * 7.
-                    })
-                    .collect();
-                arc.push(tip);
-                ui.painter().add(egui::Shape::line(arc, stroke));
-                ui.painter().add(egui::Shape::line(
-                    vec![tip - egui::vec2(0., 5.), tip, tip - egui::vec2(5., 0.)],
-                    stroke,
-                ));
-                if response
-                    .on_hover_text("Restart from the beginning…")
-                    .clicked()
-                {
-                    action = Some(true);
-                }
-            }
-        });
-    action
+    overlay.multiply_opacity(opacity);
+    let toolbar = emuluna_theme::gameplay::bar_frame(1.);
+    let button = egui::Button::new(
+        egui::RichText::new(if resume { "▶ Resume" } else { "▶ Play" })
+            .strong()
+            .color(emuluna_theme::gameplay::OVERLAY_TEXT),
+    )
+    .fill(toolbar.fill)
+    .stroke(toolbar.stroke)
+    .min_size(rect.size())
+    .corner_radius(8.)
+    .sense(if visible { egui::Sense::click() } else { egui::Sense::hover() });
+    overlay.add_enabled(!busy, button).clicked()
 }
 
 #[derive(Clone, Copy)]
@@ -538,10 +585,10 @@ pub fn collection_row(
 mod tests {
     use super::*;
     #[test]
-    fn resume_and_restart_are_separate_click_targets() {
-        for (x, expected) in [(180., false), (250., true)] {
+    fn resume_uses_a_single_click_target() {
+        for (x, expected) in [(180., true), (265., false)] {
             let ctx = egui::Context::default();
-            let mut action = None;
+            let mut clicked = false;
             for frame in 0..5 {
                 let mut events = vec![egui::Event::PointerMoved(egui::pos2(x, 200.))];
                 if frame == 2 || frame == 3 {
@@ -562,22 +609,23 @@ mod tests {
                 };
                 let _ = ctx.run(input, |ctx| {
                     egui::CentralPanel::default().show(ctx, |ui| {
-                        if let Some(clicked) = hover_controls(
+                        if hover_controls(
                             ui,
                             "game",
                             egui::Rect::from_center_size(
                                 egui::pos2(200., 200.),
-                                egui::vec2(144., 36.),
+                                egui::vec2(112., 36.),
                             ),
+                            true,
                             false,
                             true,
                         ) {
-                            action = Some(clicked);
+                            clicked = true;
                         }
                     });
                 });
             }
-            assert_eq!(action, Some(expected));
+            assert_eq!(clicked, expected);
         }
     }
     #[test]
@@ -612,6 +660,7 @@ mod tests {
                             ui,
                             "cover",
                             egui::Rect::from_center_size(rect.center(), egui::vec2(100., 34.)),
+                            visible,
                             false,
                             true,
                         );
@@ -629,6 +678,27 @@ mod tests {
             "The button must hide after leaving the card"
         );
     }
+    #[test]
+    fn hover_opacity_animates_in_and_out() {
+        let ctx = egui::Context::default();
+        let mut opacity = Vec::new();
+        for frame in 0..32 {
+            let _ = ctx.run(
+                egui::RawInput { time: Some(f64::from(frame) / 60.), ..Default::default() },
+                |ctx| {
+                    egui::CentralPanel::default().show(ctx, |ui| {
+                        opacity.push(hover_opacity(ui, "cover", (4..19).contains(&frame)));
+                    });
+                },
+            );
+        }
+        assert_eq!(opacity[0], 0.);
+        assert!(opacity[7] > 0. && opacity[7] < 1.);
+        assert_eq!(opacity[18], 1.);
+        assert!(opacity[22] > 0. && opacity[22] < 1.);
+        assert_eq!(opacity[31], 0.);
+    }
+
     #[test]
     fn hover_controls_do_not_change_virtual_row_height_or_cursor() {
         for offset in [0., 120., 480., 1800.] {
@@ -659,6 +729,7 @@ mod tests {
                                         rect.center(),
                                         egui::vec2(100., 34.),
                                     ),
+                                    true,
                                     false,
                                     true,
                                 );
